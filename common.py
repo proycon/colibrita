@@ -1,4 +1,5 @@
-#!/usr/bin/env python3
+from __future__ import print_function, unicode_literals, division, absolute_import
+
 from colibrita.format import SentencePair
 from pynlpl.formats.moses import PhraseTable
 from pynlpl.formats.giza import GizaModel
