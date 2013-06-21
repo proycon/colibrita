@@ -5,7 +5,7 @@ from pynlpl.formats.giza import GizaModel
 from pycolibri import ClassDecoder, ClassEncoder, IndexedPatternModel
 import sys
 
-def extractpairs(ttablefile, gizamodelfile_s2t, gizamodelfile_t2s, patternmodelfile_source, patternmodelfile_target, classfile_source, classfile_target):
+def extractpairs(ttablefile, gizamodelfile_s2t, gizamodelfile_t2s, patternmodelfile_source, patternmodelfile_target, classfile_source, classfile_target, DEBUG = False):
     ttable = PhraseTable(ttablefile)
 
     gizamodel_s2t = GizaModel(gizamodelfile_s2t)
@@ -44,23 +44,30 @@ def extractpairs(ttablefile, gizamodelfile_s2t, gizamodelfile_t2s, patternmodelf
 
         intersection = s2t.intersect(t2s)
 
+
+        #gather all target patterns found  in this sentence
+        sourcepatterns = list(patternmodel_source.reverseindex(sentence))
+        targetpatterns = list(patternmodel_target.reverseindex(sentence))
+
+        if DEBUG: print("(extractpatterns) processing sentence " + str(sentence) + ", collected " + str(len(sourcepatterns)) + " source patterns and " + str(len(targetpatterns)) + " target patterns", file=sys.stderr)
+
         #iterate over all source patterns found in this sentence
-        for sourcepattern in patternmodel_source.reverseindex(sentence):
+        for sourcepattern in sourcepatterns:
             sourcepattern = sourcepattern.decode(classdecoder_source)
             sourceindices = list(patternmodel_source.indices(sourcepattern))
             source_n = sourcepattern.count(" ") + 1
             assert bool(sourceindices)
             if sourcepattern in ttable:
-
+                if DEBUG: print("(extractpatterns) -- source pattern candidate " + str(sourcepattern) + " (occuring " + len(sourceindices) + " time(s))" , file=sys.stderr)
                 sourcesentence = s2t.source
                 targetsentence = s2t.target
 
-                #gather all target patterns found  in this sentence
-                targetpatterns = list(patternmodel_target.reverseindex(sentence))
 
                 #iterate over the target patterns in the phrasetable
                 for targetpattern, scores in ttable[sourcepattern]:
                     if targetpattern in targetpatterns:
+
+
                         #we have a pair, occurring in pattern models and phrase table
                         target_n = targetpattern.count(" ") + 1
 
@@ -68,6 +75,7 @@ def extractpairs(ttablefile, gizamodelfile_s2t, gizamodelfile_t2s, patternmodelf
                         targetindices = list(patternmodel_target.indices(targetpattern))
                         assert bool(targetindices)
 
+                        if DEBUG: print("(extractpatterns) --- found target pattern candidate " + str(targetpattern) + " (occuring " + len(targetindices) + " time(s))" , file=sys.stderr)
 
                         #yield the pair and full context
                         for _, sourceoffset in sourceindices:
@@ -81,7 +89,9 @@ def extractpairs(ttablefile, gizamodelfile_s2t, gizamodelfile_t2s, patternmodelf
                                         foundindex = foundindex[0]
                                     if foundindex < targetoffset or foundindex >= targetoffset + target_n:
                                         valid = False
+                                        if DEBUG: print("(extractpatterns) --- violates word alignment", file=sys.stderr)
                                         break
                                 if valid:
+                                    if DEBUG: print("(extractpatterns) --- ok", file=sys.stderr)
                                     yield sourcepattern, targetpattern, sourceoffset, targetoffset, sourcesentence, targetsentence, sentence
 
