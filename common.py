@@ -1,9 +1,17 @@
 #!/usr/bin/env python3
-from colibrita.format import Writer
+from colibrita.format import SentencePair
 from pynlpl.formats.moses import PhraseTable
 from pynlpl.formats.giza import GizaModel
 from pycolibri import ClassDecoder, ClassEncoder, IndexedPatternModel
 import sys
+
+def makesentencepair(id, sourcepattern, targetpattern, sourceoffset, targetoffset, targetsentence):
+    targetsentence = tuple(targetsentence.split())
+    targetpattern_n = targetpattern.count(" ") + 1
+
+    input = tuple(targetsentence[:targetoffset]) + tuple(Fragment(sourcepattern)) + tuple(targetsentence[targetoffset+targetpattern_n:])
+
+    return SentencePair(id, input, None, targetsentence)
 
 def extractpairs(ttablefile, gizamodelfile_s2t, gizamodelfile_t2s, patternmodelfile_source, patternmodelfile_target, classfile_source, classfile_target, DEBUG = False):
     ttable = PhraseTable(ttablefile)
