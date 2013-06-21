@@ -42,26 +42,46 @@ def extractpairs(ttablefile, gizamodelfile_s2t, gizamodelfile_t2s, patternmodelf
         sentence = s2t.index
         assert t2s.index == s2t.index
 
+        intersection = s2t.intersect(t2s)
+
         #iterate over all source patterns found in this sentence
         for sourcepattern in patternmodel_source.reverseindex(sentence):
             sourcepattern = sourcepattern.decode(classdecoder_source)
+            sourceindices = list(patternmodel_source.indices(sourcepattern))
+            source_n = sourcepattern.count(" ") + 1
+            assert bool(sourceindices)
             if sourcepattern in ttable:
+
+                sourcesentence = s2t.source
+                targetsentence = s2t.target
+
                 #gather all target patterns found  in this sentence
                 targetpatterns = list(patternmodel_target.reverseindex(sentence))
 
                 #iterate over the target patterns in the phrasetable
                 for targetpattern, scores in ttable[sourcepattern]:
                     if targetpattern in targetpatterns:
-                        #we have a pair, occurring in pattern models and phrase table. now check if it doesn't violate the word alignment
-                        #TODO
+                        #we have a pair, occurring in pattern models and phrase table
+                        target_n = targetpattern.count(" ") + 1
 
-                        #word alignment not violated, obtain positional offset for source and target in sentence
-                        #TODO
+                        #obtain positional offsets for source and target in sentence
+                        targetindices = list(patternmodel_target.indices(targetpattern))
+                        assert bool(targetindices)
 
-                        sourcesentence = s2t.source
-                        targetsentence = s2t.target
 
                         #yield the pair and full context
-                        yield sourcepattern, targetpattern, sourceoffset, targetoffset, sourcesentence, targetsentence, sentence
-
+                        for _, sourceoffset in sourceindices:
+                            for _, targetoffset in targetindices:
+                                #check if offsets don't violate the word alignment
+                                valid = True
+                                for i in range(sourceoffset, sourceoffset + source_n):
+                                    target, foundindex = intersection.getalignedtarget(i)
+                                    if isinstance(foundindex, tuple):
+                                        targetl = foundindex[1]
+                                        foundindex = foundindex[0]
+                                    if foundindex < targetoffset or foundindex >= targetoffset + target_n:
+                                        valid = False
+                                        break
+                                if valid:
+                                    yield sourcepattern, targetpattern, sourceoffset, targetoffset, sourcesentence, targetsentence, sentence
 
