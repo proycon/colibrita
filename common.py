@@ -4,7 +4,11 @@ from colibrita.format import SentencePair
 from pynlpl.formats.moses import PhraseTable
 from pynlpl.formats.giza import GizaModel
 from pycolibri import ClassDecoder, ClassEncoder, IndexedPatternModel
+
 import sys
+import os
+import datetime
+import subprocess
 
 def makesentencepair(id, sourcepattern, targetpattern, sourceoffset, targetoffset, targetsentence):
     targetsentence = tuple(targetsentence.split())
@@ -104,3 +108,95 @@ def extractpairs(ttablefile, gizamodelfile_s2t, gizamodelfile_t2s, patternmodelf
                                     if DEBUG: print("(extractpatterns) --- ok", file=sys.stderr)
                                     yield sourcepattern, targetpattern, sourceoffset, targetoffset, sourcesentence, targetsentence, sentence
 
+
+
+
+#move to seperate module?
+
+def bold(s):
+    CSI="\x1B["
+    return CSI+"1m" + s + CSI + "0m"
+
+def white(s):
+    CSI="\x1B["
+    return CSI+"37m" + s + CSI + "0m"
+
+
+def red(s):
+    CSI="\x1B["
+    return CSI+"31m" + s + CSI + "0m"
+
+def green(s):
+    CSI="\x1B["
+    return CSI+"32m" + s + CSI + "0m"
+
+
+def yellow(s):
+    CSI="\x1B["
+    return CSI+"33m" + s + CSI + "0m"
+
+
+def blue(s):
+    CSI="\x1B["
+    return CSI+"34m" + s + CSI + "0m"
+
+
+def magenta(s):
+    CSI="\x1B["
+    return CSI+"35m" + s + CSI + "0m"
+
+
+def log(msg, color=None, dobold = False):
+    if color:
+        msg = color(msg)
+    if dobold:
+        msg = bold(msg)
+    print(msg, file=sys.stderr)
+
+def execheader(self,name,*outputfiles, **kwargs):
+    print("----------------------------------------------------",file=sys.stderr)
+    if outputfiles:
+        skip = True
+        for outputfile in outputfiles:
+            if not os.path.exists(outputfile):
+                skip = False
+                break
+        if skip:
+            log("Skipping " + name, yellow, True)
+            return False
+    if 'cmd' in kwargs:
+        log("Calling " + name + " " + self.timestamp() ,white, True)
+        log("Command "+ ": " + kwargs['cmd'])
+    else:
+        log("Calling " + name + " " + self.timestamp(),white, True)
+    return True
+
+def timestamp(self):
+    return "\t" + magenta("@" + datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+
+def execfooter(self, name, r, *outputfiles, **kwargs):
+    if 'successcodes' in kwargs:
+        successcodes = kwargs['successcodes']
+    else:
+        successcodes = [0]
+    if r in successcodes:
+        log("Finished " + name + " " + self.timestamp(),green,True)
+    else:
+        log("Runtime error from " + name + ' (return code ' + str(r) + ') ' + timestamp(),red,True)
+        return False
+    if outputfiles:
+        error = False
+        for outputfile in outputfiles:
+            if os.path.exists(outputfile):
+                log("Produced output file " + outputfile,green)
+            else:
+                log("Expected output file " + outputfile+ ", not produced!",red)
+                error = True
+        if error:
+            return False
+    return True
+
+def runcmd(self, cmd, name, *outputfiles, **kwargs):
+    if not execheader(name,*outputfiles, cmd=cmd): return True
+    r = subprocess.call(cmd, shell=True)
+    return execfooter(name, r, *outputfiles,**kwargs)
