@@ -22,7 +22,8 @@ def generate(testoutput, ttablefile, gizamodelfile_s2t, gizamodelfile_t2s, patte
 
 def main():
     parser = argparse.ArgumentParser(description="Test set generation")
-    parser.add_argument('--mosesdir',type=str, help="Path to moses",action='store')
+    parser.add_argument('--mosesdir',type=str, help="Path to moses",action='store',default="")
+    parser.add_argument('--bindir',type=str, help="Path to external bin dir (path where moses bins are installed)",action='store',default="/usr/local/bin")
     parser.add_argument('--source','-s', type=str,help="Source language corpus", action='store',required=True)
     parser.add_argument('--target','-t', type=str,help="Target language corpus", action='store',required=True)
     parser.add_argument('--output','-o', type=str,help="Output name", action='store',required=True)
@@ -59,7 +60,8 @@ def main():
         os.chdir(testgendir)
 
     if not os.path.exists(ttablefile) or not os.path.exists(gizamodelfile_s2t) or not os.path.exists(gizamodelfile_t2s):
-        if not buildphrasetable(parser.mosesdir, parser.sourcelang, parser.targetlang): return False# pylint: disable=E1101
+        if not parser.mosesdir: print("No --mosesdir specified",file=sys.stderr)# pylint: disable=E1101
+        if not buildphrasetable(parser.mosesdir, parser.bindir, parser.sourcelang, parser.targetlang): return False # pylint: disable=E1101
 
     if not os.path.exists(patternmodelfile_source) or not os.path.exists(patternmodelfile_target) or not os.path.exists(classfile_source) or not os.path.exists(classfile_target):
         if not buildpatternmodel(parser.sourcelang, parser.targetlang): return False# pylint: disable=E1101
@@ -71,11 +73,11 @@ def main():
     return True
 
 
-def buildphrasetable(mosesdir, sourcelang, targetlang):
+def buildphrasetable(mosesdir, bindir, sourcelang, targetlang):
     EXEC_MOSES_TRAINMODEL = mosesdir + '/scripts/training/train-model.perl'
-    INSTALLEDBIN = mosesdir + '/bin'
+    EXTERNALBIN = bindir
     #build phrasetable using moses
-    if not runcmd(EXEC_MOSES_TRAINMODEL + ' -external-bin-dir ' + INSTALLEDBIN + " -root-dir . --corpus test --f " + sourcelang + " --e " + targetlang + " --first-step " + str(1) + " --last-step " + str(8) + ' >&2 2> testgen.log',"Creating word alignment and phrase table on test data", "model/phrase-table.gz"): return False
+    if not runcmd(EXEC_MOSES_TRAINMODEL + ' -external-bin-dir ' + EXTERNALBIN + " -root-dir . --corpus test --f " + sourcelang + " --e " + targetlang + " --first-step " + str(1) + " --last-step " + str(8) + ' >&2 2> testgen.log',"Creating word alignment and phrase table on test data", "model/phrase-table.gz"): return False
     return True
 
 def buildpatternmodel(sourcelang, targetlang, options="-t 2"):
