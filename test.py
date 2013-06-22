@@ -32,41 +32,41 @@ def main():
     parser.parse_args()
 
 
-    if not os.path.exists(parser.source):
-        print("Source corpus " + parser.source + " does not exist")
+    if not os.path.exists(parser.source): # pylint: disable=E1101
+        print("Source corpus " + parser.source + " does not exist")# pylint: disable=E1101
         sys.exit(2)
-    if not os.path.exists(parser.target):
-        print("Target corpus " + parser.target + " does not exist")
+    if not os.path.exists(parser.target): # pylint: disable=E1101
+        print("Target corpus " + parser.target + " does not exist")# pylint: disable=E1101
         sys.exit(2)
 
-    testgendir = 'testgen-' + parser.output
+    testgendir = 'testgen-' + parser.output # pylint: disable=E1101
     ttablefile = testgendir + '/model/phrase-table.gz'
-    gizamodelfile_s2t = testgendir + '/giza.' + parser.sourcelang + '-' + parser.targetlang + '/' + parser.sourcelang + '-' + parser.targetlang + '.A3.final.gz'
-    gizamodelfile_t2s = testgendir + '/giza.' + parser.targetlang + '-' + parser.sourcelang + '/' + parser.targetlang + '-' + parser.sourcelang + '.A3.final.gz'
-    patternmodelfile_source = testgendir + '/test.' + parser.sourcelang + '.indexedpatternmodel.colibri'
-    patternmodelfile_target = testgendir + '/test.' + parser.targetlang + '.indexedpatternmodel.colibri'
-    classfile_source = testgendir + '/' + parser.sourcelang + '.cls'
-    classfile_target = testgendir + '/' + parser.targetlang + '.cls'
+    gizamodelfile_s2t = testgendir + '/giza.' + parser.sourcelang + '-' + parser.targetlang + '/' + parser.sourcelang + '-' + parser.targetlang + '.A3.final.gz'# pylint: disable=E1101
+    gizamodelfile_t2s = testgendir + '/giza.' + parser.targetlang + '-' + parser.sourcelang + '/' + parser.targetlang + '-' + parser.sourcelang + '.A3.final.gz'# pylint: disable=E1101
+    patternmodelfile_source = testgendir + '/test.' + parser.sourcelang + '.indexedpatternmodel.colibri'# pylint: disable=E1101
+    patternmodelfile_target = testgendir + '/test.' + parser.targetlang + '.indexedpatternmodel.colibri'# pylint: disable=E1101
+    classfile_source = testgendir + '/' + parser.sourcelang + '.cls'# pylint: disable=E1101
+    classfile_target = testgendir + '/' + parser.targetlang + '.cls'# pylint: disable=E1101
 
 
 
     if not os.path.exists(testgendir):
         os.mkdir(testgendir)
         os.chdir(testgendir)
-        os.symlink(parser.source, 'test.' + parser.sourcelang)
-        os.symlink(parser.target, 'test.' + parser.targetlang)
+        os.symlink(parser.source, 'test.' + parser.sourcelang)# pylint: disable=E1101
+        os.symlink(parser.target, 'test.' + parser.targetlang)# pylint: disable=E1101
     else:
         os.chdir(testgendir)
 
     if not os.path.exists(ttablefile) or not os.path.exists(gizamodelfile_s2t) or not os.path.exists(gizamodelfile_t2s):
-        if not buildphrasetable(parser.mosesdir, parser.sourcelang, parser.targetlang): return False
+        if not buildphrasetable(parser.mosesdir, parser.sourcelang, parser.targetlang): return False# pylint: disable=E1101
 
     if not os.path.exists(patternmodelfile_source) or not os.path.exists(patternmodelfile_target) or not os.path.exists(classfile_source) or not os.path.exists(classfile_target):
-        if not buildpatternmodel(parser.sourcelang, parser.targetlang): return False
+        if not buildpatternmodel(parser.sourcelang, parser.targetlang): return False# pylint: disable=E1101
 
     os.chdir('..')
 
-    if not generate(parser.output + '.xml', gizamodelfile_s2t, gizamodelfile_t2s,  patternmodelfile_source, patternmodelfile_target, classfile_source, classfile_target, parser.debug): return False
+    if not generate(parser.output + '.xml', gizamodelfile_s2t, gizamodelfile_t2s,  patternmodelfile_source, patternmodelfile_target, classfile_source, classfile_target, parser.debug): return False# pylint: disable=E1101
 
     return True
 
