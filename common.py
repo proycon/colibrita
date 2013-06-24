@@ -46,8 +46,8 @@ def extractpairs(ttablefile, gizamodelfile_s2t, gizamodelfile_t2s, patternmodelf
     #iterate over all sentences in the parallel corpus (GIZA alignment acts as source)
     while True:
         try:
-            s2t = iter_s2t.next()
-            t2s = iter_t2s.next()
+            s2t = next(iter_s2t)
+            t2s = next(iter_t2s)
         except StopIteration:
             print("WARNING: No more GIZA alignments, breaking",file=sys.stderr)
             break
