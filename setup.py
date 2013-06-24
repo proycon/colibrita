@@ -31,7 +31,7 @@ setup(
     ],
     entry_points = {
         'console_scripts': [
-            'colibrita-testgen = colibrita.test:main',
+            'colibrita-testgen = colibrita.testgen:main',
         ]
     },
     #include_package_data=True,
