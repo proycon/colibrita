@@ -19,17 +19,23 @@ def makesentencepair(id, sourcepattern, targetpattern, sourceoffset, targetoffse
     return SentencePair(id, input, None, targetsentence)
 
 def extractpairs(ttablefile, gizamodelfile_s2t, gizamodelfile_t2s, patternmodelfile_source, patternmodelfile_target, classfile_source, classfile_target, DEBUG = False):
+    if DEBUG: print("Loading phrase-table", file=sys.stderr)
     ttable = PhraseTable(ttablefile)
 
+    if DEBUG: print("Loading GIZA model (s->t)", file=sys.stderr)
     gizamodel_s2t = GizaModel(gizamodelfile_s2t)
+    if DEBUG: print("Loading GIZA model (t->s)", file=sys.stderr)
     gizamodel_t2s = GizaModel(gizamodelfile_t2s)
 
+    if DEBUG: print("Loading decoders", file=sys.stderr)
     classdecoder_source = ClassDecoder(classfile_source)
     classencoder_source = ClassEncoder(classfile_source)
     classdecoder_target = ClassDecoder(classfile_target)
     classencoder_target = ClassEncoder(classfile_target)
 
+    if DEBUG: print("Loading source pattern model", file=sys.stderr)
     patternmodel_source = IndexedPatternModel(patternmodelfile_source, classencoder_source, classdecoder_source)
+    if DEBUG: print("Loading target pattern model", file=sys.stderr)
     patternmodel_target = IndexedPatternModel(patternmodelfile_target, classencoder_target, classdecoder_target)
 
 
