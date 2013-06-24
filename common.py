@@ -74,7 +74,7 @@ def extractpairs(ttablefile, gizamodelfile_s2t, gizamodelfile_t2s, patternmodelf
         #iterate over all source patterns found in this sentence
         for sourcepattern in sourcepatterns:
             if DEBUG: print("1", file=sys.stderr)
-            print(sourcepattern.n())
+            print(len(sourcepattern))
             if DEBUG: print("2", file=sys.stderr)
             sourcepattern = sourcepattern.decode(classdecoder_source)
             if DEBUG: print("3", file=sys.stderr)
