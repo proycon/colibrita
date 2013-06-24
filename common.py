@@ -32,10 +32,6 @@ def extractpairs(ttablefile, gizamodelfile_s2t, gizamodelfile_t2s, patternmodelf
     patternmodel_source = IndexedPatternModel(patternmodelfile_source, classencoder_source, classdecoder_source)
     patternmodel_target = IndexedPatternModel(patternmodelfile_target, classencoder_target, classdecoder_target)
 
-    if DEBUG:
-        for sourcepattern in patternmodel_source:
-            print(len(sourcepattern))
-            print(sourcepattern.decode(classdecoder_source))
 
     #with open(sourcecorpusfile, 'r', encoding='utf-8') as f:
     #    sourcecorpus = [x.strip() for x in f.readlines()]
