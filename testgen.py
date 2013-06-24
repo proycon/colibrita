@@ -68,7 +68,7 @@ def main():
 
     os.chdir('..')
 
-    if not generate(args.output + '.xml', gizamodelfile_s2t, gizamodelfile_t2s,  patternmodelfile_source, patternmodelfile_target, classfile_source, classfile_target, args.debug): return False# pylint: disable=E1101
+    if not generate(args.output + '.xml', ttablefile, gizamodelfile_s2t, gizamodelfile_t2s,  patternmodelfile_source, patternmodelfile_target, classfile_source, classfile_target, args.debug): return False# pylint: disable=E1101
 
     return True
 
