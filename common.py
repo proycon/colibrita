@@ -1,6 +1,6 @@
 from __future__ import print_function, unicode_literals, division, absolute_import
 
-from colibrita.format import SentencePair
+from colibrita.format import SentencePair, Fragment
 from pynlpl.formats.moses import PhraseTable
 from pynlpl.formats.giza import GizaModel
 from pycolibri import ClassDecoder, ClassEncoder, IndexedPatternModel
@@ -165,10 +165,10 @@ def execheader(name,*outputfiles, **kwargs):
             log("Skipping " + name, yellow, True)
             return False
     if 'cmd' in kwargs:
-        log("Calling " + name + " " + self.timestamp() ,white, True)
+        log("Calling " + name + " " + timestamp() ,white, True)
         log("Command "+ ": " + kwargs['cmd'])
     else:
-        log("Calling " + name + " " + self.timestamp(),white, True)
+        log("Calling " + name + " " + timestamp(),white, True)
     return True
 
 def timestamp():
@@ -180,7 +180,7 @@ def execfooter(name, r, *outputfiles, **kwargs):
     else:
         successcodes = [0]
     if r in successcodes:
-        log("Finished " + name + " " + self.timestamp(),green,True)
+        log("Finished " + name + " " + timestamp(),green,True)
     else:
         log("Runtime error from " + name + ' (return code ' + str(r) + ') ' + timestamp(),red,True)
         return False
