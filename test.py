@@ -22,14 +22,14 @@ def generate(testoutput, ttablefile, gizamodelfile_s2t, gizamodelfile_t2s, patte
 
 def main():
     parser = argparse.ArgumentParser(description="Test set generation")
-    parser.add_argument('--mosesdir',type=str, help="Path to moses",action='store',default="")
-    parser.add_argument('--bindir',type=str, help="Path to external bin dir (path where moses bins are installed)",action='store',default="/usr/local/bin")
-    parser.add_argument('--source','-s', type=str,help="Source language corpus", action='store',required=True)
-    parser.add_argument('--target','-t', type=str,help="Target language corpus", action='store',required=True)
-    parser.add_argument('--output','-o', type=str,help="Output name", action='store',required=True)
-    parser.add_argument('--sourcelang','-S', type=str,help="Source language code", action='store',required=True)
-    parser.add_argument('--targetlang','-T', type=str,help="Target language code", action='store',required=True)
-    parser.add_argument('--debug','-d', help="Debug", action='store_true', default=False)
+    parser.add_argument('--mosesdir',dest='mosesdir',type=str, help="Path to moses",action='store',default="")
+    parser.add_argument('--bindir',dest='bindir',type=str, help="Path to external bin dir (path where moses bins are installed)",action='store',default="/usr/local/bin")
+    parser.add_argument('--source','-s', dest='source',type=str,help="Source language corpus", action='store',required=True)
+    parser.add_argument('--target','-t', dest='target',type=str,help="Target language corpus", action='store',required=True)
+    parser.add_argument('--output','-o', dest='output',type=str,help="Output name", action='store',required=True)
+    parser.add_argument('--sourcelang','-S', dest='sourcelang',type=str,help="Source language code", action='store',required=True)
+    parser.add_argument('--targetlang','-T', dest='targetlang',type=str,help="Target language code", action='store',required=True)
+    parser.add_argument('--debug','-d', dest='debug',help="Debug", action='store_true', default=False)
     parser.parse_args()
 
 
