@@ -81,8 +81,8 @@ def buildphrasetable(mosesdir, bindir, sourcelang, targetlang):
     return True
 
 def buildpatternmodel(sourcelang, targetlang, options="-t 2"):
-    if not runcmd('classencoder -o ' + sourcelang + ' test.' + sourcelang, "Encoding source corpus", sourcelang + ".cls", 'test.' +  sourcelang + ".clsenc"): return False
-    if not runcmd('classencoder -o ' + targetlang + ' test.' + targetlang, "Encoding target corpus", targetlang + ".cls", 'test.' +  targetlang + ".clsenc"): return False
+    if not runcmd('classencode -o ' + sourcelang + ' test.' + sourcelang, "Encoding source corpus", sourcelang + ".cls", 'test.' +  sourcelang + ".clsenc"): return False
+    if not runcmd('classencode -o ' + targetlang + ' test.' + targetlang, "Encoding target corpus", targetlang + ".cls", 'test.' +  targetlang + ".clsenc"): return False
 
     if not runcmd('patternfinder -c ' + sourcelang + '.cls -f test.' + sourcelang + '.clsenc ' + options, "Generating pattern model for source",  'test.' +  sourcelang + ".indexedpatternmodel.colibri"): return False
     if not runcmd('patternfinder -c ' + targetlang + '.cls -f test.' + targetlang + '.clsenc ' + options, "Generating pattern model for target",  'test.' +  targetlang + ".indexedpatternmodel.colibri"): return False
