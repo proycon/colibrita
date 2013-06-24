@@ -22,53 +22,53 @@ def generate(testoutput, ttablefile, gizamodelfile_s2t, gizamodelfile_t2s, patte
 
 def main():
     parser = argparse.ArgumentParser(description="Test set generation")
-    parser.add_argument('--mosesdir',dest='mosesdir',type=str, help="Path to moses",action='store',default="")
-    parser.add_argument('--bindir',dest='bindir',type=str, help="Path to external bin dir (path where moses bins are installed)",action='store',default="/usr/local/bin")
-    parser.add_argument('--source','-s', dest='source',type=str,help="Source language corpus", action='store',required=True)
-    parser.add_argument('--target','-t', dest='target',type=str,help="Target language corpus", action='store',required=True)
-    parser.add_argument('--output','-o', dest='output',type=str,help="Output name", action='store',required=True)
-    parser.add_argument('--sourcelang','-S', dest='sourcelang',type=str,help="Source language code", action='store',required=True)
-    parser.add_argument('--targetlang','-T', dest='targetlang',type=str,help="Target language code", action='store',required=True)
-    parser.add_argument('--debug','-d', dest='debug',help="Debug", action='store_true', default=False)
-    parser.parse_args()
+    parser.add_argument('--mosesdir',type=str, help="Path to moses",action='store',default="")
+    parser.add_argument('--bindir',type=str, help="Path to external bin dir (path where moses bins are installed)",action='store',default="/usr/local/bin")
+    parser.add_argument('--source','-s', type=str,help="Source language corpus", action='store',required=True)
+    parser.add_argument('--target','-t', type=str,help="Target language corpus", action='store',required=True)
+    parser.add_argument('--output','-o', type=str,help="Output name", action='store',required=True)
+    parser.add_argument('--sourcelang','-S', type=str,help="Source language code", action='store',required=True)
+    parser.add_argument('--targetlang','-T', type=str,help="Target language code", action='store',required=True)
+    parser.add_argument('--debug','-d', type=bool,help="Debug", action='store_true', default=False)
+    args = parser.parse_args()
 
 
-    if not os.path.exists(parser.source): # pylint: disable=E1101
-        print("Source corpus " + parser.source + " does not exist")# pylint: disable=E1101
+    if not os.path.exists(args.source): # pylint: disable=E1101
+        print("Source corpus " + args.source + " does not exist")# pylint: disable=E1101
         sys.exit(2)
-    if not os.path.exists(parser.target): # pylint: disable=E1101
-        print("Target corpus " + parser.target + " does not exist")# pylint: disable=E1101
+    if not os.path.exists(args.target): # pylint: disable=E1101
+        print("Target corpus " + args.target + " does not exist")# pylint: disable=E1101
         sys.exit(2)
 
-    testgendir = 'testgen-' + parser.output # pylint: disable=E1101
+    testgendir = 'testgen-' + args.output # pylint: disable=E1101
     ttablefile = testgendir + '/model/phrase-table.gz'
-    gizamodelfile_s2t = testgendir + '/giza.' + parser.sourcelang + '-' + parser.targetlang + '/' + parser.sourcelang + '-' + parser.targetlang + '.A3.final.gz'# pylint: disable=E1101
-    gizamodelfile_t2s = testgendir + '/giza.' + parser.targetlang + '-' + parser.sourcelang + '/' + parser.targetlang + '-' + parser.sourcelang + '.A3.final.gz'# pylint: disable=E1101
-    patternmodelfile_source = testgendir + '/test.' + parser.sourcelang + '.indexedpatternmodel.colibri'# pylint: disable=E1101
-    patternmodelfile_target = testgendir + '/test.' + parser.targetlang + '.indexedpatternmodel.colibri'# pylint: disable=E1101
-    classfile_source = testgendir + '/' + parser.sourcelang + '.cls'# pylint: disable=E1101
-    classfile_target = testgendir + '/' + parser.targetlang + '.cls'# pylint: disable=E1101
+    gizamodelfile_s2t = testgendir + '/giza.' + args.sourcelang + '-' + args.targetlang + '/' + args.sourcelang + '-' + args.targetlang + '.A3.final.gz'# pylint: disable=E1101
+    gizamodelfile_t2s = testgendir + '/giza.' + args.targetlang + '-' + args.sourcelang + '/' + args.targetlang + '-' + args.sourcelang + '.A3.final.gz'# pylint: disable=E1101
+    patternmodelfile_source = testgendir + '/test.' + args.sourcelang + '.indexedpatternmodel.colibri'# pylint: disable=E1101
+    patternmodelfile_target = testgendir + '/test.' + args.targetlang + '.indexedpatternmodel.colibri'# pylint: disable=E1101
+    classfile_source = testgendir + '/' + args.sourcelang + '.cls'# pylint: disable=E1101
+    classfile_target = testgendir + '/' + args.targetlang + '.cls'# pylint: disable=E1101
 
 
 
     if not os.path.exists(testgendir):
         os.mkdir(testgendir)
         os.chdir(testgendir)
-        os.symlink(parser.source, 'test.' + parser.sourcelang)# pylint: disable=E1101
-        os.symlink(parser.target, 'test.' + parser.targetlang)# pylint: disable=E1101
+        os.symlink(args.source, 'test.' + args.sourcelang)# pylint: disable=E1101
+        os.symlink(args.target, 'test.' + args.targetlang)# pylint: disable=E1101
     else:
         os.chdir(testgendir)
 
     if not os.path.exists(ttablefile) or not os.path.exists(gizamodelfile_s2t) or not os.path.exists(gizamodelfile_t2s):
-        if not parser.mosesdir: print("No --mosesdir specified",file=sys.stderr)# pylint: disable=E1101
-        if not buildphrasetable(parser.mosesdir, parser.bindir, parser.sourcelang, parser.targetlang): return False # pylint: disable=E1101
+        if not args.mosesdir: print("No --mosesdir specified",file=sys.stderr)# pylint: disable=E1101
+        if not buildphrasetable(args.mosesdir, args.bindir, args.sourcelang, args.targetlang): return False # pylint: disable=E1101
 
     if not os.path.exists(patternmodelfile_source) or not os.path.exists(patternmodelfile_target) or not os.path.exists(classfile_source) or not os.path.exists(classfile_target):
-        if not buildpatternmodel(parser.sourcelang, parser.targetlang): return False# pylint: disable=E1101
+        if not buildpatternmodel(args.sourcelang, args.targetlang): return False# pylint: disable=E1101
 
     os.chdir('..')
 
-    if not generate(parser.output + '.xml', gizamodelfile_s2t, gizamodelfile_t2s,  patternmodelfile_source, patternmodelfile_target, classfile_source, classfile_target, parser.debug): return False# pylint: disable=E1101
+    if not generate(args.output + '.xml', gizamodelfile_s2t, gizamodelfile_t2s,  patternmodelfile_source, patternmodelfile_target, classfile_source, classfile_target, args.debug): return False# pylint: disable=E1101
 
     return True
 
