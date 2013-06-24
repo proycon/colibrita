@@ -29,7 +29,7 @@ def main():
     parser.add_argument('--output','-o', type=str,help="Output name", action='store',required=True)
     parser.add_argument('--sourcelang','-S', type=str,help="Source language code", action='store',required=True)
     parser.add_argument('--targetlang','-T', type=str,help="Target language code", action='store',required=True)
-    parser.add_argument('--debug','-d', type=bool,help="Debug", action='store_true')
+    parser.add_argument('--debug','-d', help="Debug", action='store_true', default=False)
     parser.parse_args()
 
 
