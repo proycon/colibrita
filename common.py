@@ -153,7 +153,7 @@ def log(msg, color=None, dobold = False):
         msg = bold(msg)
     print(msg, file=sys.stderr)
 
-def execheader(self,name,*outputfiles, **kwargs):
+def execheader(name,*outputfiles, **kwargs):
     print("----------------------------------------------------",file=sys.stderr)
     if outputfiles:
         skip = True
@@ -171,10 +171,10 @@ def execheader(self,name,*outputfiles, **kwargs):
         log("Calling " + name + " " + self.timestamp(),white, True)
     return True
 
-def timestamp(self):
+def timestamp():
     return "\t" + magenta("@" + datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
 
-def execfooter(self, name, r, *outputfiles, **kwargs):
+def execfooter(name, r, *outputfiles, **kwargs):
     if 'successcodes' in kwargs:
         successcodes = kwargs['successcodes']
     else:
@@ -196,7 +196,7 @@ def execfooter(self, name, r, *outputfiles, **kwargs):
             return False
     return True
 
-def runcmd(self, cmd, name, *outputfiles, **kwargs):
+def runcmd(cmd, name, *outputfiles, **kwargs):
     if not execheader(name,*outputfiles, cmd=cmd): return True
     r = subprocess.call(cmd, shell=True)
     return execfooter(name, r, *outputfiles,**kwargs)
