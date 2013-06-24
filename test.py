@@ -54,8 +54,8 @@ def main():
     if not os.path.exists(testgendir):
         os.mkdir(testgendir)
         os.chdir(testgendir)
-        os.symlink(args.source, 'test.' + args.sourcelang)# pylint: disable=E1101
-        os.symlink(args.target, 'test.' + args.targetlang)# pylint: disable=E1101
+        os.symlink('../' + args.source, 'test.' + args.sourcelang)# pylint: disable=E1101
+        os.symlink('../' + args.target, 'test.' + args.targetlang)# pylint: disable=E1101
     else:
         os.chdir(testgendir)
 
