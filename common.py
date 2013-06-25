@@ -18,9 +18,9 @@ def makesentencepair(id, sourcepattern, targetpattern, sourceoffset, targetoffse
 
     return SentencePair(id, input, None, targetsentence)
 
-def extractpairs(ttablefile, gizamodelfile_s2t, gizamodelfile_t2s, patternmodelfile_source, patternmodelfile_target, classfile_source, classfile_target, DEBUG = False):
+def extractpairs(ttablefile, gizamodelfile_s2t, gizamodelfile_t2s, patternmodelfile_source, patternmodelfile_target, classfile_source, classfile_target, joinedprobabilitythreshold = 0.1, divergencefrombestthreshold=0.8, DEBUG = False):
     if DEBUG: print("Loading phrase-table", file=sys.stderr)
-    ttable = PhraseTable(ttablefile)
+    ttable = PhraseTable(ttablefile,False, False, "|||", 3, 0,None, None, lambda x: x[0] * x[2] > joinedprobabilitythreshold)
 
     if DEBUG: print("Loading GIZA model (s->t)", file=sys.stderr)
     gizamodel_s2t = GizaModel(gizamodelfile_s2t)
@@ -93,12 +93,16 @@ def extractpairs(ttablefile, gizamodelfile_s2t, gizamodelfile_t2s, patternmodelf
                 sourcesentence = s2t.source
                 targetsentence = s2t.target
 
+                targetoptions = sorted( ( (targetpattern, scores) for targetpattern, scores in ttable[sourcepattern] ) , key=lambda x: x[1] )
+                bestscore = targetoptions[0][1][0] * targetoptions[0][1][2]
 
                 #iterate over the target patterns in the phrasetable
                 for targetpattern, scores in ttable[sourcepattern]:
                     if DEBUG: print("(extractpatterns) -- considering target pattern from phrase-table: " + str(targetpattern) , file=sys.stderr)
                     if targetpattern in targetpatterns:
-
+                        joinedprob = scores[0] * scores[2]
+                        if joinedprob < bestscore * divergencefrombestthreshold:
+                            continue
 
                         #we have a pair, occurring in pattern models and phrase table
                         target_n = targetpattern.count(" ") + 1
