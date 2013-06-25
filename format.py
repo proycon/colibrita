@@ -111,9 +111,9 @@ class SentencePair:
     def xml(self):
         children = []
 
-        if self.input: children.append( E.input(SentencePair._serialisevalue(self.input)))
-        if self.output: children.append( E.output(SentencePair._serialisevalue(self.output)))
-        if self.ref: children.append( E.ref(SentencePair._serialisevalue(self.ref)))
+        if self.input: children.append( E.input(*SentencePair._serialisevalue(self.input)))
+        if self.output: children.append( E.output(*SentencePair._serialisevalue(self.output)))
+        if self.ref: children.append( E.ref(*SentencePair._serialisevalue(self.ref)))
         return E.s(*children, id = str(self.id))
 
 class Fragment:
