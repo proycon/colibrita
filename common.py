@@ -85,7 +85,7 @@ def extractpairs(ttablefile, gizamodelfile_s2t, gizamodelfile_t2s, patternmodelf
         #iterate over all source patterns found in this sentence
         for sourcepattern in sourcepatterns:
             sourcepattern = sourcepattern.decode(classdecoder_source)
-            sourceindices = list(patternmodel_source.indices(sourcepattern))
+            sourceindices = [ (x,y) for x,y in patternmodel_source.indices(sourcepattern) if x == sentence ]
             source_n = sourcepattern.count(" ") + 1
             assert bool(sourceindices)
             if sourcepattern in ttable:
@@ -104,7 +104,7 @@ def extractpairs(ttablefile, gizamodelfile_s2t, gizamodelfile_t2s, patternmodelf
                         target_n = targetpattern.count(" ") + 1
 
                         #obtain positional offsets for source and target in sentence
-                        targetindices = list(patternmodel_target.indices(targetpattern))
+                        targetindices = [ (x,y) for x,y in patternmodel_target.indices(targetpattern) if x == sentence]
                         assert bool(targetindices)
 
                         if DEBUG: print("(extractpatterns) --- found target pattern candidate " + str(targetpattern) + " (occuring " + str(len(targetindices)) + " time(s))" , file=sys.stderr)
