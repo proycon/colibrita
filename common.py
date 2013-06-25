@@ -81,13 +81,12 @@ def extractpairs(ttablefile, gizamodelfile_s2t, gizamodelfile_t2s, patternmodelf
 
         #iterate over all source patterns found in this sentence
         for sourcepattern in sourcepatterns:
-            print(len(sourcepattern))
             sourcepattern = sourcepattern.decode(classdecoder_source)
             sourceindices = list(patternmodel_source.indices(sourcepattern))
             source_n = sourcepattern.count(" ") + 1
             assert bool(sourceindices)
             if sourcepattern in ttable:
-                if DEBUG: print("(extractpatterns) -- source pattern candidate " + str(sourcepattern) + " (occuring " + str(len(sourceindices)) + " time(s))" , file=sys.stderr)
+                if DEBUG: print("(extractpatterns) -- source pattern candidate " + str(sourcepattern) + " (occuring " + str(len(sourceindices)) + " time(s)), has " + str(len(ttable[sourcepattern])) + " translation options in phrase-table" , file=sys.stderr)
                 sourcesentence = s2t.source
                 targetsentence = s2t.target
 
