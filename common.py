@@ -91,7 +91,7 @@ def extractpairs(ttablefile, gizamodelfile_s2t, gizamodelfile_t2s, patternmodelf
             source_n = sourcepattern.count(" ") + 1
             assert bool(sourceindices)
             if sourcepattern in ttable:
-                if DEBUG: print("(extractpatterns) -- source pattern candidate " + str(sourcepattern) + " (occuring " + len(sourceindices) + " time(s))" , file=sys.stderr)
+                if DEBUG: print("(extractpatterns) -- source pattern candidate " + str(sourcepattern) + " (occuring " + str(len(sourceindices)) + " time(s))" , file=sys.stderr)
                 sourcesentence = s2t.source
                 targetsentence = s2t.target
 
@@ -108,7 +108,7 @@ def extractpairs(ttablefile, gizamodelfile_s2t, gizamodelfile_t2s, patternmodelf
                         targetindices = list(patternmodel_target.indices(targetpattern))
                         assert bool(targetindices)
 
-                        if DEBUG: print("(extractpatterns) --- found target pattern candidate " + str(targetpattern) + " (occuring " + len(targetindices) + " time(s))" , file=sys.stderr)
+                        if DEBUG: print("(extractpatterns) --- found target pattern candidate " + str(targetpattern) + " (occuring " + str(len(targetindices)) + " time(s))" , file=sys.stderr)
 
                         #yield the pair and full context
                         for _, sourceoffset in sourceindices:
