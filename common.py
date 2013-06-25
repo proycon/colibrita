@@ -14,7 +14,7 @@ def makesentencepair(id, sourcepattern, targetpattern, sourceoffset, targetoffse
     targetsentence = tuple(targetsentence)
     targetpattern_n = targetpattern.count(" ") + 1
 
-    input = tuple(targetsentence[:targetoffset]) + (Fragment(tuple(sourcepattern.split())),) + tuple(targetsentence[targetoffset+targetpattern_n:])
+    input = tuple(targetsentence[:targetoffset] + " ") + (Fragment(tuple(targetpattern.split())),) + tuple(" " + targetsentence[targetoffset+targetpattern_n:])
 
     return SentencePair(id, input, None, targetsentence)
 
