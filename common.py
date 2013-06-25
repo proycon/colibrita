@@ -11,7 +11,7 @@ import datetime
 import subprocess
 
 def makesentencepair(id, sourcepattern, targetpattern, sourceoffset, targetoffset, targetsentence):
-    targetsentence = tuple(targetsentence.split())
+    targetsentence = tuple(targetsentence)
     targetpattern_n = targetpattern.count(" ") + 1
 
     input = tuple(targetsentence[:targetoffset]) + tuple(Fragment(sourcepattern)) + tuple(targetsentence[targetoffset+targetpattern_n:])
