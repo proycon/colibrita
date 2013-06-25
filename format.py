@@ -30,9 +30,12 @@ class Writer:
 
 class SentencePair:
     def __init__(self, id,input, output, ref=None):
-        assert isinstance(input, tuple)
-        assert isinstance(output, tuple)
-        assert isinstance(ref, tuple)
+        if not isinstance(input, tuple):
+            raise ValueError("Input - Expected tuple, got " + str(type(input)), input)
+        if not isinstance(output, tuple) and not (output is None):
+            raise ValueError("Output - Expected tuple, got " + str(type(output)), output)
+        if not isinstance(ref, tuple) and not (ref is None):
+            raise ValueError("Ref - Expected tuple, got " + str(type(ref)), ref)
         self.id = id
         self.input = input
         self.output = output
