@@ -98,9 +98,12 @@ class SentencePair:
     @staticmethod
     def _serialisevalue(v):
         result = []
-        for x in v:
+        l = len(v)
+        for i, x in enumerate(v):
             if isinstance(x, Fragment):
+                result.append(" ")
                 result.append(x.xml())
+                if i < l - 1: result.append(" ")
             elif result and isinstance(result[-1], str):
                 result[-1] += " " + x
             else:
