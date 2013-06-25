@@ -93,6 +93,7 @@ def extractpairs(ttablefile, gizamodelfile_s2t, gizamodelfile_t2s, patternmodelf
 
                 #iterate over the target patterns in the phrasetable
                 for targetpattern, scores in ttable[sourcepattern]:
+                    if DEBUG: print("(extractpatterns) -- considering target pattern from phrase-table: " + str(targetpattern) , file=sys.stderr)
                     if targetpattern in targetpatterns:
 
 
