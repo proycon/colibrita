@@ -77,6 +77,9 @@ def extractpairs(ttablefile, gizamodelfile_s2t, gizamodelfile_t2s, patternmodelf
 
         if DEBUG: print("(extractpatterns) processing sentence " + str(sentence) + ", collected " + str(len(sourcepatterns)) + " source patterns and " + str(len(targetpatterns)) + " target patterns", file=sys.stderr)
 
+        if DEBUG:
+            for targetpattern in targetpatterns:
+                if DEBUG: print("(extractpatterns) -- identified target pattern " + str(targetpattern) , file=sys.stderr)
 
 
         #iterate over all source patterns found in this sentence
