@@ -38,6 +38,7 @@ def extractpairs(ttablefile, gizamodelfile_s2t, gizamodelfile_t2s, patternmodelf
     if DEBUG: print("Loading target pattern model", file=sys.stderr)
     patternmodel_target = IndexedPatternModel(patternmodelfile_target, classencoder_target, classdecoder_target)
 
+    if DEBUG: print("test" in patternmodel_source, file=sys.stderr)
 
     #with open(sourcecorpusfile, 'r', encoding='utf-8') as f:
     #    sourcecorpus = [x.strip() for x in f.readlines()]
@@ -50,6 +51,7 @@ def extractpairs(ttablefile, gizamodelfile_s2t, gizamodelfile_t2s, patternmodelf
     iter_t2s = iter(gizamodel_t2s)
 
 
+    if DEBUG: print("Iterating over all sentence pairs", file=sys.stderr)
     #iterate over all sentences in the parallel corpus (GIZA alignment acts as source)
     while True:
         try:
