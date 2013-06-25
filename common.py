@@ -69,7 +69,8 @@ def extractpairs(ttablefile, gizamodelfile_s2t, gizamodelfile_t2s, patternmodelf
             print("(extractpatterns) t2s.source=", t2s.source , file=sys.stderr)
             print("(extractpatterns) s2t.target=", s2t.target , file=sys.stderr)
         intersection = s2t.intersect(t2s)
-
+        if not intersection:
+            continue
 
         #gather all target patterns found  in this sentence
         sourcepatterns = list(patternmodel_source.reverseindex(sentence))
