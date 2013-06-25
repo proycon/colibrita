@@ -18,7 +18,7 @@ def makesentencepair(id, sourcepattern, targetpattern, sourceoffset, targetoffse
 
     return SentencePair(id, input, None, targetsentence)
 
-def extractpairs(ttablefile, gizamodelfile_s2t, gizamodelfile_t2s, patternmodelfile_source, patternmodelfile_target, classfile_source, classfile_target, joinedprobabilitythreshold = 0.1, divergencefrombestthreshold=0.8, DEBUG = False):
+def extractpairs(ttablefile, gizamodelfile_s2t, gizamodelfile_t2s, patternmodelfile_source, patternmodelfile_target, classfile_source, classfile_target, joinedprobabilitythreshold, divergencefrombestthreshold, DEBUG):
     if DEBUG: print("Loading phrase-table", file=sys.stderr)
     ttable = PhraseTable(ttablefile,False, False, "|||", 3, 0,None, None, lambda x: x[0] * x[2] > joinedprobabilitythreshold)
 
