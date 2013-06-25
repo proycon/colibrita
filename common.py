@@ -125,7 +125,7 @@ def extractpairs(ttablefile, gizamodelfile_s2t, gizamodelfile_t2s, patternmodelf
                                         break
                                 if valid:
                                     if DEBUG: print("(extractpatterns) --- ok", file=sys.stderr)
-                                    yield sourcepattern, targetpattern, sourceoffset, targetoffset, sourcesentence, targetsentence, sentence
+                                    yield sourcepattern, targetpattern, sourceoffset, targetoffset, tuple(sourcesentence), tuple(targetsentence), sentence
 
 
 
