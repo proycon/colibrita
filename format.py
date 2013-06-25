@@ -2,6 +2,7 @@ from __future__ import print_function, unicode_literals, division, absolute_impo
 
 import lxml.etree
 from lxml.builder import E
+import sys
 
 class Reader:
     def __init__(self, filename):
@@ -109,6 +110,10 @@ class SentencePair:
 
     def xml(self):
         children = []
+        print("INPUT:", self.input,file=sys.stderr)
+        print("OUTPUT:",self.output,file=sys.stderr)
+        print("REF:",self.ref,file=sys.stderr)
+
         if self.input: children.append( E.input(SentencePair._serialisevalue(self.input)))
         if self.output: children.append( E.output(SentencePair._serialisevalue(self.output)))
         if self.ref: children.append( E.ref(SentencePair._serialisevalue(self.ref)))
