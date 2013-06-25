@@ -101,7 +101,7 @@ class SentencePair:
         for x in v:
             if isinstance(x, Fragment):
                 result.append(x.xml())
-            elif result and not isinstance(result[-1], Fragment):
+            elif result and isinstance(result[-1], str):
                 result[-1] += " " + x
             else:
                 result.append(x)
@@ -110,9 +110,6 @@ class SentencePair:
 
     def xml(self):
         children = []
-        print("INPUT:", self.input,file=sys.stderr)
-        print("OUTPUT:",self.output,file=sys.stderr)
-        print("REF:",self.ref,file=sys.stderr)
 
         if self.input: children.append( E.input(SentencePair._serialisevalue(self.input)))
         if self.output: children.append( E.output(SentencePair._serialisevalue(self.output)))
