@@ -103,6 +103,7 @@ class SentencePair:
             if isinstance(x, Fragment):
                 result.append(" ")
                 result.append(x.xml())
+                if i < l - 1: result.append(" ")
             elif result and isinstance(result[-1], str):
                 result[-1] += " " + x
             else:
