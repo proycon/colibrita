@@ -10,11 +10,12 @@ import os
 import datetime
 import subprocess
 
-def makesentencepair(id, sourcepattern, targetpattern, sourceoffset, targetoffset, targetsentence):
+def makesentencepair(id, sourcepattern, targetpattern, sourceoffset, targetoffset, sourcesentence, targetsentence):
     targetsentence = tuple(targetsentence)
     targetpattern_n = targetpattern.count(" ") + 1
 
     input = tuple(targetsentence[:targetoffset]) + (Fragment(tuple(targetpattern.split())),) + tuple(targetsentence[targetoffset+targetpattern_n:])
+    targetsentence = tuple(targetsentence[:targetoffset]) + (Fragment(tuple(sourcepattern.split())),) + tuple(targetsentence[targetoffset+targetpattern_n:])
 
     return SentencePair(id, input, None, targetsentence)
 
