@@ -15,9 +15,12 @@ def makesentencepair(id, sourcepattern, targetpattern, sourceoffset, targetoffse
     targetpattern_n = targetpattern.count(" ") + 1
 
     input = tuple(targetsentence[:targetoffset]) + (Fragment(tuple(targetpattern.split())),) + tuple(targetsentence[targetoffset+targetpattern_n:])
-    targetsentence = tuple(targetsentence[:targetoffset]) + (Fragment(tuple(sourcepattern.split())),) + tuple(targetsentence[targetoffset+targetpattern_n:])
+    newtargetsentence = tuple(targetsentence[:targetoffset]) + (Fragment(tuple(sourcepattern.split())),) + tuple(targetsentence[targetoffset+targetpattern_n:])
 
-    return SentencePair(id, input, None, targetsentence)
+    if tuple(SentencePair._str(newtargetsentence)) != targetsentence:
+        print("Target sentence mismatches: ", targetsentence, file=sys.stderr)
+
+    return SentencePair(id, input, None, newtargetsentence)
 
 def extractpairs(ttablefile, gizamodelfile_s2t, gizamodelfile_t2s, patternmodelfile_source, patternmodelfile_target, classfile_source, classfile_target, joinedprobabilitythreshold, divergencefrombestthreshold, DEBUG):
     if DEBUG: print("Loading phrase-table", file=sys.stderr)

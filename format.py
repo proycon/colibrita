@@ -85,8 +85,8 @@ class SentencePair:
     def isoutput(self):
         return bool(self.output)
 
-
-    def _str(self, t):
+    @staticmethod
+    def _str(t):
         for x in t:
             if isinstance(x, Fragment):
                 yield str(x)
