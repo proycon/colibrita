@@ -31,6 +31,8 @@ def main():
     parser.add_argument('--sourcelang','-S', type=str,help="Source language code", action='store',required=True)
     parser.add_argument('--targetlang','-T', type=str,help="Target language code", action='store',required=True)
     parser.add_argument('--debug','-d', help="Debug", action='store_true', default=False)
+    parser.add_argument('-p', dest='joinedprobabilitythreshold', help="Joined probabiity threshold for inclusion of fragments from phrase translation-table: min(P(s|t) * P(t|s))", type=float,action='store',default=0.01)
+    parser.add_argument('-D', dest='divergencefrombestthreshold', help="Maximum divergence from best translation option", type=float,action='store',default=0.01)
     args = parser.parse_args()
 
 
@@ -69,7 +71,7 @@ def main():
 
     os.chdir('..')
 
-    if not generate(args.output + '.xml', ttablefile, gizamodelfile_s2t, gizamodelfile_t2s,  patternmodelfile_source, patternmodelfile_target, classfile_source, classfile_target, args.debug): return False# pylint: disable=E1101
+    if not generate(args.output + '.xml', ttablefile, gizamodelfile_s2t, gizamodelfile_t2s,  patternmodelfile_source, patternmodelfile_target, classfile_source, classfile_target, args.joinedprobabilitythreshold, args.divergencefrombestthreshold, args.debug): return False# pylint: disable=E1101
 
     return True
 
