@@ -16,11 +16,16 @@ def makesentencepair(id, sourcepattern, targetpattern, sourceoffset, targetoffse
     sourcepattern_n = sourcepattern.count(" ") + 1
 
     input = tuple(targetsentence[:targetoffset]) + (Fragment(tuple(targetpattern.split())),) + tuple(targetsentence[targetoffset+targetpattern_n:])
-    newtargetsentence = tuple(targetsentence[:targetoffset]) + (Fragment(tuple(sourcepattern.split())),) + tuple(targetsentence[targetoffset+sourcepattern_n:])
+    newtargetsentence = tuple(targetsentence[:targetoffset]) + (Fragment(tuple(sourcepattern.split())),) + tuple(targetsentence[targetoffset+targetpattern_n:])
 
 
     if tuple(SentencePair._str(newtargetsentence)) != targetsentence:
         print("Target sentence mismatch:\n", tuple(SentencePair._str(newtargetsentence)), "\n****VS****\n", targetsentence, file=sys.stderr)
+        print("Source pattern: " , sourcepattern,file=sys.stderr)
+        print("Target pattern: ", targetpattern,file=sys.stderr)
+        print("Target offset: ", targetoffset,file=sys.stderr)
+        print("Target n: ", targetpattern_n,file=sys.stderr)
+        print("Input: ", input,file=sys.stderr)
         assert False
 
     return SentencePair(id, input, None, newtargetsentence)
