@@ -91,7 +91,7 @@ class SentencePair:
             if isinstance(x, Fragment):
                 yield str(x)
             elif isinstance(x, str):
-                yield " ".join(x)
+                yield x
             else:
                 raise ValueError
 
