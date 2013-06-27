@@ -101,7 +101,7 @@ class SentencePair:
         l = len(v)
         for i, x in enumerate(v):
             if isinstance(x, Fragment):
-                result.append(" ")
+                if i > 0: result.append(" ")
                 result.append(x.xml())
                 if i < l - 1: result.append(" ")
             elif result and isinstance(result[-1], str):
