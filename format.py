@@ -126,7 +126,7 @@ class Fragment:
         self.value = value
 
     def __str__(self):
-        return self.value
+        return " ".join(self.value)
 
     def xml(self):
         return E.f(" ".join(self.value), id=str(self.id))
