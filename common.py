@@ -17,7 +17,7 @@ def makesentencepair(id, sourcepattern, targetpattern, sourceoffset, targetoffse
     input = tuple(targetsentence[:targetoffset]) + (Fragment(tuple(targetpattern.split())),) + tuple(targetsentence[targetoffset+targetpattern_n:])
     newtargetsentence = tuple(targetsentence[:targetoffset]) + (Fragment(tuple(sourcepattern.split())),) + tuple(targetsentence[targetoffset+targetpattern_n:])
 
-    if tuple(SentencePair._str(newtargetsentence)) != targetsentence:
+    if tuple(SentencePair._str(newtargetsentence).split(" ")) != targetsentence:
         print("Target sentence mismatches: ", targetsentence, file=sys.stderr)
 
     return SentencePair(id, input, None, newtargetsentence)
