@@ -20,7 +20,8 @@ def makesentencepair(id, sourcepattern, targetpattern, sourceoffset, targetoffse
 
 
     if tuple(SentencePair._str(newtargetsentence)) != targetsentence:
-        print("Target sentence mismatches: ", tuple(SentencePair._str(newtargetsentence)), " ****VS**** ", targetsentence, file=sys.stderr)
+        print("Target sentence mismatch:\n", tuple(SentencePair._str(newtargetsentence)), "\n****VS****\n", targetsentence, file=sys.stderr)
+        assert False
 
     return SentencePair(id, input, None, newtargetsentence)
 
