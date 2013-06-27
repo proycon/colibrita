@@ -99,6 +99,10 @@ def extractpairs(ttablefile, gizamodelfile_s2t, gizamodelfile_t2s, patternmodelf
         #iterate over all source patterns found in this sentence
         for sourcepattern in sourcepatterns:
             sourcepattern = sourcepattern.decode(classdecoder_source)
+            if any(( not ispunct(x) for x in sourcepattern.split() ) ):
+                continue
+
+
             sourceindices = [ (x,y) for x,y in patternmodel_source.indices(sourcepattern) if x == sentence ]
             source_n = sourcepattern.count(" ") + 1
             assert bool(sourceindices)
@@ -114,6 +118,8 @@ def extractpairs(ttablefile, gizamodelfile_s2t, gizamodelfile_t2s, patternmodelf
                 for targetpattern, scores in ttable[sourcepattern]:
                     if DEBUG: print("(extractpatterns) -- considering target pattern from phrase-table: " + str(targetpattern) , file=sys.stderr)
                     if targetpattern in targetpatterns:
+                        if any(( not ispunct(x) for x in targetpattern.split() ) ):
+                            continue
                         joinedprob = scores[0] * scores[2]
                         if joinedprob < bestscore * divergencefrombestthreshold:
                             continue
@@ -146,7 +152,8 @@ def extractpairs(ttablefile, gizamodelfile_s2t, gizamodelfile_t2s, patternmodelf
                                     yield sourcepattern, targetpattern, sourceoffset, targetoffset, tuple(sourcesentence), tuple(targetsentence), sentence
 
 
-
+def ispunct(s):
+    return s in ('.',',',':',';','/','\\','_','(',')','[',']','{','}')
 
 #move to seperate module?
 
