@@ -13,9 +13,10 @@ import subprocess
 def makesentencepair(id, sourcepattern, targetpattern, sourceoffset, targetoffset, sourcesentence, targetsentence):
     targetsentence = tuple(targetsentence)
     targetpattern_n = targetpattern.count(" ") + 1
+    sourcepattern_n = sourcepattern.count(" ") + 1
 
     input = tuple(targetsentence[:targetoffset]) + (Fragment(tuple(targetpattern.split())),) + tuple(targetsentence[targetoffset+targetpattern_n:])
-    newtargetsentence = tuple(targetsentence[:targetoffset]) + (Fragment(tuple(sourcepattern.split())),) + tuple(targetsentence[targetoffset+targetpattern_n:])
+    newtargetsentence = tuple(targetsentence[:targetoffset]) + (Fragment(tuple(sourcepattern.split())),) + tuple(targetsentence[targetoffset+sourcepattern_n:])
 
 
     if tuple(SentencePair._str(newtargetsentence)) != targetsentence:
