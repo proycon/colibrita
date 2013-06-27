@@ -71,13 +71,13 @@ class SentencePair:
         return SentencePair(node.attrib.get('id',1), input,output,ref)
 
     def inputstr(self):
-        return " ".join(self._str(self.input))
+        return " ".join(SentencePair._str(self.input))
 
     def outputstr(self):
-        return " ".join(self._str(self.output))
+        return " ".join(SentencePair._str(self.output))
 
     def refstr(self):
-        return " ".join(self._str(self.ref))
+        return " ".join(SentencePair._str(self.ref))
 
     def isref(self):
         return bool(self.ref)
