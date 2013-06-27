@@ -24,6 +24,7 @@ def makesentencepair(id, sourcepattern, targetpattern, sourceoffset, targetoffse
         print("Source pattern: " , sourcepattern,file=sys.stderr)
         print("Target pattern: ", targetpattern,file=sys.stderr)
         print("Target offset: ", targetoffset,file=sys.stderr)
+        print("Source offset: ", sourceoffset,file=sys.stderr)
         print("Target n: ", targetpattern_n,file=sys.stderr)
         print("Input: ", input,file=sys.stderr)
         assert False
