@@ -19,6 +19,7 @@ def makesentencepair(id, sourcepattern, targetpattern, sourceoffset, targetoffse
     newtargetsentence = tuple(targetsentence[:targetoffset]) + (Fragment(tuple(sourcepattern.split())),) + tuple(targetsentence[targetoffset+targetpattern_n:])
 
 
+
     if tuple(SentencePair._str(newtargetsentence)) != targetsentence:
         print("Target sentence mismatch:\n", tuple(SentencePair._str(newtargetsentence)), "\n****VS****\n", targetsentence, file=sys.stderr)
         print("Source pattern: " , sourcepattern,file=sys.stderr)
@@ -46,9 +47,9 @@ def extractpairs(ttablefile, gizamodelfile_s2t, gizamodelfile_t2s, patternmodelf
     classdecoder_target = ClassDecoder(classfile_target)
     classencoder_target = ClassEncoder(classfile_target)
 
-    if DEBUG: print("Loading source pattern model", file=sys.stderr)
+    if DEBUG: print("Loading source pattern model " + patternmodelfile_source, file=sys.stderr)
     patternmodel_source = IndexedPatternModel(patternmodelfile_source, classencoder_source, classdecoder_source)
-    if DEBUG: print("Loading target pattern model", file=sys.stderr)
+    if DEBUG: print("Loading target pattern model " + patternmodelfile_target, file=sys.stderr)
     patternmodel_target = IndexedPatternModel(patternmodelfile_target, classencoder_target, classdecoder_target)
 
 
