@@ -45,8 +45,8 @@ def main():
 
     testgendir = 'testgen-' + args.output # pylint: disable=E1101
     ttablefile = testgendir + '/model/phrase-table.gz'
-    gizamodelfile_s2t = testgendir + '/giza.' + args.sourcelang + '-' + args.targetlang + '/' + args.sourcelang + '-' + args.targetlang + '.A3.final.gz'# pylint: disable=E1101
-    gizamodelfile_t2s = testgendir + '/giza.' + args.targetlang + '-' + args.sourcelang + '/' + args.targetlang + '-' + args.sourcelang + '.A3.final.gz'# pylint: disable=E1101
+    gizamodelfile_t2s = testgendir + '/giza.' + args.sourcelang + '-' + args.targetlang + '/' + args.sourcelang + '-' + args.targetlang + '.A3.final.gz'# pylint: disable=E1101
+    gizamodelfile_s2t = testgendir + '/giza.' + args.targetlang + '-' + args.sourcelang + '/' + args.targetlang + '-' + args.sourcelang + '.A3.final.gz'# pylint: disable=E1101
     patternmodelfile_source = testgendir + '/test.' + args.sourcelang + '.indexedpatternmodel.colibri'# pylint: disable=E1101
     patternmodelfile_target = testgendir + '/test.' + args.targetlang + '.indexedpatternmodel.colibri'# pylint: disable=E1101
     classfile_source = testgendir + '/' + args.sourcelang + '.cls'# pylint: disable=E1101
