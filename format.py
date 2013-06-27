@@ -87,9 +87,11 @@ class SentencePair:
 
     @staticmethod
     def _str(t):
+        s = ""
         for x in t:
             if isinstance(x, Fragment):
-                yield str(x)
+                for y in x.value:
+                    yield y
             elif isinstance(x, str):
                 yield x
             else:
