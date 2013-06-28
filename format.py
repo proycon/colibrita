@@ -70,6 +70,26 @@ class SentencePair:
                 output = SentencePair._parsevalue(subnode)
         return SentencePair(node.attrib.get('id',1), input,output,ref)
 
+
+    def fragments(self, s):
+        d = {}
+        if s:
+            for x in s:
+                if isinstance(x, Fragment):
+                    d[x.id] = x
+        return d
+
+    def inputfragments(self,s):
+        return self.fragments(self.input)
+
+
+    def outputfragments(self,s):
+        return self.fragments(self.output)
+
+
+    def reffragments(self,s):
+        return self.fragments(self.ref)
+
     def inputstr(self):
         return " ".join(SentencePair._str(self.input))
 
