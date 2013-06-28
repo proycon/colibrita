@@ -125,12 +125,12 @@ def evaluate(ref, out, matrexdir, workdir, casesensitive=True):
 
 
             accuracy = matches/(matches+misses)
-            print("Accuracy for sentence " + str(id) + " = " + str(accuracy))
+            print("Accuracy for sentence " + str(ref_s.id) + " = " + str(accuracy))
             accuracies.append(accuracy)
 
 
             wordaccuracy = wordmatches/(wordmatches+wordmisses)
-            print("Word accuracy for sentence " + str(id) + " = " + str(wordaccuracy))
+            print("Word accuracy for sentence " + str(ref_s.id) + " = " + str(wordaccuracy))
             wordaccuracies.append(wordaccuracy)
 
     if accuracies:
