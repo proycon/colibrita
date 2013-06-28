@@ -27,7 +27,11 @@ def evaluate(ref, out, matrexdir, casesensitive=True):
     matches = 0
     misses = 0
 
+    wordmatches = 0
+    wordmisses = 0
+
     accuracies = []
+    wordaccuracies = []
 
     if casesensitive:
         eq = lambda x,y: x == y
@@ -56,14 +60,50 @@ def evaluate(ref, out, matrexdir, casesensitive=True):
             else:
                 if eq(reffragments[inputfragment.id].value, outputfragments[inputfragment.id].value):
                     matches += 1
+                    wordmatches += 1
                 else:
                     misses += 1
+                    if len(reffragments[inputfragment.id].value) > len(outputfragments[inputfragment.id].value):
+                        partialmatch = False
+                        for i in range(0, len(reffragments[inputfragment.id].value)):
+                            if eq(reffragments[inputfragment.id].value[i:i+len(outputfragments[inputfragment.id].value)], outputfragments[inputfragment.id].value):
+                                partialmatch = True
+                        if partialmatch:
+                            p = len(outputfragments[inputfragment.id].value) / len(reffragments[inputfragment.id].value)
+                            wordmatches += p
+                            wordmisses += 1 - p
+                        else:
+                            wordmisses += 1
+                    elif len(reffragments[inputfragment.id].value) < len(outputfragments[inputfragment.id].value):
+                        partialmatch = False
+                        for i in range(0, len(outputfragments[inputfragment.id].value)):
+                            if eq(outputfragments[inputfragment.id].value[i:i+len(reffragments[inputfragment.id].value)], reffragments[inputfragment.id].value):
+                                partialmatch = True
+                        if partialmatch:
+                            p = len(reffragments[inputfragment.id].value) / len(outputfragments[inputfragment.id].value)
+                            wordmatches += p
+                            wordmisses += 1 - p
+                        else:
+                            wordmisses += 1
+                    else:
+                        wordmisses += 1
+
+
 
             accuracy = matches/(matches+misses)
             print("Accuracy for sentence " + str(id) + " = " + str(accuracy))
             accuracies.append(accuracy)
 
+
+            wordaccuracy = wordmatches/(wordmatches+wordmisses)
+            print("Word accuracy for sentence " + str(id) + " = " + str(wordaccuracy))
+            wordaccuracies.append(wordaccuracy)
+
     if accuracies:
         totalavgaccuracy = sum(accuracies) / len(accuracies)
         print("Total average accuracy = " + str(totalavgaccuracy))
+    if wordaccuracies:
+        totalwordavgaccuracy = sum(wordaccuracies) / len(wordaccuracies)
+        print("Total word average accuracy = " + str(totalwordavgaccuracy))
 
+    return totalavgaccuracy, totalwordavgaccuracy
