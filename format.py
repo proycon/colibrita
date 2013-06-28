@@ -50,12 +50,13 @@ class SentencePair:
     @staticmethod
     def _parsevalue(node):
         content = []
-        for t in node.text.split():
-            if t: content.append(t)
+        if node.text:
+            for t in node.text.split():
+                 if t: content.append(t)
         for subnode in node:
             if subnode.tag == "f":
                 content.append( Fragment(tuple([ x for x in subnode.text.split() if x ]), subnode.attrib.get('id',1) ) )
-            else:
+            elif subnode.text:
                 for t in subnode.text.split():
                     if t: content.append(t)
             if subnode.tail: content.append(subnode.tail)
