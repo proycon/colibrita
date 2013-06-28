@@ -6,6 +6,7 @@ import sys
 
 class Reader:
     def __init__(self, filename):
+        self.filename = filename
         self.stream = open(filename,'rb')
 
     def __iter__(self):
@@ -19,6 +20,7 @@ class Reader:
 
 class Writer:
     def __init__(self, filename):
+        self.filename = filename
         self.stream = open(filename, 'wb')
 
     def write(self, sentencepair):

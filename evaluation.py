@@ -38,6 +38,20 @@ def evaluate(ref, out, matrexdir, casesensitive=True):
     else:
         eq = lambda x,y: " ".join(x).lower() == " ".join(y).lower()
 
+    matrexsrcfile = out.filename.replace('.xml','') + '.matrex-src.xml'
+    matrextgtfile = out.filename.replace('.xml','') + '.matrex-ref.xml'
+    matrexoutfile = out.filename.replace('.xml','') + '.matrex-out.xml'
+
+
+
+    matrexsrc = open(matrexsrcfile ,'w', encoding='utf-8')
+    matrextgt = open(matrextgtfile ,'w', encoding='utf-8')
+    matrexout = open(matrexoutfile ,'w', encoding='utf-8')
+
+    for t,f in (('src',matrexsrc),('ref',matrextgt),('tst',matrexout)):
+        f.write( "<" + type + "set setid=\"mteval\" srclang=\"src\" trglang=\"tgt\">\n")
+        f.write("<DOC docid=\"colibrita\" sysid=\"colibrita\">\n")
+
     while True:
         try:
             ref_s = next(ref_it)
@@ -47,6 +61,14 @@ def evaluate(ref, out, matrexdir, casesensitive=True):
 
         if ref_s.id != out_s.id:
             raise Exception("Sentence ID mismatch in reference and output! " + str(ref_s.id) + " vs " + str(out_s.id))
+        elif ref_s.input != out_s.input:
+            raise Exception("Sentence input mismatch in reference and output! " , ref_s.input,  " vs " , out_s.input)
+
+        matrexsrc.write("<seg id=\"" + str(ref_s.id) + "\">" + ref_s.inputstr() + "</seg>\n")
+        matrextgt.write("<seg id=\"" + str(ref_s.id) + "\">" + ref_s.refstr() + "</seg>\n")
+        matrexout.write("<seg id=\"" + str(out_s.id) + "\">" + out_s.outputstr() + "</seg>\n")
+
+
 
         outputfragments = out_s.outputfragments()
         reffragments = ref_s.reffragments()
@@ -68,6 +90,7 @@ def evaluate(ref, out, matrexdir, casesensitive=True):
                         for i in range(0, len(reffragments[inputfragment.id].value)):
                             if eq(reffragments[inputfragment.id].value[i:i+len(outputfragments[inputfragment.id].value)], outputfragments[inputfragment.id].value):
                                 partialmatch = True
+                                break
                         if partialmatch:
                             p = len(outputfragments[inputfragment.id].value) / len(reffragments[inputfragment.id].value)
                             wordmatches += p
@@ -79,6 +102,7 @@ def evaluate(ref, out, matrexdir, casesensitive=True):
                         for i in range(0, len(outputfragments[inputfragment.id].value)):
                             if eq(outputfragments[inputfragment.id].value[i:i+len(reffragments[inputfragment.id].value)], reffragments[inputfragment.id].value):
                                 partialmatch = True
+                                break
                         if partialmatch:
                             p = len(reffragments[inputfragment.id].value) / len(outputfragments[inputfragment.id].value)
                             wordmatches += p
@@ -106,4 +130,13 @@ def evaluate(ref, out, matrexdir, casesensitive=True):
         totalwordavgaccuracy = sum(wordaccuracies) / len(wordaccuracies)
         print("Total word average accuracy = " + str(totalwordavgaccuracy))
 
+
+    for t,f in (('src',matrexsrc),('ref',matrextgt),('tst',matrexout)):
+
+        f.write("</DOC>\n</" + type + "set>")
+        f.close()
+
     return totalavgaccuracy, totalwordavgaccuracy
+
+
+
