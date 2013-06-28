@@ -22,12 +22,14 @@ class Writer:
     def __init__(self, filename):
         self.filename = filename
         self.stream = open(filename, 'wb')
+        self.stream.write('<sentencepairs>')
 
     def write(self, sentencepair):
         assert isinstance(sentencepair, SentencePair)
         self.stream.write( lxml.etree.tostring(sentencepair.xml(), xml_declaration=False, pretty_print=True, encoding='utf-8') )
 
     def __del__(self):
+        self.stream.write('</sentencepairs>')
         self.stream.close()
 
 
@@ -81,15 +83,15 @@ class SentencePair:
                     d[x.id] = x
         return d
 
-    def inputfragments(self,s):
+    def inputfragments(self):
         return self.fragments(self.input)
 
 
-    def outputfragments(self,s):
+    def outputfragments(self):
         return self.fragments(self.output)
 
 
-    def reffragments(self,s):
+    def reffragments(self):
         return self.fragments(self.ref)
 
     def inputstr(self):
