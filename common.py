@@ -29,7 +29,7 @@ def makesentencepair(id, sourcepattern, targetpattern, sourceoffset, targetoffse
         print("Source offset: ", sourceoffset,file=sys.stderr)
         print("Target n: ", targetpattern_n,file=sys.stderr)
         print("Input: ", input,file=sys.stderr)
-        return False
+        return False, None
 
     return True, SentencePair(id, input, None, newtargetsentence)
 
