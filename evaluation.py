@@ -16,16 +16,17 @@ def main():
     parser.add_argument('--ref',type=str,help='Reference file', action='store',required=True)
     parser.add_argument('--out',type=str,help='Output file', action='store',required=True)
     parser.add_argument('--debug','-d', help="Debug", action='store_true', default=False)
+    parser.add_argument('--workdir','-w',type=str,help='Work directorry', action='store',default=".")
     parser.add_argument('-i',dest='casesensitive',help='Measure translation accuracy without regard for case',action='store_false',default=True)
     args = parser.parse_args()
 
-    totalavgaccuracy, totalwordavgaccuracy, matrexsrcfile, matrextgtfile, matrexoutfile = evaluate(Reader(args.ref), Reader(args.out), args.matrexdir)
+    totalavgaccuracy, totalwordavgaccuracy, matrexsrcfile, matrextgtfile, matrexoutfile = evaluate(Reader(args.ref), Reader(args.out), args.matrexdir, args.workdir, args.casesensitive)
 
     if args.matrexdir:
-        mtscore(args.matrexdir, matrexsrcfile, matrextgtfile, matrexoutfile)
+        mtscore(args.matrexdir, matrexsrcfile, matrextgtfile, matrexoutfile, args.workdir)
 
 
-def evaluate(ref, out, matrexdir, casesensitive=True):
+def evaluate(ref, out, matrexdir, workdir, casesensitive=True):
     ref_it = iter(ref)
     out_it = iter(out)
 
