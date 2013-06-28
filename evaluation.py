@@ -55,7 +55,7 @@ def evaluate(ref, out, matrexdir, workdir, casesensitive=True):
     matrexout = open(matrexoutfile ,'w', encoding='utf-8')
 
     for t,f in (('src',matrexsrc),('ref',matrextgt),('tst',matrexout)):
-        f.write( "<" + type + "set setid=\"mteval\" srclang=\"src\" trglang=\"tgt\">\n")
+        f.write( "<" + t + "set setid=\"mteval\" srclang=\"src\" trglang=\"tgt\">\n")
         f.write("<DOC docid=\"colibrita\" sysid=\"colibrita\">\n")
 
     while True:
@@ -69,6 +69,10 @@ def evaluate(ref, out, matrexdir, workdir, casesensitive=True):
             raise Exception("Sentence ID mismatch in reference and output! " + str(ref_s.id) + " vs " + str(out_s.id))
         elif ref_s.input != out_s.input:
             raise Exception("Sentence input mismatch in reference and output! " , ref_s.input,  " vs " , out_s.input)
+        elif not ref_s.ref:
+            raise Exception("No reference for sentence " + str(ref_s.id))
+        elif not out_s.output:
+            raise Exception("No output for sentence " + str(out_s.id))
 
         matrexsrc.write("<seg id=\"" + str(ref_s.id) + "\">" + ref_s.inputstr() + "</seg>\n")
         matrextgt.write("<seg id=\"" + str(ref_s.id) + "\">" + ref_s.refstr() + "</seg>\n")
@@ -138,7 +142,7 @@ def evaluate(ref, out, matrexdir, workdir, casesensitive=True):
 
 
     for t,f in (('src',matrexsrc),('ref',matrextgt),('tst',matrexout)):
-        f.write("</DOC>\n</" + type + "set>")
+        f.write("</DOC>\n</" + t + "set>")
         f.close()
 
     return totalavgaccuracy, totalwordavgaccuracy, matrexsrcfile, matrextgtfile, matrexoutfile
