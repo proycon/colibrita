@@ -22,6 +22,7 @@ def makesentencepair(id, sourcepattern, targetpattern, sourceoffset, targetoffse
 
     if tuple(SentencePair._str(newtargetsentence)) != targetsentence:
         print("Target sentence mismatch:\n", tuple(SentencePair._str(newtargetsentence)), "\n****VS****\n", targetsentence, file=sys.stderr)
+        print("Sentence: ", id,file=sys.stderr)
         print("Source pattern: " , sourcepattern,file=sys.stderr)
         print("Target pattern: ", targetpattern,file=sys.stderr)
         print("Target offset: ", targetoffset,file=sys.stderr)
