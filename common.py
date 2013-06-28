@@ -29,9 +29,9 @@ def makesentencepair(id, sourcepattern, targetpattern, sourceoffset, targetoffse
         print("Source offset: ", sourceoffset,file=sys.stderr)
         print("Target n: ", targetpattern_n,file=sys.stderr)
         print("Input: ", input,file=sys.stderr)
-        assert False
+        return False
 
-    return SentencePair(id, input, None, newtargetsentence)
+    return True, SentencePair(id, input, None, newtargetsentence)
 
 def extractpairs(ttablefile, gizamodelfile_s2t, gizamodelfile_t2s, patternmodelfile_source, patternmodelfile_target, classfile_source, classfile_target, joinedprobabilitythreshold, divergencefrombestthreshold, DEBUG):
     if DEBUG: print("Loading phrase-table", file=sys.stderr)
