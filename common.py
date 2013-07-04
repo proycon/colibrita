@@ -165,7 +165,7 @@ def generate(testoutput, ttablefile, gizamodelfile_s2t, gizamodelfile_t2s, patte
         if valid:
             writer.write(sentencepair)
 
-def makeset(output, settype, workdir, source, target, sourcelang, targetlang, mosesdir, bindir, joinedprobabilitythreshold, divergencefrombestthreshold, debug):
+def makeset(output, settype, workdir, source, target, sourcelang, targetlang, mosesdir, bindir, joinedprobabilitythreshold, divergencefrombestthreshold, occurrencethreshold, debug):
     if not os.path.exists(source): # pylint: disable=E1101
         print("Source corpus " + source + " does not exist")# pylint: disable=E1101
         sys.exit(2)
@@ -194,7 +194,7 @@ def makeset(output, settype, workdir, source, target, sourcelang, targetlang, mo
         if not buildphrasetable(settype,mosesdir, bindir, sourcelang, targetlang): return False # pylint: disable=E1101
 
     if not os.path.exists(patternmodelfile_source) or not os.path.exists(patternmodelfile_target) or not os.path.exists(classfile_source) or not os.path.exists(classfile_target):
-        if not buildpatternmodel(settype,sourcelang, targetlang): return False# pylint: disable=E1101
+        if not buildpatternmodel(settype,sourcelang, targetlang, occurrencethreshold): return False# pylint: disable=E1101
 
     os.chdir('..')
 

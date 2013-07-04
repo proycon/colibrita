@@ -24,13 +24,14 @@ def main():
     parser.add_argument('--debug','-d', help="Debug", action='store_true', default=False)
     parser.add_argument('-p', dest='joinedprobabilitythreshold', help="Joined probabiity threshold for inclusion of fragments from phrase translation-table: min(P(s|t) * P(t|s))", type=float,action='store',default=0.01)
     parser.add_argument('-D', dest='divergencefrombestthreshold', help="Maximum divergence from best translation option", type=float,action='store',default=0.01)
+    parser.add_argument('-O', dest='occurrencethreshold', help="Patterns occurring below this threshold will not be consideren", type=float,action='store',default=2)
     args = parser.parse_args()
 
 
 
     workdir = 'testgen-' + args.output # pylint: disable=E1101
     settype = 'test'
-    makeset(args.output, settype, workdir, args.source, args.target, args.sourcelang, args.targetlang, args.mosesdir, args.bindir, args.joinedprobabilitythreshold, args.divergencefrombestthreshold, args.debug)
+    makeset(args.output, settype, workdir, args.source, args.target, args.sourcelang, args.targetlang, args.mosesdir, args.bindir, args.joinedprobabilitythreshold, args.divergencefrombestthreshold, args.occurrencethreshold, args.debug)
 
     return True
 
