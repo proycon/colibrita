@@ -10,6 +10,7 @@ import os
 import datetime
 import subprocess
 import random
+import timbl
 
 def makesentencepair(id, sourcepattern, targetpattern, sourceoffset, targetoffset, sourcesentence, targetsentence):
     targetsentence = tuple(targetsentence)

@@ -83,13 +83,35 @@ class SentencePair:
                 output = SentencePair._parsevalue(subnode)
         return SentencePair(node.attrib.get('id',1), input,output,ref)
 
+    def replacefragment(self, old,new,s):
+        s2 = []
+        if s:
+            for x in s:
+                if s == old:
+                    s2.append(new)
+                else:
+                    s2.append(x)
+        return tuple(s2)
+
 
     def fragments(self, s):
         d = {}
         if s:
             for x in s:
                 if isinstance(x, Fragment):
-                    d[x.id] = x
+                    left = ""
+                    right = ""
+                    mode = 0
+                    for y in s:
+                        if isinstance(y,Fragment):
+                            if x == y:
+                                mode = 1
+                        else:
+                            if mode == 0:
+                                left += " " + y
+                            else:
+                                right += y + " "
+                    d[x.id] = left.strip(), x, right.strip()
         return d
 
     def inputfragments(self):
@@ -156,15 +178,21 @@ class SentencePair:
 
 class Fragment:
     def __init__(self, value,id=1):
-        assert isinstance(value, tuple)
+        assert isinstance(value, tuple) or value is None
         self.id = id
         self.value = value
 
     def __str__(self):
-        return " ".join(self.value)
+        if self.value:
+            return " ".join(self.value)
+        else:
+            return "{?}"
 
     def xml(self):
-        return E.f(" ".join(self.value), id=str(self.id))
+        if self.value:
+            return E.f(" ".join(self.value), id=str(self.id))
+        else:
+            return E.f(id=str(self.id))
 
     def __eq__(self, other):
         return (self.id == other.id and self.value == other.value)
