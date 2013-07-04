@@ -15,8 +15,12 @@ class Reader:
             if action == "end" and node.tag == "s":
                 yield SentencePair.fromxml(node)
 
-    def __del__(self):
+    def close(self):
         self.stream.close()
+        self.stream = None
+
+    def __del__(self):
+        if self.stream: self.stream.close()
 
 class Writer:
     def __init__(self, filename):
@@ -28,10 +32,14 @@ class Writer:
         assert isinstance(sentencepair, SentencePair)
         self.stream.write( lxml.etree.tostring(sentencepair.xml(), xml_declaration=False, pretty_print=True, encoding='utf-8') )
 
-    def __del__(self):
+    def close(self):
         self.stream.write('</sentencepairs>')
         self.stream.close()
+        self.stream = None
 
+
+    def __del__(self):
+        if self.stream: self.close()
 
 class SentencePair:
     def __init__(self, id,input, output, ref=None):

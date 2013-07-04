@@ -1,6 +1,6 @@
 from __future__ import print_function, unicode_literals, division, absolute_import
 
-from colibrita.format import SentencePair, Fragment, Writer
+from colibrita.format import SentencePair, Fragment, Writer, Reader
 from pynlpl.formats.moses import PhraseTable
 from pynlpl.formats.giza import GizaModel
 from pycolibri import ClassDecoder, ClassEncoder, IndexedPatternModel
@@ -9,6 +9,7 @@ import sys
 import os
 import datetime
 import subprocess
+import random
 
 def makesentencepair(id, sourcepattern, targetpattern, sourceoffset, targetoffset, sourcesentence, targetsentence):
     targetsentence = tuple(targetsentence)
@@ -154,9 +155,12 @@ def extractpairs(ttablefile, gizamodelfile_s2t, gizamodelfile_t2s, patternmodelf
                                     yield sourcepattern, targetpattern, sourceoffset, targetoffset, tuple(sourcesentence), tuple(targetsentence), sentence
 
 
-def generate(testoutput, ttablefile, gizamodelfile_s2t, gizamodelfile_t2s, patternmodelfile_source, patternmodelfile_target, classfile_source, classfile_target,  joinedprobabilitythreshold = 0.01, divergencefrombestthreshold=0.8,DEBUG = False):
+def generate(testoutput, ttablefile, gizamodelfile_s2t, gizamodelfile_t2s, patternmodelfile_source, patternmodelfile_target, classfile_source, classfile_target, size =0, joinedprobabilitythreshold = 0.01, divergencefrombestthreshold=0.8,DEBUG = False):
 
-    writer = Writer(testoutput)
+    if size > 0:
+        writer = Writer(testoutput+'.tmp')
+    else:
+        writer = Writer(testoutput)
 
     id = 0
     for sourcepattern, targetpattern, sourceoffset, targetoffset, sourcesentence, targetsentence, sentence in extractpairs(ttablefile, gizamodelfile_s2t, gizamodelfile_t2s, patternmodelfile_source, patternmodelfile_target, classfile_source, classfile_target, joinedprobabilitythreshold, divergencefrombestthreshold, DEBUG):
@@ -165,7 +169,23 @@ def generate(testoutput, ttablefile, gizamodelfile_s2t, gizamodelfile_t2s, patte
         if valid:
             writer.write(sentencepair)
 
-def makeset(output, settype, workdir, source, target, sourcelang, targetlang, mosesdir, bindir, joinedprobabilitythreshold, divergencefrombestthreshold, occurrencethreshold, debug):
+    writer.close()
+
+    if size > 0:
+        selected_ids = set(random.sample( range(1,id+1), size ))
+        writer = Writer(testoutput)
+        reader = Reader(testoutput+'.tmp')
+        newid = 0
+        for sentencepair in reader:
+            if int(sentencepair.id) in selected_ids:
+                newid += 1
+                sentencepair.id = newid
+                writer.write(sentencepair)
+        reader.close()
+        writer.close()
+
+
+def makeset(output, settype, workdir, source, target, sourcelang, targetlang, mosesdir, bindir, size, joinedprobabilitythreshold, divergencefrombestthreshold, occurrencethreshold, debug):
     if not os.path.exists(source): # pylint: disable=E1101
         print("Source corpus " + source + " does not exist")# pylint: disable=E1101
         sys.exit(2)
@@ -198,7 +218,7 @@ def makeset(output, settype, workdir, source, target, sourcelang, targetlang, mo
 
     os.chdir('..')
 
-    if not generate(output + '.xml', ttablefile, gizamodelfile_s2t, gizamodelfile_t2s,  patternmodelfile_source, patternmodelfile_target, classfile_source, classfile_target, joinedprobabilitythreshold, divergencefrombestthreshold, debug): return False# pylint: disable=E1101
+    if not generate(output + '.xml', ttablefile, gizamodelfile_s2t, gizamodelfile_t2s,  patternmodelfile_source, patternmodelfile_target, classfile_source, classfile_target, size, joinedprobabilitythreshold, divergencefrombestthreshold, debug): return False# pylint: disable=E1101
 
     return True
 
