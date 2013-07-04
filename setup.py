@@ -31,7 +31,7 @@ setup(
     ],
     entry_points = {
         'console_scripts': [
-            'colibrita-testgen = colibrita.testgen:main',
+            'colibrita-setgen = colibrita.setgen:main',
             'colibrita-evaluate = colibrita.evaluation:main',
         ]
     },

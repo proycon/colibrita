@@ -13,7 +13,9 @@ from colibrita.common import extractpairs, makesentencepair, runcmd, makeset
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Test set generation")
+    parser = argparse.ArgumentParser(description="Set generation")
+    parser.add_argument('--train',dest='settype', action='store_const',const='train')
+    parser.add_argument('--test',dest='settype', action='store_const',const='test')
     parser.add_argument('--mosesdir',type=str, help="Path to moses",action='store',default="")
     parser.add_argument('--bindir',type=str, help="Path to external bin dir (path where moses bins are installed)",action='store',default="/usr/local/bin")
     parser.add_argument('--source','-s', type=str,help="Source language corpus", action='store',required=True)
@@ -27,11 +29,14 @@ def main():
     parser.add_argument('-O', dest='occurrencethreshold', help="Patterns occurring below this threshold will not be consideren", type=float,action='store',default=2)
     args = parser.parse_args()
 
+    try:
+        args.settype
+    except:
+        print("Specify either --train or --test")
+        sys.exit(2)
 
-
-    workdir = 'testgen-' + args.output # pylint: disable=E1101
-    settype = 'test'
-    makeset(args.output, settype, workdir, args.source, args.target, args.sourcelang, args.targetlang, args.mosesdir, args.bindir, args.joinedprobabilitythreshold, args.divergencefrombestthreshold, args.occurrencethreshold, args.debug)
+    workdir = args.settype + '-' + args.output # pylint: disable=E1101
+    makeset(args.output, args.settype, workdir, args.source, args.target, args.sourcelang, args.targetlang, args.mosesdir, args.bindir, args.joinedprobabilitythreshold, args.divergencefrombestthreshold, args.occurrencethreshold, args.debug)
 
     return True
 
