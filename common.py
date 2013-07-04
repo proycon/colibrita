@@ -1,6 +1,6 @@
 from __future__ import print_function, unicode_literals, division, absolute_import
 
-from colibrita.format import SentencePair, Fragment
+from colibrita.format import SentencePair, Fragment, Writer
 from pynlpl.formats.moses import PhraseTable
 from pynlpl.formats.giza import GizaModel
 from pycolibri import ClassDecoder, ClassEncoder, IndexedPatternModel
@@ -153,6 +153,72 @@ def extractpairs(ttablefile, gizamodelfile_s2t, gizamodelfile_t2s, patternmodelf
                                     if DEBUG: print("(extractpatterns) --- ok", file=sys.stderr)
                                     yield sourcepattern, targetpattern, sourceoffset, targetoffset, tuple(sourcesentence), tuple(targetsentence), sentence
 
+
+def generate(testoutput, ttablefile, gizamodelfile_s2t, gizamodelfile_t2s, patternmodelfile_source, patternmodelfile_target, classfile_source, classfile_target,  joinedprobabilitythreshold = 0.01, divergencefrombestthreshold=0.8,DEBUG = False):
+
+    writer = Writer(testoutput)
+
+    id = 0
+    for sourcepattern, targetpattern, sourceoffset, targetoffset, sourcesentence, targetsentence, sentence in extractpairs(ttablefile, gizamodelfile_s2t, gizamodelfile_t2s, patternmodelfile_source, patternmodelfile_target, classfile_source, classfile_target, joinedprobabilitythreshold, divergencefrombestthreshold, DEBUG):
+        id += 1
+        valid, sentencepair = makesentencepair(id, sourcepattern, targetpattern, sourceoffset, targetoffset, sourcesentence, targetsentence)
+        if valid:
+            writer.write(sentencepair)
+
+def makeset(output, settype, workdir, source, target, sourcelang, targetlang, mosesdir, bindir, joinedprobabilitythreshold, divergencefrombestthreshold, debug):
+    if not os.path.exists(source): # pylint: disable=E1101
+        print("Source corpus " + source + " does not exist")# pylint: disable=E1101
+        sys.exit(2)
+    if not os.path.exists(target): # pylint: disable=E1101
+        print("Target corpus " + target + " does not exist")# pylint: disable=E1101
+        sys.exit(2)
+
+    ttablefile = workdir + '/model/phrase-table.gz'
+    gizamodelfile_t2s = workdir + '/giza.' + sourcelang + '-' + targetlang + '/' + sourcelang + '-' + targetlang + '.A3.final.gz'# pylint: disable=E1101
+    gizamodelfile_s2t = workdir + '/giza.' + targetlang + '-' + sourcelang + '/' + targetlang + '-' + sourcelang + '.A3.final.gz'# pylint: disable=E1101
+    patternmodelfile_source = workdir + '/test.' + sourcelang + '.indexedpatternmodel.colibri'# pylint: disable=E1101
+    patternmodelfile_target = workdir + '/test.' + targetlang + '.indexedpatternmodel.colibri'# pylint: disable=E1101
+    classfile_source = workdir + '/' + sourcelang + '.cls'# pylint: disable=E1101
+    classfile_target = workdir + '/' + targetlang + '.cls'# pylint: disable=E1101
+
+    if not os.path.exists(workdir):
+        os.mkdir(workdir)
+        os.chdir(workdir)
+        os.symlink('../' + source, 'test.' + sourcelang)# pylint: disable=E1101
+        os.symlink('../' + target, 'test.' + targetlang)# pylint: disable=E1101
+    else:
+        os.chdir(workdir)
+
+    if not os.path.exists(ttablefile) or not os.path.exists(gizamodelfile_s2t) or not os.path.exists(gizamodelfile_t2s):
+        if not mosesdir: print("No --mosesdir specified",file=sys.stderr)# pylint: disable=E1101
+        if not buildphrasetable(settype,mosesdir, bindir, sourcelang, targetlang): return False # pylint: disable=E1101
+
+    if not os.path.exists(patternmodelfile_source) or not os.path.exists(patternmodelfile_target) or not os.path.exists(classfile_source) or not os.path.exists(classfile_target):
+        if not buildpatternmodel(settype,sourcelang, targetlang): return False# pylint: disable=E1101
+
+    os.chdir('..')
+
+    if not generate(output + '.xml', ttablefile, gizamodelfile_s2t, gizamodelfile_t2s,  patternmodelfile_source, patternmodelfile_target, classfile_source, classfile_target, joinedprobabilitythreshold, divergencefrombestthreshold, debug): return False# pylint: disable=E1101
+
+    return True
+
+
+def buildphrasetable(corpusname, mosesdir, bindir, sourcelang, targetlang):
+    EXEC_MOSES_TRAINMODEL = mosesdir + '/scripts/training/train-model.perl'
+    EXTERNALBIN = bindir
+    #build phrasetable using moses
+    if not runcmd(EXEC_MOSES_TRAINMODEL + ' -external-bin-dir ' + EXTERNALBIN + " -root-dir . --corpus " + corpusname + " --f " + sourcelang + " --e " + targetlang + " --first-step " + str(1) + " --last-step " + str(8) + ' >&2 2> ' + corpusname + '-moses.log',"Creating word alignment and phrase table on test data", "model/phrase-table.gz"): return False
+    return True
+
+def buildpatternmodel(corpusname, sourcelang, targetlang, occurrencethreshold=2):
+    options = " -t " + occurrencethreshold
+    if not runcmd('classencode -o ' + sourcelang + ' ' + corpusname + '.' + sourcelang, "Encoding source corpus", sourcelang + ".cls", corpusname + '.' +  sourcelang + ".clsenc"): return False
+    if not runcmd('classencode -o ' + targetlang + ' ' + corpusname + '.' + targetlang, "Encoding target corpus", targetlang + ".cls", corpusname + '.' +  targetlang + ".clsenc"): return False
+
+    if not runcmd('patternfinder -c ' + sourcelang + '.cls -f ' + corpusname + '.' + sourcelang + '.clsenc ' + options + ' > /dev/null', "Generating pattern model for source",   corpusname + '.' +  sourcelang + ".indexedpatternmodel.colibri"): return False
+    if not runcmd('patternfinder -c ' + targetlang + '.cls -f ' + corpusname + '.' + targetlang + '.clsenc ' + options + ' > /dev/null', "Generating pattern model for target",   corpusname + '.' +  targetlang + ".indexedpatternmodel.colibri"): return False
+
+    return True
 
 def ispunct(s):
     return s in ('.',',',':',';','/','\\','_','(',')','[',']','{','}')
