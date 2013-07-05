@@ -29,12 +29,12 @@ class Reader:
 class Writer:
     def __init__(self, filename):
         self.filename = filename
-        self.stream = open(filename, 'wb')
+        self.stream = open(filename, 'w')
         self.stream.write('<sentencepairs>\n')
 
     def write(self, sentencepair):
         assert isinstance(sentencepair, SentencePair)
-        self.stream.write( lxml.etree.tostring(sentencepair.xml(), xml_declaration=False, pretty_print=True, encoding='utf-8') )
+        self.stream.write( str(lxml.etree.tostring(sentencepair.xml(), xml_declaration=False, pretty_print=True, encoding='utf-8'),'utf-8') )
 
     def close(self):
         self.stream.write('</sentencepairs>\n')
