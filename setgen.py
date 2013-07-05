@@ -36,6 +36,7 @@ def main():
         print("Specify either --train or --test")
         sys.exit(2)
 
+    print("Building " + args.settype + " set", file=sys.stderr)
     workdir = args.settype + '-' + args.output # pylint: disable=E1101
     makeset(args.output, args.settype, workdir, args.source, args.target, args.sourcelang, args.targetlang, args.mosesdir, args.bindir, args.size, args.joinedprobabilitythreshold, args.divergencefrombestthreshold, args.occurrencethreshold, args.debug)
 
