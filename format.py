@@ -21,7 +21,7 @@ class Reader:
 
 
     def reset(self):
-        self.seek(0)
+        self.stream.seek(0)
 
     def __del__(self):
         if self.stream: self.stream.close()
@@ -30,14 +30,14 @@ class Writer:
     def __init__(self, filename):
         self.filename = filename
         self.stream = open(filename, 'wb')
-        self.stream.write('<sentencepairs>')
+        self.stream.write('<sentencepairs>\n')
 
     def write(self, sentencepair):
         assert isinstance(sentencepair, SentencePair)
         self.stream.write( lxml.etree.tostring(sentencepair.xml(), xml_declaration=False, pretty_print=True, encoding='utf-8') )
 
     def close(self):
-        self.stream.write('</sentencepairs>')
+        self.stream.write('</sentencepairs>\n')
         self.stream.close()
         self.stream = None
 
