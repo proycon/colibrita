@@ -197,16 +197,16 @@ def makeset(output, settype, workdir, source, target, sourcelang, targetlang, mo
     ttablefile = workdir + '/model/phrase-table.gz'
     gizamodelfile_t2s = workdir + '/giza.' + sourcelang + '-' + targetlang + '/' + sourcelang + '-' + targetlang + '.A3.final.gz'# pylint: disable=E1101
     gizamodelfile_s2t = workdir + '/giza.' + targetlang + '-' + sourcelang + '/' + targetlang + '-' + sourcelang + '.A3.final.gz'# pylint: disable=E1101
-    patternmodelfile_source = workdir + '/test.' + sourcelang + '.indexedpatternmodel.colibri'# pylint: disable=E1101
-    patternmodelfile_target = workdir + '/test.' + targetlang + '.indexedpatternmodel.colibri'# pylint: disable=E1101
+    patternmodelfile_source = workdir + '/' + settype + '.' + sourcelang + '.indexedpatternmodel.colibri'# pylint: disable=E1101
+    patternmodelfile_target = workdir + '/' + settype + '.' + targetlang + '.indexedpatternmodel.colibri'# pylint: disable=E1101
     classfile_source = workdir + '/' + sourcelang + '.cls'# pylint: disable=E1101
     classfile_target = workdir + '/' + targetlang + '.cls'# pylint: disable=E1101
 
     if not os.path.exists(workdir):
         os.mkdir(workdir)
         os.chdir(workdir)
-        os.symlink('../' + source, 'test.' + sourcelang)# pylint: disable=E1101
-        os.symlink('../' + target, 'test.' + targetlang)# pylint: disable=E1101
+        os.symlink('../' + source, settype + '.' + sourcelang)# pylint: disable=E1101
+        os.symlink('../' + target, settype +  '.' + targetlang)# pylint: disable=E1101
     else:
         os.chdir(workdir)
 
