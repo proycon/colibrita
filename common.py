@@ -232,7 +232,7 @@ def buildphrasetable(corpusname, mosesdir, bindir, sourcelang, targetlang):
     return True
 
 def buildpatternmodel(corpusname, sourcelang, targetlang, occurrencethreshold=2):
-    options = " -t " + occurrencethreshold
+    options = " -t " + str(occurrencethreshold)
     if not runcmd('classencode -o ' + sourcelang + ' ' + corpusname + '.' + sourcelang, "Encoding source corpus", sourcelang + ".cls", corpusname + '.' +  sourcelang + ".clsenc"): return False
     if not runcmd('classencode -o ' + targetlang + ' ' + corpusname + '.' + targetlang, "Encoding target corpus", targetlang + ".cls", corpusname + '.' +  targetlang + ".clsenc"): return False
 

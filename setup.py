@@ -33,9 +33,10 @@ setup(
         'console_scripts': [
             'colibrita-setgen = colibrita.setgen:main',
             'colibrita-evaluate = colibrita.evaluation:main',
+            'colibrita = colibrita:main',
         ]
     },
     #include_package_data=True,
     #package_data = {'foliatools': ['*.xsl'] },
-    install_requires=['pynlpl >= 0.6.4', 'lxml >= 2.2']
+    install_requires=['pynlpl >= 0.6.5', 'lxml >= 2.2']
 )

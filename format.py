@@ -19,6 +19,10 @@ class Reader:
         self.stream.close()
         self.stream = None
 
+
+    def reset(self):
+        self.seek(0)
+
     def __del__(self):
         if self.stream: self.stream.close()
 
@@ -187,6 +191,23 @@ class Fragment:
             return " ".join(self.value)
         else:
             return "{?}"
+
+    def __len__(self):
+        if self.value:
+            return len(self.value)
+        else:
+            return 0
+
+    def __iter__(self):
+        if self.value:
+            for word in self.value:
+                yield word
+
+    def __hash__(self):
+        if self.value:
+            return hash(self.value)
+        else:
+            return 0
 
     def xml(self):
         if self.value:
