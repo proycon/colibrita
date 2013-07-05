@@ -84,7 +84,7 @@ class ClassifierExperts:
         return (Ns_kloc / Nkloc) * (1/Nkcorp)
 
 
-    def extract_keywords(self, sourcefragment, bow_absolute_threshold, kwcount, wcount):
+    def extract_keywords(self, sourcefragment, bow_absolute_threshold, bow_prob_threshold, bow_filter_threshold, kwcount, wcount):
         print("Extracting keywords for " + sourcefragment + "...")
 
         sourcefragment = str(sourcefragment)
@@ -98,10 +98,10 @@ class ClassifierExperts:
         #select all words that occur at least 3 times for a sense, and have a probability_sense_given_keyword >= 0.001
         for targetfragment in kwcount[sourcefragment]:
             for keyword, freq in kwcount[sourcefragment][targetfragment].items():
-                 if (wcount[keyword] >= self.bow_filter_threshold): #filter very rare words (occuring less than 20 times)
+                 if (wcount[keyword] >= bow_filter_threshold): #filter very rare words (occuring less than 20 times)
                      if freq>= bow_absolute_threshold:
                         p = self.probability_translation_given_keyword(sourcefragment, targetfragment, keyword, kwcount, wcount)
-                        if p >= self.bow_prob_threshold:
+                        if p >= bow_prob_threshold:
                             bag.append( (sourcefragment, targetfragment, freq, p) )
 
         bag = sorted(bag)
@@ -117,7 +117,7 @@ class ClassifierExperts:
 
 
 
-    def build(self, reader, leftcontext, rightcontext, keywords, compute_bow_params, bow_absolute_threshold, bow_prob_threshold,bow_filter_threshold):
+    def build(self, reader, leftcontext, rightcontext, keywords, compute_bow_params, bow_absolute_threshold, bow_prob_threshold,bow_filter_threshold, timbloptions):
         assert (isinstance(reader, Reader))
 
 
@@ -140,7 +140,7 @@ class ClassifierExperts:
                     dttable.write(str(source) + "\t" + str(target) + "\n")
             #gather keywords:
             if keywords:
-                keywords[source] = self.extract_keywords(source, bow_absolute_threshold, tcount, wcount)
+                keywords[source] = self.extract_keywords(source, bow_absolute_threshold, bow_prob_threshold, bow_filter_threshold, tcount, wcount)
         dttable.close()
 
         #now loop over corpus and build classifiers for those where disambiguation is needed
@@ -162,7 +162,7 @@ class ClassifierExperts:
                             f_right = f_right + list(["</s>"] * (rightcontext - len(f_right)))
                     features += f_right
 
-                    self.classifiers[str(inputfragment)] = timbl.TimblClassifier(self.workdir + '/' + base64.b64encode(str(inputfragment)), self.timbloptions)
+                    self.classifiers[str(inputfragment)] = timbl.TimblClassifier(self.workdir + '/' + base64.b64encode(str(inputfragment)), timbloptions)
 
 
 
