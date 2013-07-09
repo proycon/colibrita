@@ -20,8 +20,6 @@ def makesentencepair(id, sourcepattern, targetpattern, sourceoffset, targetoffse
     newtargetsentence = tuple(targetsentence[:targetoffset]) + (Fragment(tuple(targetpattern.split())),) + tuple(targetsentence[targetoffset+targetpattern_n:])
     input = tuple(targetsentence[:targetoffset]) + (Fragment(tuple(sourcepattern.split())),) + tuple(targetsentence[targetoffset+targetpattern_n:])
 
-
-
     if tuple(SentencePair._str(newtargetsentence)) != targetsentence:
         print("Target sentence mismatch:\n", tuple(SentencePair._str(newtargetsentence)), "\n****VS****\n", targetsentence, file=sys.stderr)
         print("Sentence: ", id,file=sys.stderr)
@@ -158,14 +156,23 @@ def extractpairs(ttablefile, gizamodelfile_s2t, gizamodelfile_t2s, patternmodelf
 
 def generate(testoutput, ttablefile, gizamodelfile_s2t, gizamodelfile_t2s, patternmodelfile_source, patternmodelfile_target, classfile_source, classfile_target, size =0, joinedprobabilitythreshold = 0.01, divergencefrombestthreshold=0.8,DEBUG = False):
 
+
     if size > 0:
+        print("Extracting instances, writing to " + testoutput + '.tmp',file=sys.stderr)
         writer = Writer(testoutput+'.tmp')
     else:
+        print("Extracting instances, writing to " + testoutput,file=sys.stderr)
         writer = Writer(testoutput)
 
+
+
+    prevsentence = -1
     id = 0
     for sourcepattern, targetpattern, sourceoffset, targetoffset, sourcesentence, targetsentence, sentence in extractpairs(ttablefile, gizamodelfile_s2t, gizamodelfile_t2s, patternmodelfile_source, patternmodelfile_target, classfile_source, classfile_target, joinedprobabilitythreshold, divergencefrombestthreshold, DEBUG):
         id += 1
+        if sentence != prevsentence:
+            print(datetime.datetime.now().strftime('%H:%M:%S'), "Input sentence #" + str(sentence) + " , Output sentence #" + str(id), file=sys.stderr)
+            prevsentence = sentence
         valid, sentencepair = makesentencepair(id, sourcepattern, targetpattern, sourceoffset, targetoffset, sourcesentence, targetsentence)
         if valid:
             writer.write(sentencepair)
@@ -173,6 +180,7 @@ def generate(testoutput, ttablefile, gizamodelfile_s2t, gizamodelfile_t2s, patte
     writer.close()
 
     if size > 0:
+        print("Sampling " + str(size),file=sys.stderr)
         selected_ids = set(random.sample( range(1,id+1), size ))
         writer = Writer(testoutput)
         reader = Reader(testoutput+'.tmp')
