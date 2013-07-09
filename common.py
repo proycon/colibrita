@@ -219,7 +219,7 @@ def makeset(output, settype, workdir, source, target, sourcelang, targetlang, mo
 
     os.chdir('..')
 
-    if not generate(output + '.xml', ttablefile, gizamodelfile_s2t, gizamodelfile_t2s,  patternmodelfile_source, patternmodelfile_target, classfile_source, classfile_target, size, joinedprobabilitythreshold, divergencefrombestthreshold, debug): return False# pylint: disable=E1101
+    if not generate(output + '.' + settype + '.xml', ttablefile, gizamodelfile_s2t, gizamodelfile_t2s,  patternmodelfile_source, patternmodelfile_target, classfile_source, classfile_target, size, joinedprobabilitythreshold, divergencefrombestthreshold, debug): return False# pylint: disable=E1101
 
     return True
 

@@ -148,7 +148,7 @@ class ClassifierExperts:
             for left, inputfragment, right in sentencepair.inputfragments():
                 assert str(inputfragment) in tcount
                 if len(tcount[str(inputfragment)]) > 1:
-                    #extract context
+                    #extract local context
                     features = []
                     if leftcontext:
                         f_left = list(left[-leftcontext:])
@@ -162,11 +162,19 @@ class ClassifierExperts:
                             f_right = f_right + list(["</s>"] * (rightcontext - len(f_right)))
                     features += f_right
 
-                    self.classifiers[str(inputfragment)] = timbl.TimblClassifier(self.workdir + '/' + base64.b64encode(str(inputfragment)), timbloptions)
+
+                    targetfragment = sentencepair.reffragments()[1]
+
+                    #extract global context
+                    #TODO
+
+                    if not str(inputfragment) in self.classifiers:
+                        #Build classifier
+                        self.classifiers[str(inputfragment)] = timbl.TimblClassifier(self.workdir + '/' + base64.b64encode(str(inputfragment)), timbloptions)
+
+                    self.classifiers[str(inputfragment)].append( features, str(targetfragment) )
 
 
-
-                    #build classifier
 
 
 
