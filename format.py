@@ -116,7 +116,7 @@ class SentencePair:
                             else:
                                 right += y + " "
                     d[x.id] = left.strip(), x, right.strip()
-        return d
+        return d.values()
 
     def inputfragments(self):
         return self.fragments(self.input)
