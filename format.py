@@ -216,4 +216,7 @@ class Fragment:
             return E.f(id=str(self.id))
 
     def __eq__(self, other):
-        return (self.id == other.id and self.value == other.value)
+        if isinstance(other, Fragment):
+            return (self.id == other.id and self.value == other.value)
+        else:
+            return False
