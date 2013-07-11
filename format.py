@@ -91,7 +91,7 @@ class SentencePair:
         s2 = []
         if s:
             for x in s:
-                if s == old:
+                if x == old:
                     s2.append(new)
                 else:
                     s2.append(x)
