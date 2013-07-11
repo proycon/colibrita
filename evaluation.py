@@ -177,8 +177,8 @@ def mtscore(matrexdir, sourcexml, refxml, targetxml, WORKDIR = '.'):
                         bleu = float(line[10:].strip())
                         print("BLEU score: ", bleu, file=sys.stderr)
                 f.close()
-            except:
-                log("Error reading bleu.score",red)
+            except Exception as e:
+                log("Error reading bleu.score:" + str(e),red)
                 errors = True
     else:
         log("Skipping BLEU (no script found ["+EXEC_MATREX_BLEU+"])",yellow)
@@ -193,8 +193,8 @@ def mtscore(matrexdir, sourcexml, refxml, targetxml, WORKDIR = '.'):
                         wer = float(line[12:20].strip())
                         log("WER score: " + str(wer), white)
                 f.close()
-            except:
-                log("Error reading wer.score",red)
+            except Exception as e:
+                log("Error reading wer.score:" + str(e),red)
                 errors = True
     else:
         log("Skipping WER (no script found ["+EXEC_MATREX_WER+"]) ",yellow)
@@ -209,8 +209,8 @@ def mtscore(matrexdir, sourcexml, refxml, targetxml, WORKDIR = '.'):
                         per = float(line[12:20].strip())
                         log("PER score: " + str(per), white)
                 f.close()
-            except:
-                log("Error reading per.score",red)
+            except Exception as e:
+                log("Error reading per.score" + str(e),red)
                 errors = True
     else:
         log("Skipping PER (no script found ["+EXEC_MATREX_PER+"])",yellow)
@@ -225,8 +225,8 @@ def mtscore(matrexdir, sourcexml, refxml, targetxml, WORKDIR = '.'):
                         meteor = float(line[7:].strip())
                         log("METEOR score: " + str(meteor), white)
                 f.close()
-            except:
-                log("Error reading meteor.score",red)
+            except Exception as e:
+                log("Error reading meteor.score:" + str(e),red)
                 errors = True
     else:
         log("Skipping METEOR (no script found ["+EXEC_MATREX_METEOR+"])",yellow)
@@ -255,8 +255,8 @@ def mtscore(matrexdir, sourcexml, refxml, targetxml, WORKDIR = '.'):
                         except:
                             raise
                 f.close()
-            except:
-                log("Error reading mteval.score",red)
+            except Exception as e:
+                log("Error reading mteval.score: " + str(e),red)
                 errors = True
     else:
         log("Skipping MTEVAL (BLEU & NIST) (no script found)", yellow)
@@ -271,8 +271,8 @@ def mtscore(matrexdir, sourcexml, refxml, targetxml, WORKDIR = '.'):
                         ter = float(line[11:].strip().split(' ')[0])
                         log("TER score: ", ter,white)
                 f.close()
-            except:
-                log("Error reading ter.score",red)
+            except Exception as e:
+                log("Error reading ter.score: " + str(e),red)
     else:
         log("Skipping TER (no script found)",yellow)
 
