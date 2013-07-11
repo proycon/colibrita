@@ -71,7 +71,7 @@ class SentencePair:
             elif subnode.text:
                 for t in subnode.text.split():
                     if t: content.append(t)
-            if subnode.tail.strip(): content.append(subnode.tail.strip())
+            if subnode.tail and subnode.tail.strip(): content.append(subnode.tail.strip())
         return tuple(content)
 
 
