@@ -102,7 +102,7 @@ class ClassifierExperts:
                      if freq>= bow_absolute_threshold:
                         p = self.probability_translation_given_keyword(sourcefragment, targetfragment, keyword, kwcount, wcount)
                         if p >= bow_prob_threshold:
-                            bag.append( (sourcefragment, targetfragment, freq, p) )
+                            bag.append( (keyword, targetfragment, freq, p) )
 
         bag = sorted(bag)
         f = open(self.workdir + '/' + base64.b64encode(sourcefragment) + '.keywords','w',encoding='utf-8')
@@ -117,7 +117,7 @@ class ClassifierExperts:
 
 
 
-    def build(self, reader, leftcontext, rightcontext, keywords, compute_bow_params, bow_absolute_threshold, bow_prob_threshold,bow_filter_threshold, timbloptions):
+    def build(self, reader, leftcontext, rightcontext, dokeywords, compute_bow_params, bow_absolute_threshold, bow_prob_threshold,bow_filter_threshold, timbloptions):
         assert (isinstance(reader, Reader))
 
 
@@ -139,7 +139,7 @@ class ClassifierExperts:
                 if len(tcount[str(source)]) == 1:
                     dttable.write(str(source) + "\t" + str(target) + "\n")
             #gather keywords:
-            if keywords:
+            if dokeywords:
                 keywords[source] = self.extract_keywords(source, bow_absolute_threshold, bow_prob_threshold, bow_filter_threshold, tcount, wcount)
         dttable.close()
 
@@ -166,7 +166,18 @@ class ClassifierExperts:
                     targetfragment = sentencepair.reffragments()[1]
 
                     #extract global context
-                    #TODO
+                    if dokeywords and str(inputfragment) in keywords:
+                        bag = {}
+                        for keyword, target, freq,p in keywords[str(inputfragment)]:
+                            bag[keyword] = 0
+
+                        for word in itertools.chain(left, right):
+                            if word in bag:
+                                bag[keyword] = 1
+
+                        #add to features
+                        for keyword in sorted(bag.keys()):
+                            features.append(keyword+"="+str(bag[keyword]))
 
                     if not str(inputfragment) in self.classifiers:
                         #Build classifier
