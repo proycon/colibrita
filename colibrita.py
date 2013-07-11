@@ -23,7 +23,7 @@ class ClassifierExperts:
 
     def load(self, timbloptions):
         for f in glob.glob(self.workdir + '/*.train'):
-            sourcefragment = base64.b64decode(os.path.basename(f).replace('.train',''))
+            sourcefragment = str(base64.b64decode(os.path.basename(f).replace('.train','')),'utf-8')
             print("Loading classifier " + sourcefragment, file=sys.stderr)
             self.classifiers[sourcefragment] = timbl.TimblClassifier(f[:-6], timbloptions)
 
@@ -187,7 +187,8 @@ class ClassifierExperts:
 
                     if not str(inputfragment) in self.classifiers:
                         #Build classifier
-                        self.classifiers[str(inputfragment)] = timbl.TimblClassifier(self.workdir + '/' + base64.b64encode(str(inputfragment)), timbloptions)
+                        cid = base64.b64encode(str(inputfragment).encode('utf-8'))
+                        self.classifiers[str(inputfragment)] = timbl.TimblClassifier(self.workdir + '/' + cid, timbloptions)
 
                     self.classifiers[str(inputfragment)].append( features, str(targetfragment) )
 
