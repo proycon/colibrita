@@ -8,6 +8,7 @@ import os
 import subprocess
 import itertools
 import base64
+import glob
 import timbl
 from collections import defaultdict
 
@@ -20,7 +21,14 @@ class ClassifierExperts:
         self.workdir = workdir
         self.classifiers = {}
 
-    def load(self):
+    def load(self, timbloptions):
+        for f in glob.glob(self.workdir + '/*.train'):
+            sourcefragment = base64.b64decode(os.path.basename(f).replace('.train',''))
+            print("Loading classifier " + sourcefragment, file=sys.stderr)
+            self.classifiers[sourcefragment] = timbl.TimblClassifier(f[:-6], timbloptions)
+
+
+
         #f = open(self.workdir + '/classifiers.cfg')
         #f.close()
         pass
