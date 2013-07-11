@@ -43,7 +43,7 @@ def main():
                 translation = tuple(targetpattern.split())
                 outputfragment = Fragment(translation, inputfragment.id)
             outputfragment = Fragment(translation, inputfragment.id)
-            sentencepair.replacefragment(inputfragment, outputfragment, sentencepair.output)
+            sentencepair.output = sentencepair.replacefragment(inputfragment, outputfragment, sentencepair.output)
         output.write(sentencepair)
     testset.close()
     output.close()
