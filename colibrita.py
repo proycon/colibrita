@@ -31,7 +31,7 @@ class ClassifierExperts:
         tcount = defaultdict(int)
         for sentencepair in reader:
             for left, sourcefragment, right in sentencepair.inputfragments():
-                targetfragment = sentencepair.reffragments()[1]
+                targetfragment = sentencepair.reffragmentsdict()[sourcefragment.id]
                 tcount[str(sourcefragment)][str(targetfragment)] += 1
         return tcount
 
@@ -48,7 +48,7 @@ class ClassifierExperts:
                 for word in itertools.chain(left, right):
                     wcount[word] += 1
                     wcount_total += 1
-                    targetfragment = sentencepair.reffragments()[1]
+                    targetfragment = sentencepair.reffragmentsdict()[sourcefragment.id]
                     kwcount[str(sourcefragment)][str(targetfragment)][word] += 1
 
 
@@ -147,6 +147,7 @@ class ClassifierExperts:
 
         #now loop over corpus and build classifiers for those where disambiguation is needed
         for sentencepair in reader:
+            targetfragments = sentencepair.reffragmentsdict()
             print("Building training @" + str(sentencepair.id), file=sys.stderr)
             for left, inputfragment, right in sentencepair.inputfragments():
                 assert str(inputfragment) in tcount
@@ -165,8 +166,7 @@ class ClassifierExperts:
                             f_right = f_right + list(["</s>"] * (rightcontext - len(f_right)))
                     features += f_right
 
-
-                    targetfragment = sentencepair.reffragments()[1]
+                    targetfragment = targetfragments[inputfragment.id]
 
                     #extract global context
                     if dokeywords and str(inputfragment) in keywords:
