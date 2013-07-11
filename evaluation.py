@@ -20,26 +20,22 @@ def main():
     parser.add_argument('-i',dest='casesensitive',help='Measure translation accuracy without regard for case',action='store_false',default=True)
     args = parser.parse_args()
 
-    totalavgaccuracy, totalwordavgaccuracy, matrexsrcfile, matrextgtfile, matrexoutfile = evaluate(Reader(args.ref), Reader(args.out), args.matrexdir, args.workdir, args.casesensitive)
+    totalavgaccuracy, totalwordavgaccuracy, totalavgrecall, matrexsrcfile, matrextgtfile, matrexoutfile = evaluate(Reader(args.ref), Reader(args.out), args.matrexdir, args.workdir, args.casesensitive)
 
     outprefix = '.'.join(args.split('.')[:-1])
 
     if args.matrexdir:
-        mtscore(args.matrexdir, matrexsrcfile, matrextgtfile, matrexoutfile, totalavgaccuracy, totalwordavgaccuracy, outprefix, args.workdir)
+        mtscore(args.matrexdir, matrexsrcfile, matrextgtfile, matrexoutfile, totalavgaccuracy, totalwordavgaccuracy, totalavgrecall, outprefix, args.workdir)
 
 
 def evaluate(ref, out, matrexdir, workdir, casesensitive=True):
     ref_it = iter(ref)
     out_it = iter(out)
 
-    matches = 0
-    misses = 0
-
-    wordmatches = 0
-    wordmisses = 0
 
     accuracies = []
     wordaccuracies = []
+    recalls = []
 
     if casesensitive:
         eq = lambda x,y: x == y
@@ -81,6 +77,12 @@ def evaluate(ref, out, matrexdir, workdir, casesensitive=True):
         matrexout.write("<seg id=\"" + str(out_s.id) + "\">" + out_s.outputstr() + "</seg>\n")
 
 
+        matches = 0
+        misses = 0
+
+        wordmatches = 0
+        wordmisses = 0
+        missedrecall = 0
 
         outputfragments = out_s.outputfragmentsdict()
         reffragments = ref_s.reffragmentsdict()
@@ -97,7 +99,12 @@ def evaluate(ref, out, matrexdir, workdir, casesensitive=True):
                     wordmatches += 1
                 else:
                     misses += 1
-                    if len(reffragments[inputfragment.id].value) > len(outputfragments[inputfragment.id].value):
+                    if len(outputfragments[inputfragment.id].value):
+                        #missing output
+                        misses += 1
+                        wordmisses += 1
+                        missedrecall += 1
+                    elif len(reffragments[inputfragment.id].value) > len(outputfragments[inputfragment.id].value):
                         partialmatch = False
                         for i in range(0, len(reffragments[inputfragment.id].value)):
                             if eq(reffragments[inputfragment.id].value[i:i+len(outputfragments[inputfragment.id].value)], outputfragments[inputfragment.id].value):
@@ -126,15 +133,21 @@ def evaluate(ref, out, matrexdir, workdir, casesensitive=True):
 
 
 
+            recall = (matches+misses)/((matches+misses)-missedrecall)
+            print("Recall for sentence " + str(ref_s.id) + " = " + str(recall))
+            recalls.append(recall)
+
             accuracy = matches/(matches+misses)
             print("Accuracy for sentence " + str(ref_s.id) + " = " + str(accuracy))
             accuracies.append(accuracy)
-
 
             wordaccuracy = wordmatches/(wordmatches+wordmisses)
             print("Word accuracy for sentence " + str(ref_s.id) + " = " + str(wordaccuracy))
             wordaccuracies.append(wordaccuracy)
 
+    if recalls:
+        totalavgrecall = sum(recalls) / len(recalls)
+        print("Total average recall = " + str(totalavgrecall))
     if accuracies:
         totalavgaccuracy = sum(accuracies) / len(accuracies)
         print("Total average accuracy = " + str(totalavgaccuracy))
@@ -147,10 +160,10 @@ def evaluate(ref, out, matrexdir, workdir, casesensitive=True):
         f.write("</DOC>\n</" + t + "set>")
         f.close()
 
-    return totalavgaccuracy, totalwordavgaccuracy, matrexsrcfile, matrextgtfile, matrexoutfile
+    return totalavgaccuracy, totalwordavgaccuracy, totalavgrecall,matrexsrcfile, matrextgtfile, matrexoutfile
 
 
-def mtscore(matrexdir, sourcexml, refxml, targetxml, totalavgaccuracy, totalwordavgaccuracy, outprefix, WORKDIR = '.'):
+def mtscore(matrexdir, sourcexml, refxml, targetxml, totalavgaccuracy, totalwordavgaccuracy, totalavgrecall, outprefix, WORKDIR = '.'):
 
     per = 0
     wer = 0
@@ -281,10 +294,10 @@ def mtscore(matrexdir, sourcexml, refxml, targetxml, totalavgaccuracy, totalword
 
     log("SCORE SUMMARY\n===================\n")
     f = open(WORKDIR + '/' + outprefix + '.summary.score','w')
-    s = "Accuracy Word-Accuracy BLEU METEOR NIST TER WER PER"
+    s = "Accuracy Word-Accuracy Recall BLEU METEOR NIST TER WER PER"
     f.write(s+ "\n")
     log(s)
-    s = str(totalavgaccuracy) + " " + str(totalwordavgaccuracy) + " " + str(bleu) + " " + str(meteor) + " " + str(nist)  + " " + str(ter) + " " + str(wer)  + " " + str(per)
+    s = str(totalavgaccuracy) + " " + str(totalwordavgaccuracy) + " " + str(totalavgrecall) + " " + str(bleu) + " " + str(meteor) + " " + str(nist)  + " " + str(ter) + " " + str(wer)  + " " + str(per)
     f.write(s + "\n")
     log(s)
     f.close()

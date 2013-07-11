@@ -223,6 +223,12 @@ class Fragment:
         else:
             return 0
 
+    def __bool__(self):
+        if self.value:
+            return True
+        else:
+            return False
+
     def xml(self):
         if self.value:
             return E.f(" ".join(self.value), id=str(self.id))
