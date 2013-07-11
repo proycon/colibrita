@@ -28,7 +28,7 @@ class ClassifierExperts:
             self.classifiers[sourcefragment] = timbl.TimblClassifier(f[:-6], timbloptions)
 
     def counttranslations(self, reader):
-        tcount = defaultdict(int)
+        tcount = defaultdict( lambda: defaultdict(int) )
         for sentencepair in reader:
             for left, sourcefragment, right in sentencepair.inputfragments():
                 targetfragment = sentencepair.reffragmentsdict()[sourcefragment.id]
@@ -39,7 +39,7 @@ class ClassifierExperts:
         print("Counting words for keyword extraction...", sys.stderr)
         wcount = defaultdict(int)
         wcount_total = 0
-        kwcount = defaultdict(int)
+        kwcount = defaultdict(lambda: defaultdict(int))
         for sentencepair in reader:
             for left, sourcefragment, right in sentencepair.inputfragments():
                 for word in sourcefragment:
