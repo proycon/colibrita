@@ -246,6 +246,7 @@ def main():
             experts.build(data, args.leftcontext, args.rightcontext, args.keywords, args.compute_bow_params, args.bow_absolute_threshold, args.bow_prob_threshold, args.bow_filter_threshold, args.timbloptions)
         else:
             print("Classifiers already built", file=sys.stderr)
+            experts.load(args.timbloptions)
         experts.train()
     elif args.settype == 'test':
         #TODO
