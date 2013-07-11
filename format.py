@@ -67,7 +67,7 @@ class SentencePair:
                  if t: content.append(t)
         for subnode in node:
             if subnode.tag == "f":
-                content.append( Fragment(tuple([ x for x in subnode.text.split() if x ]), subnode.attrib.get('id',1) ) )
+                content.append( Fragment(tuple([ x.strip() for x in subnode.text.split() if x.strip() ]), subnode.attrib.get('id',1) ) )
             elif subnode.text:
                 for t in subnode.text.split():
                     if t: content.append(t)
