@@ -123,8 +123,10 @@ class ClassifierExperts:
         assert (isinstance(reader, Reader))
 
         if dokeywords:
+            print("Counting keywords", file=sys.stderr)
             wcount, tcount, wcount_total = self.countkeywords(reader, dokeywords, compute_bow_params, bow_absolute_threshold, bow_prob_threshold,bow_filter_threshold)
         else:
+            print("Gathering initial occurrence count", file=sys.stderr)
             tcount = self.counttranslations(reader)
             wcount = {} #not needed
 
@@ -135,6 +137,7 @@ class ClassifierExperts:
 
 
         #make translation table of direct translation that have only one translation
+        print("Writing direct translation table", file=sys.stderr)
         dttable = open(self.workdir + '/directtranslation.table','w',encoding='utf-8')
         for source in tcount:
             for target in tcount[source]:
