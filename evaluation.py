@@ -219,7 +219,7 @@ def mtscore(matrexdir, sourcexml, refxml, targetxml, WORKDIR = '.'):
         if not runcmd(EXEC_PERL + ' -I ' + os.path.dirname(EXEC_MATREX_METEOR) + ' ' + EXEC_MATREX_METEOR + " -s colibrita -r " + refxml + ' -t ' + targetxml + ' --modules "exact"  > ' + 'meteor.score',  'Computing METEOR score'): errors = True
         if not errors:
             try:
-                f = open(WORKDIR + '/meteor.score','r',encoding='utf-8'))
+                f = open(WORKDIR + '/meteor.score','r',encoding='utf-8')
                 for line in f:
                     if line[0:6] == "Score:":
                         meteor = float(line[7:].strip())
@@ -235,7 +235,7 @@ def mtscore(matrexdir, sourcexml, refxml, targetxml, WORKDIR = '.'):
         if not runcmd(EXEC_PERL + ' ' + EXEC_MATREX_MTEVAL + " -r " + refxml + ' -t ' + targetxml + ' -s ' + sourcexml +  '  > ' + 'mteval.score',  'Computing NIST & BLEU scores'): errors = True
         if not errors:
             try:
-                f = open(WORKDIR + '/mteval.score','r',encoding='utf-8'))
+                f = open(WORKDIR + '/mteval.score','r',encoding='utf-8')
                 for line in f:
                     if line[0:12] == "NIST score =":
                         nist = float(line[13:21].strip())
@@ -265,7 +265,7 @@ def mtscore(matrexdir, sourcexml, refxml, targetxml, WORKDIR = '.'):
         if not runcmd(EXEC_JAVA + ' -jar ' + EXEC_MATREX_TER + " -r " + refxml + ' -h ' + targetxml + '  > ' + 'ter.score',  'Computing TER score'): errors = True
         if not errors:
             try:
-                f = open('ter.score','r',encoding='utf-8'))
+                f = open('ter.score','r',encoding='utf-8')
                 for line in f:
                     if line[0:10] == "Total TER:":
                         ter = float(line[11:].strip().split(' ')[0])
