@@ -27,12 +27,6 @@ class ClassifierExperts:
             print("Loading classifier " + sourcefragment, file=sys.stderr)
             self.classifiers[sourcefragment] = timbl.TimblClassifier(f[:-6], timbloptions)
 
-
-
-        #f = open(self.workdir + '/classifiers.cfg')
-        #f.close()
-        pass
-
     def counttranslations(self, reader):
         tcount = defaultdict(int)
         for sentencepair in reader:

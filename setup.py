@@ -11,7 +11,7 @@ def read(fname):
 
 setup(
     name = "colibrita",
-    version = "0.1.1",
+    version = "0.1.2",
     author = "Maarten van Gompel",
     author_email = "proycon@anaproy.nl",
     description = (""),
@@ -34,7 +34,7 @@ setup(
             'colibrita-setgen = colibrita.setgen:main',
             'colibrita-evaluate = colibrita.evaluation:main',
             'colibrita-baseline = colibrita.baseline:main',
-            'colibrita = colibrita:main',
+            'colibrita = colibrita.colibrita:main',
         ]
     },
     #include_package_data=True,
