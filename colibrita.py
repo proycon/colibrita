@@ -187,8 +187,9 @@ class ClassifierExperts:
 
                     if not str(inputfragment) in self.classifiers:
                         #Build classifier
-                        cid = base64.b64encode(str(inputfragment).encode('utf-8'))
-                        self.classifiers[str(inputfragment)] = timbl.TimblClassifier(self.workdir + '/' + cid, timbloptions)
+                        cid = self.workdir + '/'
+                        cid = cid.encode('utf-8') + base64.b64encode(str(inputfragment).encode('utf-8'))
+                        self.classifiers[str(inputfragment)] = timbl.TimblClassifier(cid, timbloptions)
 
                     self.classifiers[str(inputfragment)].append( features, str(targetfragment) )
 
