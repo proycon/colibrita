@@ -25,7 +25,7 @@ class ClassifierExperts:
         for f in glob.glob(self.workdir + '/*.train'):
             sourcefragment = str(base64.b64decode(os.path.basename(f).replace('.train','')),'utf-8')
             print("Loading classifier " + sourcefragment, file=sys.stderr)
-            self.classifiers[sourcefragment] = timbl.TimblClassifier(f[:-6].encode('utf-8'), timbloptions)
+            self.classifiers[sourcefragment] = timbl.TimblClassifier(f[:-6], timbloptions)
 
     def counttranslations(self, reader):
         tcount = defaultdict( lambda: defaultdict(int) )
@@ -187,8 +187,7 @@ class ClassifierExperts:
 
                     if not str(inputfragment) in self.classifiers:
                         #Build classifier
-                        cid = self.workdir + '/'
-                        cid = cid.encode('utf-8') + base64.b64encode(str(inputfragment).encode('utf-8'))
+                        cid = self.workdir + '/' + str( base64.b64encode(str(inputfragment).encode('utf-8')) , 'utf-8')
                         self.classifiers[str(inputfragment)] = timbl.TimblClassifier(cid, timbloptions)
 
                     self.classifiers[str(inputfragment)].append( features, str(targetfragment) )
