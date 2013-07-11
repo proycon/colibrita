@@ -164,7 +164,7 @@ class ClassifierExperts:
                     features += f_left
 
                     if rightcontext:
-                        f_right = right[:rightcontext]
+                        f_right = list(right[:rightcontext])
                         if len(f_right) < rightcontext:
                             f_right = f_right + list(["</s>"] * (rightcontext - len(f_right)))
                     features += f_right
