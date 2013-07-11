@@ -131,8 +131,10 @@ def evaluate(ref, out, matrexdir, workdir, casesensitive=True):
                         wordmisses += 1
 
 
-
-            recall = (matches+misses)/((matches+misses)-missedrecall)
+            if missedrecall == matches +misses:
+                recall = 0.0
+            else:
+                recall = (matches+misses)/((matches+misses)-missedrecall)
             print("Recall for sentence " + str(ref_s.id) + " = " + str(recall))
             recalls.append(recall)
 
