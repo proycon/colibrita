@@ -224,7 +224,7 @@ def main():
     args = parser.parse_args()
 
     try:
-        if args.settype != 'train' or args.settype != 'test':
+        if args.settype != 'train' and args.settype != 'test':
             raise ValueError
     except:
         print("Specify either --train or --test")
