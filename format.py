@@ -98,7 +98,7 @@ class SentencePair:
         return tuple(s2)
 
 
-    def fragments(self, s):
+    def fragments(self, s, returndict=False):
         d = {}
         if s:
             for x in s:
@@ -115,19 +115,33 @@ class SentencePair:
                                 left += " " + y
                             else:
                                 right += y + " "
-                    d[x.id] = left.strip(), x, right.strip()
-        return d.values()
+                    if returndict:
+                        d[x.id] = x #no context
+                    else:
+                        d[x.id] = left.strip(), x, right.strip()
+        if returndict:
+            return d
+        else:
+            return d.values()
+
 
     def inputfragments(self):
         return self.fragments(self.input)
 
-
     def outputfragments(self):
         return self.fragments(self.output)
 
-
     def reffragments(self):
         return self.fragments(self.ref)
+
+    def inputfragmentsdict(self): #no context
+        return self.fragments(self.input,True)
+
+    def outputfragmentsdict(self):
+        return self.fragments(self.output,True)
+
+    def reffragmentsdict(self):
+        return self.fragments(self.ref,True)
 
     def inputstr(self):
         return " ".join(SentencePair._str(self.input))

@@ -80,9 +80,9 @@ def evaluate(ref, out, matrexdir, workdir, casesensitive=True):
 
 
 
-        outputfragments = out_s.outputfragments()
-        reffragments = ref_s.reffragments()
-        for left, inputfragment, right in ref_s.inputfragments():
+        outputfragments = out_s.outputfragmentsdict()
+        reffragments = ref_s.reffragmentsdict()
+        for inputfragment in ref_s.inputfragmentsdict().values():
             if not inputfragment.id in reffragments:
                 raise Exception("No reference fragment found for fragment " + str(inputfragment.id) + " in sentence " + str(ref_s.id))
 
