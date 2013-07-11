@@ -120,10 +120,8 @@ class ClassifierExperts:
     def build(self, reader, leftcontext, rightcontext, dokeywords, compute_bow_params, bow_absolute_threshold, bow_prob_threshold,bow_filter_threshold, timbloptions):
         assert (isinstance(reader, Reader))
 
-
-
-        if keywords:
-            wcount, tcount, wcount_total = self.countkeywords(reader, keywords, compute_bow_params, bow_absolute_threshold, bow_prob_threshold,bow_filter_threshold)
+        if dokeywords:
+            wcount, tcount, wcount_total = self.countkeywords(reader, dokeywords, compute_bow_params, bow_absolute_threshold, bow_prob_threshold,bow_filter_threshold)
         else:
             tcount = self.counttranslations(reader)
             wcount = {} #not needed
@@ -131,6 +129,8 @@ class ClassifierExperts:
         reader.reset()
 
         keywords = {}
+
+
 
         #make translation table of direct translation that have only one translation
         dttable = open(self.workdir + '/directtranslation.table','w',encoding='utf-8')
@@ -145,6 +145,7 @@ class ClassifierExperts:
 
         #now loop over corpus and build classifiers for those where disambiguation is needed
         for sentencepair in reader:
+            print("Building training @" + str(sentencepair.id), file=sys.stderr)
             for left, inputfragment, right in sentencepair.inputfragments():
                 assert str(inputfragment) in tcount
                 if len(tcount[str(inputfragment)]) > 1:
@@ -186,6 +187,13 @@ class ClassifierExperts:
                     self.classifiers[str(inputfragment)].append( features, str(targetfragment) )
 
 
+    def train(self):
+        print("Training " + str(len(self.classifiers)) + " classifiers", file=sys.stderr)
+        for classifier in self.classifiers:
+            self.classifiers[classifier].train()
+            self.classifiers[classifier].save()
+
+
 
 
 
@@ -201,14 +209,15 @@ def main():
     parser.add_argument('--test',dest='settype', action='store_const',const='test')
     parser.add_argument('-f','--dataset', type=str,help="Dataset file", action='store',required=True)
     parser.add_argument('--debug','-d', help="Debug", action='store_true', default=False)
-    parser.add_argument('-l','--leftcontext', help="Left local context size", action='store',default=0)
-    parser.add_argument('-r','--rightcontext', help="Right local context size", action='store',default=0)
+    parser.add_argument('-l','--leftcontext',type=int, help="Left local context size", action='store',default=0)
+    parser.add_argument('-r','--rightcontext',type=int,help="Right local context size", action='store',default=0)
     parser.add_argument('-k','--keywords',help="Add global keywords in context", action='store_true',default=False)
     parser.add_argument("--kt",dest="bow_absolute_threshold", help="Keyword needs to occur at least this many times in the context (absolute number)", type=int, action='store',default=3)
     parser.add_argument("--kp",dest="bow_prob_threshold", help="minimal P(translation|keyword)", type=int, action='store',default=0.001)
-    parser.add_argument("--kg",dest="bow_absolute_threshold", help="Keyword needs to occur at least this many times globally in the entire corpus (absolute number)", type=int, action='store',default=20)
+    parser.add_argument("--kg",dest="bow_filter_threshold", help="Keyword needs to occur at least this many times globally in the entire corpus (absolute number)", type=int, action='store',default=20)
     parser.add_argument("--ka",dest="compute_bow_params", help="Attempt to automatically compute --kt,--kp and --kg parameters", type=bool, action='store_false',default=True)
     parser.add_argument('-O', dest='timbloptions', help="Timbl Classifier options", type=str,action='store',default="-k 1")
+    parser.add_argument('-o','--output',type=str,help="Output prefix", required = True)
 
     args = parser.parse_args()
 
@@ -218,6 +227,22 @@ def main():
         print("Specify either --train or --test")
         sys.exit(2)
 
+
+    if args.settype == 'train':
+        experts = ClassifierExperts(args.output)
+
+        data = Reader(args.dataset)
+        if not os.path.isdir(args.output):
+            os.mkdir(args.output)
+        if not os.path.exists(args.output + '/directtranslation.table'):
+            print("Building classifiers", file=sys.stderr)
+            experts.build(data, args.leftcontext, args.rightcontext, args.keywords, args.compute_bow_params, args.bow_absolute_threshold, args.bow_prob_threshold, args.bow_filter_threshold, args.timbloptions)
+        else:
+            print("Classifiers already built", file=sys.stderr)
+        experts.train()
+    elif args.settype == 'test':
+        #TODO
+        pass
 
     return True
 
