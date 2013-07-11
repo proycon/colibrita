@@ -30,6 +30,7 @@ def main():
     testset = Reader(args.testset)
     output = Writer(outputfile)
     for sentencepair in testset:
+        print("Sentence #" + sentencepair.id,file=sys.stderr)
         sentencepair.ref = None
         sentencepair.output = copy(sentencepair.input)
         for left, inputfragment, right in sentencepair.inputfragments():
@@ -42,8 +43,8 @@ def main():
                         translation = targetpattern
                 translation = tuple(targetpattern.split())
                 outputfragment = Fragment(translation, inputfragment.id)
-            outputfragment = Fragment(translation, inputfragment.id)
-            sentencepair.output = sentencepair.replacefragment(inputfragment, outputfragment, sentencepair.output)
+                print("\t" + str(inputfragment) + " -> " + str(outputfragment), file=sys.stderr)
+                sentencepair.output = sentencepair.replacefragment(inputfragment, outputfragment, sentencepair.output)
         output.write(sentencepair)
     testset.close()
     output.close()
