@@ -41,7 +41,7 @@ def main():
                     if scores[2] > maxscore:
                         maxscore = scores[2]
                         translation = targetpattern
-                translation = tuple(targetpattern.split())
+                translation = tuple(translation.split())
                 outputfragment = Fragment(translation, inputfragment.id)
                 print("\t" + str(inputfragment) + " -> " + str(outputfragment), file=sys.stderr)
                 sentencepair.output = sentencepair.replacefragment(inputfragment, outputfragment, sentencepair.output)
