@@ -101,7 +101,6 @@ def evaluate(ref, out, matrexdir, workdir, casesensitive=True):
                     misses += 1
                     if len(outputfragments[inputfragment.id].value):
                         #missing output
-                        misses += 1
                         wordmisses += 1
                         missedrecall += 1
                     elif len(reffragments[inputfragment.id].value) > len(outputfragments[inputfragment.id].value):
