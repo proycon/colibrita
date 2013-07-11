@@ -22,7 +22,7 @@ def main():
 
     totalavgaccuracy, totalwordavgaccuracy, totalavgrecall, matrexsrcfile, matrextgtfile, matrexoutfile = evaluate(Reader(args.ref), Reader(args.out), args.matrexdir, args.workdir, args.casesensitive)
 
-    outprefix = '.'.join(args.split('.')[:-1])
+    outprefix = '.'.join(args.out.split('.')[:-1])
 
     if args.matrexdir:
         mtscore(args.matrexdir, matrexsrcfile, matrextgtfile, matrexoutfile, totalavgaccuracy, totalwordavgaccuracy, totalavgrecall, outprefix, args.workdir)
@@ -99,7 +99,7 @@ def evaluate(ref, out, matrexdir, workdir, casesensitive=True):
                     wordmatches += 1
                 else:
                     misses += 1
-                    if len(outputfragments[inputfragment.id].value):
+                    if len(outputfragments[inputfragment.id]) == 0:
                         #missing output
                         wordmisses += 1
                         missedrecall += 1
