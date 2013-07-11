@@ -16,14 +16,16 @@ def main():
     parser.add_argument('--ref',type=str,help='Reference file', action='store',required=True)
     parser.add_argument('--out',type=str,help='Output file', action='store',required=True)
     parser.add_argument('--debug','-d', help="Debug", action='store_true', default=False)
-    parser.add_argument('--workdir','-w',type=str,help='Work directorry', action='store',default=".")
+    parser.add_argument('--workdir','-w',type=str,help='Work directory', action='store',default=".")
     parser.add_argument('-i',dest='casesensitive',help='Measure translation accuracy without regard for case',action='store_false',default=True)
     args = parser.parse_args()
 
     totalavgaccuracy, totalwordavgaccuracy, matrexsrcfile, matrextgtfile, matrexoutfile = evaluate(Reader(args.ref), Reader(args.out), args.matrexdir, args.workdir, args.casesensitive)
 
+    outprefix = '.'.join(args.split('.')[:-1])
+
     if args.matrexdir:
-        mtscore(args.matrexdir, matrexsrcfile, matrextgtfile, matrexoutfile, args.workdir)
+        mtscore(args.matrexdir, matrexsrcfile, matrextgtfile, matrexoutfile, totalavgaccuracy, totalwordavgaccuracy, outprefix, args.workdir)
 
 
 def evaluate(ref, out, matrexdir, workdir, casesensitive=True):
@@ -148,7 +150,7 @@ def evaluate(ref, out, matrexdir, workdir, casesensitive=True):
     return totalavgaccuracy, totalwordavgaccuracy, matrexsrcfile, matrextgtfile, matrexoutfile
 
 
-def mtscore(matrexdir, sourcexml, refxml, targetxml, WORKDIR = '.'):
+def mtscore(matrexdir, sourcexml, refxml, targetxml, totalavgaccuracy, totalwordavgaccuracy, outprefix, WORKDIR = '.'):
 
     per = 0
     wer = 0
@@ -168,10 +170,10 @@ def mtscore(matrexdir, sourcexml, refxml, targetxml, WORKDIR = '.'):
 
     errors = False
     if EXEC_MATREX_BLEU and os.path.exists(EXEC_MATREX_BLEU):
-        if not runcmd(EXEC_PERL + ' ' + EXEC_MATREX_BLEU + " -r " + refxml + ' -t ' + targetxml + ' -s ' + sourcexml + ' -ci > ' + 'bleu.score',  'Computing BLEU score'): errors = True
+        if not runcmd(EXEC_PERL + ' ' + EXEC_MATREX_BLEU + " -r " + refxml + ' -t ' + targetxml + ' -s ' + sourcexml + ' -ci > ' + outprefix + '.bleu.score',  'Computing BLEU score'): errors = True
         if not errors:
             try:
-                f = open(WORKDIR + '/bleu.score')
+                f = open(WORKDIR + '/' + outprefix + '.bleu.score')
                 for line in f:
                     if line[0:9] == "BLEUr1n4,":
                         bleu = float(line[10:].strip())
@@ -184,10 +186,10 @@ def mtscore(matrexdir, sourcexml, refxml, targetxml, WORKDIR = '.'):
         log("Skipping BLEU (no script found ["+EXEC_MATREX_BLEU+"])",yellow)
 
     if EXEC_MATREX_WER and os.path.exists(EXEC_MATREX_WER):
-        if not runcmd(EXEC_PERL + ' ' + EXEC_MATREX_WER + " -r " + refxml + ' -t ' + targetxml + ' -s ' + sourcexml + '  > ' + 'wer.score', 'Computing WER score'): errors = True
+        if not runcmd(EXEC_PERL + ' ' + EXEC_MATREX_WER + " -r " + refxml + ' -t ' + targetxml + ' -s ' + sourcexml + '  > ' + outprefix + '.wer.score', 'Computing WER score'): errors = True
         if not errors:
             try:
-                f = open(WORKDIR + '/wer.score','r',encoding='utf-8')
+                f = open(WORKDIR + '/' + outprefix + '.wer.score','r',encoding='utf-8')
                 for line in f:
                     if line[0:11] == "WER score =":
                         wer = float(line[12:19].strip())
@@ -200,10 +202,10 @@ def mtscore(matrexdir, sourcexml, refxml, targetxml, WORKDIR = '.'):
         log("Skipping WER (no script found ["+EXEC_MATREX_WER+"]) ",yellow)
 
     if EXEC_MATREX_PER and os.path.exists(EXEC_MATREX_PER):
-        if not runcmd(EXEC_PERL + ' ' + EXEC_MATREX_PER + " -r " + refxml + ' -t ' + targetxml + ' -s ' + sourcexml + '  > ' + 'per.score',  'Computing PER score'): errors = True
+        if not runcmd(EXEC_PERL + ' ' + EXEC_MATREX_PER + " -r " + refxml + ' -t ' + targetxml + ' -s ' + sourcexml + '  > ' + outprefix + '.per.score',  'Computing PER score'): errors = True
         if not errors:
             try:
-                f = open(WORKDIR + '/per.score','r',encoding='utf-8')
+                f = open(WORKDIR + '/' + outprefix +'.per.score','r',encoding='utf-8')
                 for line in f:
                     if line[0:11] == "PER score =":
                         per = float(line[12:19].strip())
@@ -216,10 +218,10 @@ def mtscore(matrexdir, sourcexml, refxml, targetxml, WORKDIR = '.'):
         log("Skipping PER (no script found ["+EXEC_MATREX_PER+"])",yellow)
 
     if EXEC_MATREX_METEOR and os.path.exists(EXEC_MATREX_METEOR):
-        if not runcmd(EXEC_PERL + ' -I ' + os.path.dirname(EXEC_MATREX_METEOR) + ' ' + EXEC_MATREX_METEOR + " -s colibrita -r " + refxml + ' -t ' + targetxml + ' --modules "exact"  > ' + 'meteor.score',  'Computing METEOR score'): errors = True
+        if not runcmd(EXEC_PERL + ' -I ' + os.path.dirname(EXEC_MATREX_METEOR) + ' ' + EXEC_MATREX_METEOR + " -s colibrita -r " + refxml + ' -t ' + targetxml + ' --modules "exact"  > ' + outprefix + '.meteor.score',  'Computing METEOR score'): errors = True
         if not errors:
             try:
-                f = open(WORKDIR + '/meteor.score','r',encoding='utf-8')
+                f = open(WORKDIR + '/' + outprefix + '.meteor.score','r',encoding='utf-8')
                 for line in f:
                     if line[0:6] == "Score:":
                         meteor = float(line[7:].strip())
@@ -232,10 +234,10 @@ def mtscore(matrexdir, sourcexml, refxml, targetxml, WORKDIR = '.'):
         log("Skipping METEOR (no script found ["+EXEC_MATREX_METEOR+"])",yellow)
 
     if EXEC_MATREX_MTEVAL and os.path.exists(EXEC_MATREX_MTEVAL):
-        if not runcmd(EXEC_PERL + ' ' + EXEC_MATREX_MTEVAL + " -r " + refxml + ' -t ' + targetxml + ' -s ' + sourcexml +  '  > ' + 'mteval.score',  'Computing NIST & BLEU scores'): errors = True
+        if not runcmd(EXEC_PERL + ' ' + EXEC_MATREX_MTEVAL + " -r " + refxml + ' -t ' + targetxml + ' -s ' + sourcexml +  '  > ' + outprefix + '.mteval.score',  'Computing NIST & BLEU scores'): errors = True
         if not errors:
             try:
-                f = open(WORKDIR + '/mteval.score','r',encoding='utf-8')
+                f = open(WORKDIR + '/' + outprefix + '.mteval.score','r',encoding='utf-8')
                 for line in f:
                     if line[0:12] == "NIST score =":
                         nist = float(line[13:21].strip())
@@ -262,10 +264,10 @@ def mtscore(matrexdir, sourcexml, refxml, targetxml, WORKDIR = '.'):
         log("Skipping MTEVAL (BLEU & NIST) (no script found)", yellow)
 
     if EXEC_MATREX_TER and os.path.exists(EXEC_MATREX_TER):
-        if not runcmd(EXEC_JAVA + ' -jar ' + EXEC_MATREX_TER + " -r " + refxml + ' -h ' + targetxml + '  > ' + 'ter.score',  'Computing TER score'): errors = True
+        if not runcmd(EXEC_JAVA + ' -jar ' + EXEC_MATREX_TER + " -r " + refxml + ' -h ' + targetxml + '  > ' + outprefix + '.ter.score',  'Computing TER score'): errors = True
         if not errors:
             try:
-                f = open('ter.score','r',encoding='utf-8')
+                f = open(WORKDIR +'/' + outprefix + '.ter.score','r',encoding='utf-8')
                 for line in f:
                     if line[0:10] == "Total TER:":
                         ter = float(line[11:].strip().split(' ')[0])
@@ -278,11 +280,11 @@ def mtscore(matrexdir, sourcexml, refxml, targetxml, WORKDIR = '.'):
 
 
     log("SCORE SUMMARY\n===================\n")
-    f = open(WORKDIR + '/summary.score','w')
-    s = "BLEU METEOR NIST TER WER PER"
+    f = open(WORKDIR + '/' + outprefix + '.summary.score','w')
+    s = "Accuracy Word-Accuracy BLEU METEOR NIST TER WER PER"
     f.write(s+ "\n")
     log(s)
-    s = str(bleu) + " " + str(meteor) + " " + str(nist)  + " " + str(ter) + " " + str(wer)  + " " + str(per)
+    s = str(totalavgaccuracy) + " " + str(totalwordavgaccuracy) + " " + str(bleu) + " " + str(meteor) + " " + str(nist)  + " " + str(ter) + " " + str(wer)  + " " + str(per)
     f.write(s + "\n")
     log(s)
     f.close()
