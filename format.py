@@ -166,8 +166,11 @@ class SentencePair:
         s = ""
         for x in t:
             if isinstance(x, Fragment):
-                for y in x.value:
-                    yield y
+                if x.value:
+                    for y in x.value:
+                        yield y
+                else:
+                    yield '{?}'
             elif isinstance(x, str):
                 yield x
             else:
