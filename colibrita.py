@@ -191,7 +191,7 @@ class ClassifierExperts:
                         cid = str( base64.b64encode(str(inputfragment).encode('utf-8')) , 'utf-8')
                         cidfile = self.workdir + '/' +  cid
                         self.classifiers[str(inputfragment)] = timbl.TimblClassifier(cid, timbloptions)
-                        index.write(cid + "\t" + str(inputfragment) + "\t" + sum(tcount[str(inputfragment)].values()) "\n")
+                        index.write(cid + "\t" + str(inputfragment) + "\t" + sum(tcount[str(inputfragment)].values()) + "\n")
 
                     self.classifiers[str(inputfragment)].append( features, str(targetfragment) )
 
