@@ -280,7 +280,7 @@ class ClassifierExperts:
                     print("\tClassifier translation " + str(inputfragment) + " -> " + str(outputfragment) + "\t[ DISTRIBUTION:" + str(repr(distribution))+" ]", file=sys.stderr)
                 else:
                     #no translation found
-                    ouputfragment = Fragment(None, inputfragment.id)
+                    outputfragment = Fragment(None, inputfragment.id)
                     print("\tNo translation for " + str(inputfragment), file=sys.stderr)
                 sentencepair.output = sentencepair.replacefragment(inputfragment, outputfragment, sentencepair.output)
             writer.write(sentencepair)
