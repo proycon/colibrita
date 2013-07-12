@@ -142,12 +142,13 @@ class ClassifierExperts:
         for source in tcount:
             for target in tcount[source]:
                 if len(tcount[str(source)]) == 1:
-                    dttable.write(str(source) + "\t" + str(target) + "\n")
+                    dttable.write(str(source) + "\t" + str(target) + "\t" + str(tcount[str(source)][str(target)]) + "\n")
             #gather keywords:
             if dokeywords:
                 keywords[source] = self.extract_keywords(source, bow_absolute_threshold, bow_prob_threshold, bow_filter_threshold, tcount, wcount)
         dttable.close()
 
+        index = open(self.workdir + '/index.table','w',encoding='utf-8')
         #now loop over corpus and build classifiers for those where disambiguation is needed
         for sentencepair in reader:
             targetfragments = sentencepair.reffragmentsdict()
@@ -187,10 +188,14 @@ class ClassifierExperts:
 
                     if not str(inputfragment) in self.classifiers:
                         #Build classifier
-                        cid = self.workdir + '/' + str( base64.b64encode(str(inputfragment).encode('utf-8')) , 'utf-8')
+                        cid = str( base64.b64encode(str(inputfragment).encode('utf-8')) , 'utf-8')
+                        cidfile = self.workdir + '/' +  cid
                         self.classifiers[str(inputfragment)] = timbl.TimblClassifier(cid, timbloptions)
+                        index.write(cid + "\t" + str(inputfragment) + "\t" + sum(tcount[str(inputfragment)].values()) "\n")
 
                     self.classifiers[str(inputfragment)].append( features, str(targetfragment) )
+
+        index.close()
 
 
     def train(self):
