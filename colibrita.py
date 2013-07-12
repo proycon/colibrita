@@ -152,10 +152,11 @@ class ClassifierExperts:
         #now loop over corpus and build classifiers for those where disambiguation is needed
         for sentencepair in reader:
             targetfragments = sentencepair.reffragmentsdict()
-            print("Building training @" + str(sentencepair.id), file=sys.stderr)
+            usedclassifier = False
             for left, inputfragment, right in sentencepair.inputfragments():
                 assert str(inputfragment) in tcount
                 if len(tcount[str(inputfragment)]) > 1:
+                    usedclassifier = True
                     #extract local context
                     features = []
                     if leftcontext:
@@ -198,6 +199,10 @@ class ClassifierExperts:
 
                     self.classifiers[str(inputfragment)].append( features, str(targetfragment) )
 
+            if usedclassifier:
+                print("Built classifier(s) for @" + str(sentencepair.id), file=sys.stderr)
+            else:
+                print("Skipped @" + str(sentencepair.id), file=sys.stderr)
         index.close()
 
 
