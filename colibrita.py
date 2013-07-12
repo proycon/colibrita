@@ -7,10 +7,10 @@ import sys
 import os
 import subprocess
 import itertools
-import base64
 import glob
 import timbl
 from collections import defaultdict
+from urllib.parse import quote_plus, unquote_plus
 
 from colibrita.format import Writer, Reader
 from colibrita.common import extractpairs, makesentencepair, runcmd, makeset
@@ -23,7 +23,7 @@ class ClassifierExperts:
 
     def load(self, timbloptions):
         for f in glob.glob(self.workdir + '/*.train'):
-            sourcefragment = str(base64.b64decode(os.path.basename(f).replace('.train','').encode('utf-8')),'utf-8')
+            sourcefragment = unquote_plus(os.path.basename(f).replace('.train',''))
             print("Loading classifier " + sourcefragment, file=sys.stderr)
             self.classifiers[sourcefragment] = timbl.TimblClassifier(f[:-6], timbloptions)
 
@@ -107,7 +107,7 @@ class ClassifierExperts:
                             bag.append( (keyword, targetfragment, freq, p) )
 
         bag = sorted(bag)
-        f = open(self.workdir + '/' + base64.b64encode(sourcefragment) + '.keywords','w',encoding='utf-8')
+        f = open(self.workdir + '/' + quote_plus(sourcefragment) + '.keywords','w',encoding='utf-8')
         for keyword, targetfragment, c, p in bag:
             f.write(keyword + '\t' + str(targetfragment) + '\t' + str(c) + '\t' + str(p) + '\n')
         f.close()
@@ -189,7 +189,7 @@ class ClassifierExperts:
 
                     if not str(inputfragment) in self.classifiers:
                         #Build classifier
-                        cid = str( base64.b64encode(str(inputfragment).encode('utf-8')) , 'utf-8')
+                        cid = quote_plus(str(inputfragment))
                         cidfile = self.workdir + '/' +  cid
                         self.classifiers[str(inputfragment)] = timbl.TimblClassifier(cid, timbloptions)
                         index.write(cid + "\t" + str(inputfragment) + "\t" + str(sum(tcount[str(inputfragment)].values())) + "\t")
