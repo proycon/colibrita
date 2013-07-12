@@ -11,8 +11,9 @@ import glob
 import timbl
 from collections import defaultdict
 from urllib.parse import quote_plus, unquote_plus
+from copy import copy
 
-from colibrita.format import Writer, Reader
+from colibrita.format import Writer, Reader, Fragment
 from colibrita.common import extractpairs, makesentencepair, runcmd, makeset
 
 
@@ -20,12 +21,23 @@ class ClassifierExperts:
     def __init__(self, workdir):
         self.workdir = workdir
         self.classifiers = {}
+        self.keywords = {}
 
     def load(self, timbloptions):
         for f in glob.glob(self.workdir + '/*.train'):
             sourcefragment = unquote_plus(os.path.basename(f).replace('.train',''))
             print("Loading classifier " + sourcefragment, file=sys.stderr)
             self.classifiers[sourcefragment] = timbl.TimblClassifier(f[:-6], timbloptions)
+        print("Loaded " + str(len(self.classifiers)) + " classifiers",file=sys.stderr)
+        for f in glob.glob(self.workdir + '/*.keywords'):
+            sourcefragment = unquote_plus(os.path.basename(f).replace('.keywords',''))
+            print("Loading keywords for " + sourcefragment, file=sys.stderr)
+            f = open(f, 'r', 'utf-8')
+            for line in f:
+                keyword, target, c, p = line.split("\t")
+                self.keywords[sourcefragment].append((keyword, target,c,p))
+            f.close()
+
 
     def counttranslations(self, reader):
         tcount = defaultdict( lambda: defaultdict(int) )
@@ -132,10 +144,6 @@ class ClassifierExperts:
 
         reader.reset()
 
-        keywords = {}
-
-
-
         #make translation table of direct translation that have only one translation
         print("Writing direct translation table", file=sys.stderr)
         dttable = open(self.workdir + '/directtranslation.table','w',encoding='utf-8')
@@ -145,7 +153,7 @@ class ClassifierExperts:
                     dttable.write(str(source) + "\t" + str(target) + "\t" + str(tcount[str(source)][str(target)]) + "\n")
             #gather keywords:
             if dokeywords:
-                keywords[source] = self.extract_keywords(source, bow_absolute_threshold, bow_prob_threshold, bow_filter_threshold, tcount, wcount)
+                self.keywords[source] = self.extract_keywords(source, bow_absolute_threshold, bow_prob_threshold, bow_filter_threshold, tcount, wcount)
         dttable.close()
 
         index = open(self.workdir + '/index.table','w',encoding='utf-8')
@@ -176,9 +184,9 @@ class ClassifierExperts:
                     targetfragment = targetfragments[inputfragment.id]
 
                     #extract global context
-                    if dokeywords and str(inputfragment) in keywords:
+                    if dokeywords and str(inputfragment) in self.keywords:
                         bag = {}
-                        for keyword, target, freq,p in keywords[str(inputfragment)]:
+                        for keyword, target, freq,p in self.keywords[str(inputfragment)]:
                             bag[keyword] = 0
 
                         for word in itertools.chain(left, right):
@@ -214,10 +222,69 @@ class ClassifierExperts:
             self.classifiers[classifier].train()
             self.classifiers[classifier].save()
 
+    def test(self, data, outputfile, leftcontext, rightcontext, dokeywords, timbloptions):
+        dttable = {}
+        f = open(self.workdir + '/directtranslation.table')
+        for line in f:
+            if line:
+                fields = line.split()
+                dttable[fields[0]] = fields[1]
+        f.close()
+
+        writer = Writer(outputfile)
+        for sentencepair in data:
+            print("Processing sentence " + str(sentencepair.id),file=sys.stderr)
+            sentencepair.ref = None
+            sentencepair.output = copy(sentencepair.input)
+            for left, inputfragment, right in sentencepair.inputfragments():
+                left = tuple(left.split())
+                right = tuple(right.split())
+                if str(inputfragment) in dttable:
+                    #direct translation
+                    outputfragment = Fragment(tuple(dttable[str(inputfragment)].split()), inputfragment.id)
+                    print("\tDirect translation " + str(inputfragment) + " -> " + str(outputfragment), file=sys.stderr)
+                elif str(inputfragment) in self.classifiers:
+                    #translation by classifier
+                    features = []
+
+                    if leftcontext:
+                        f_left = list(left[-leftcontext:])
+                        if len(f_left) < leftcontext:
+                            f_left = list(["<s>"] * (leftcontext - len(f_left))) + f_left
+                    features += f_left
+
+                    if rightcontext:
+                        f_right = list(right[:rightcontext])
+                        if len(f_right) < rightcontext:
+                            f_right = f_right + list(["</s>"] * (rightcontext - len(f_right)))
+                    features += f_right
 
 
+                    #extract global context
+                    if dokeywords and str(inputfragment) in self.keywords:
+                        bag = {}
+                        for keyword, target, freq,p in self.keywords[str(inputfragment)]:
+                            bag[keyword] = 0
 
+                        for word in itertools.chain(left, right):
+                            if word in bag:
+                                bag[keyword] = 1
 
+                        #add to features
+                        for keyword in sorted(bag.keys()):
+                            features.append(keyword+"="+str(bag[keyword]))
+
+                    #pass to classifier
+                    classlabel, distribution, distance =  self.classifiers[str(inputfragment)].classify(features)
+                    outputfragment = Fragment(tuple(classlabel.split()), inputfragment.id)
+                    print("\tClassifier translation " + str(inputfragment) + " -> " + str(outputfragment) + "\t[ DISTRIBUTION:" + str(repr(distribution))+" ]", file=sys.stderr)
+                else:
+                    #no translation found
+                    ouputfragment = Fragment(None, inputfragment.id)
+                    print("\tNo translation for " + str(inputfragment), file=sys.stderr)
+                sentencepair.output = sentencepair.replacefragment(inputfragment, outputfragment, sentencepair.output)
+            writer.write(sentencepair)
+        writer.close()
 
 
 
@@ -264,8 +331,19 @@ def main():
             experts.load(args.timbloptions)
         experts.train()
     elif args.settype == 'test':
-        #TODO
-        pass
+        if not os.path.isdir(args.output):
+            print("Output directory " + args.output + " does not exist, did you forget to train the system first?", file=sys.stderr)
+            sys.exit(2)
+        if not os.path.exists(args.output + '/directtranslation.table'):
+            print("Direct translation table does not exist, did you forget to train the system first?", file=sys.stderr)
+            sys.exit(2)
+
+        experts = ClassifierExperts(args.output)
+        print("Loading classifiers",file=sys.stderr)
+        experts.load(args.timbloptions)
+        print("Running...",file=sys.stderr)
+        data = Reader(args.dataset)
+        experts.test(data, args.output + '.output.xml', args.leftcontext, args.rightcontext, args.keywords, args.timbloptions)
 
     return True
 
