@@ -44,7 +44,10 @@ def main():
                 translation = tuple(translation.split())
                 outputfragment = Fragment(translation, inputfragment.id)
                 print("\t" + str(inputfragment) + " -> " + str(outputfragment), file=sys.stderr)
-                sentencepair.output = sentencepair.replacefragment(inputfragment, outputfragment, sentencepair.output)
+            else:
+                outputfragment = Fragment(None, inputfragment.id)
+                print("\t" + str(inputfragment) + " -> NO TRANSLATION", file=sys.stderr)
+            sentencepair.output = sentencepair.replacefragment(inputfragment, outputfragment, sentencepair.output)
         output.write(sentencepair)
     testset.close()
     output.close()
