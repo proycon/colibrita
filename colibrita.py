@@ -218,7 +218,7 @@ class ClassifierExperts:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Colibrita - Translation Assistance")
+    parser = argparse.ArgumentParser(description="Colibrita - Translation Assistance", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--train',dest='settype', action='store_const',const='train')
     parser.add_argument('--test',dest='settype', action='store_const',const='test')
     parser.add_argument('-f','--dataset', type=str,help="Dataset file", action='store',required=True)

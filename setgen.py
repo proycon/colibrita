@@ -13,7 +13,7 @@ from colibrita.common import extractpairs, makesentencepair, runcmd, makeset
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Set generation")
+    parser = argparse.ArgumentParser(description="Set generation", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--train',dest='settype', action='store_const',const='train')
     parser.add_argument('--test',dest='settype', action='store_const',const='test')
     parser.add_argument('--mosesdir',type=str, help="Path to moses",action='store',default="")
