@@ -276,6 +276,7 @@ class ClassifierExperts:
 
                     #pass to classifier
                     classlabel, distribution, distance =  self.classifiers[str(inputfragment)].classify(features)
+                    classlabel = classlabel.replace('\_',' ')
                     outputfragment = Fragment(tuple(classlabel.split()), inputfragment.id)
                     print("\tClassifier translation " + str(inputfragment) + " -> " + str(outputfragment) + "\t[ DISTRIBUTION:" + str(repr(distribution))+" ]", file=sys.stderr)
                 else:
