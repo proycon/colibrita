@@ -155,6 +155,8 @@ class ClassifierExperts:
             usedclassifier = False
             for left, inputfragment, right in sentencepair.inputfragments():
                 assert str(inputfragment) in tcount
+                left = tuple(left.split())
+                right = tuple(right.split())
                 if len(tcount[str(inputfragment)]) > 1:
                     usedclassifier = True
                     #extract local context
