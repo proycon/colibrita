@@ -201,7 +201,7 @@ class ClassifierExperts:
 
             if usedclassifier:
                 print("Built classifier(s) for @" + str(sentencepair.id), file=sys.stderr)
-            else:
+            elif int(sentencepair.id) % 1000 == 0:
                 print("Skipped @" + str(sentencepair.id), file=sys.stderr)
         index.close()
 
