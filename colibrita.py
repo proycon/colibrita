@@ -227,7 +227,7 @@ class ClassifierExperts:
         f = open(self.workdir + '/directtranslation.table')
         for line in f:
             if line:
-                fields = line.split()
+                fields = line.split('\t')
                 dttable[fields[0]] = fields[1]
         f.close()
 
