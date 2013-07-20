@@ -48,7 +48,7 @@ class ClassifierExperts:
         return tcount
 
     def countkeywords(self, reader, keywords, compute_bow_params, bow_absolute_threshold, bow_prob_threshold,bow_filter_threshold):
-        print("Counting words for keyword extraction...", sys.stderr)
+        print("Counting words for keyword extraction...", file=sys.stderr)
         wcount = defaultdict(int)
         wcount_total = 0
         tcount = defaultdict( lambda: defaultdict(int) )
