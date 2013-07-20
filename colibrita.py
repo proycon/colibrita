@@ -51,7 +51,8 @@ class ClassifierExperts:
         print("Counting words for keyword extraction...", sys.stderr)
         wcount = defaultdict(int)
         wcount_total = 0
-        kwcount = defaultdict(lambda: defaultdict(int))
+        tcount = defaultdict( lambda: defaultdict(int) )
+        kwcount = defaultdict(lambda: defaultdict(lambda: defaultdict(int)))
         for sentencepair in reader:
             for left, sourcefragment, right in sentencepair.inputfragments():
                 for word in sourcefragment:
@@ -61,10 +62,11 @@ class ClassifierExperts:
                     wcount[word] += 1
                     wcount_total += 1
                     targetfragment = sentencepair.reffragmentsdict()[sourcefragment.id]
+                    tcount[str(sourcefragment)][str(targetfragment)] += 1
                     kwcount[str(sourcefragment)][str(targetfragment)][word] += 1
 
 
-        return wcount, kwcount, wcount_total
+        return wcount, tcount,kwcount, wcount_total
 
 
     def probability_translation_given_keyword(self, source,target, keyword, kwcount, wcount):
@@ -136,11 +138,12 @@ class ClassifierExperts:
 
         if dokeywords:
             print("Counting keywords", file=sys.stderr)
-            wcount, tcount, wcount_total = self.countkeywords(reader, dokeywords, compute_bow_params, bow_absolute_threshold, bow_prob_threshold,bow_filter_threshold)
+            wcount, tcount, kwcount, wcount_total = self.countkeywords(reader, dokeywords, compute_bow_params, bow_absolute_threshold, bow_prob_threshold,bow_filter_threshold)
         else:
             print("Gathering initial occurrence count", file=sys.stderr)
             tcount = self.counttranslations(reader)
             wcount = {} #not needed
+            kwcount = {} #not needed
 
         reader.reset()
 
@@ -153,7 +156,7 @@ class ClassifierExperts:
                     dttable.write(str(source) + "\t" + str(target) + "\t" + str(tcount[str(source)][str(target)]) + "\n")
             #gather keywords:
             if dokeywords:
-                self.keywords[source] = self.extract_keywords(source, bow_absolute_threshold, bow_prob_threshold, bow_filter_threshold, tcount, wcount)
+                self.keywords[source] = self.extract_keywords(source, bow_absolute_threshold, bow_prob_threshold, bow_filter_threshold, kwcount, wcount)
         dttable.close()
 
         index = open(self.workdir + '/index.table','w',encoding='utf-8')
