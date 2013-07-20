@@ -31,6 +31,7 @@ class ClassifierExperts:
         print("Loaded " + str(len(self.classifiers)) + " classifiers",file=sys.stderr)
         for f in glob.glob(self.workdir + '/*.keywords'):
             sourcefragment = unquote_plus(os.path.basename(f).replace('.keywords',''))
+            self.keywords[sourcefragment] = []
             print("Loading keywords for " + sourcefragment, file=sys.stderr)
             f = open(f, 'r', encoding='utf-8')
             for line in f:
@@ -158,7 +159,9 @@ class ClassifierExperts:
                     dttable.write(str(source) + "\t" + str(target) + "\t" + str(tcount[str(source)][str(target)]) + "\n")
             #gather keywords:
             if dokeywords:
-                self.keywords[source] = self.extract_keywords(source, bow_absolute_threshold, bow_prob_threshold, bow_filter_threshold, kwcount, wcount)
+                bag = self.extract_keywords(source, bow_absolute_threshold, bow_prob_threshold, bow_filter_threshold, kwcount, wcount)
+                if bag:
+                    self.keywords[source] = bag
         dttable.close()
 
         index = open(self.workdir + '/index.table','w',encoding='utf-8')
