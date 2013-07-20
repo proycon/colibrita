@@ -32,7 +32,7 @@ class ClassifierExperts:
         for f in glob.glob(self.workdir + '/*.keywords'):
             sourcefragment = unquote_plus(os.path.basename(f).replace('.keywords',''))
             print("Loading keywords for " + sourcefragment, file=sys.stderr)
-            f = open(f, 'r', 'utf-8')
+            f = open(f, 'r', encoding='utf-8')
             for line in f:
                 keyword, target, c, p = line.split("\t")
                 self.keywords[sourcefragment].append((keyword, target,c,p))
