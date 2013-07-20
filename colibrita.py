@@ -174,12 +174,14 @@ class ClassifierExperts:
                     usedclassifier = True
                     #extract local context
                     features = []
+                    f_left = []
                     if leftcontext:
                         f_left = list(left[-leftcontext:])
                         if len(f_left) < leftcontext:
                             f_left = list(["<s>"] * (leftcontext - len(f_left))) + f_left
                     features += f_left
 
+                    f_right = []
                     if rightcontext:
                         f_right = list(right[:rightcontext])
                         if len(f_right) < rightcontext:
