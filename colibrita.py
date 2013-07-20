@@ -55,7 +55,7 @@ class ClassifierExperts:
         kwcount = defaultdict(lambda: defaultdict(lambda: defaultdict(int)))
         for sentencepair in reader:
             if int(sentencepair.id) % 1000 == 0:
-                print(" Counting word for keywords extraction @" + str(sentencepair.id), file=sys.stderr)
+                print(" Counting word for keyword extraction @" + str(sentencepair.id), file=sys.stderr)
             for left, sourcefragment, right in sentencepair.inputfragments():
                 for word in sourcefragment:
                     wcount[word] += 1
