@@ -123,13 +123,16 @@ class ClassifierExperts:
                         if p >= bow_prob_threshold:
                             bag.append( (keyword, targetfragment, freq, p) )
 
-        bag = sorted(bag)
-        f = open(self.workdir + '/' + quote_plus(sourcefragment) + '.keywords','w',encoding='utf-8')
-        for keyword, targetfragment, c, p in bag:
-            f.write(keyword + '\t' + str(targetfragment) + '\t' + str(c) + '\t' + str(p) + '\n')
-        f.close()
+        if bag:
+            bag = sorted(bag)
+            f = open(self.workdir + '/' + quote_plus(sourcefragment) + '.keywords','w',encoding='utf-8')
+            for keyword, targetfragment, c, p in bag:
+                f.write(keyword + '\t' + str(targetfragment) + '\t' + str(c) + '\t' + str(p) + '\n')
+            f.close()
 
-        print("\tFound " + str(len(bag)) + " keywords", file=sys.stderr)
+            print("\tFound " + str(len(bag)) + " keywords", file=sys.stderr)
+        else:
+            print("\tNo keywords found", file=sys.stderr)
         return bag
 
 
