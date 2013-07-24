@@ -59,9 +59,11 @@ class ClassifierExperts:
                 print(" Counting words for keyword extraction @" + str(sentencepair.id), file=sys.stderr)
             for left, sourcefragment, right in sentencepair.inputfragments():
                 for word in sourcefragment:
+                    print("  DEBUG1: counting", word, file=sys.stderr)
                     wcount[word] += 1
                     wcount_total += 1
                 for word in itertools.chain(left, right):
+                    print("  DEBUG2: counting", word, file=sys.stderr)
                     wcount[word] += 1
                     wcount_total += 1
                     targetfragment = sentencepair.reffragmentsdict()[sourcefragment.id]
