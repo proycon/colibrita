@@ -124,13 +124,14 @@ class ClassifierExperts:
                             bag.append( (keyword, targetfragment, freq, p) )
 
         if bag:
+            print("\tFound " + str(len(bag)) + " keywords: ", file=sys.stderr)
             bag = sorted(bag)
             f = open(self.workdir + '/' + quote_plus(sourcefragment) + '.keywords','w',encoding='utf-8')
             for keyword, targetfragment, c, p in bag:
                 f.write(keyword + '\t' + str(targetfragment) + '\t' + str(c) + '\t' + str(p) + '\n')
+                print("\t\t", keyword, file=sys.stderr)
             f.close()
 
-            print("\tFound " + str(len(bag)) + " keywords", file=sys.stderr)
         else:
             print("\tNo keywords found", file=sys.stderr)
         return bag
