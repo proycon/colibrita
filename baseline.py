@@ -6,6 +6,7 @@ import argparse
 import sys
 import os
 import subprocess
+import math
 from copy import copy
 
 from pynlpl.formats.moses import PhraseTable
@@ -13,7 +14,7 @@ from colibrita.format import Reader, Writer, Fragment
 from colibrita.common import extractpairs, makesentencepair, runcmd, makeset
 
 
-def makebaseline(ttable, outputfile, testset):
+def makebaseline(ttable, outputfile, testset,lm=None,tweight=1, lmweight=1):
     output = Writer(outputfile)
     for sentencepair in testset:
         print("Sentence #" + sentencepair.id,file=sys.stderr)
@@ -22,18 +23,35 @@ def makebaseline(ttable, outputfile, testset):
         for left, inputfragment, right in sentencepair.inputfragments():
             translation = None
             if str(inputfragment) in ttable:
-                maxscore = 0
-                for targetpattern, scores in ttable[str(inputfragment)]:
-                    if scores[2] > maxscore:
-                        maxscore = scores[2]
-                        translation = targetpattern
+                if lm:
+                    candidatesentences = []
+                    for targetpattern, scores in ttable[str(inputfragment)]:
+                        tscore = math.log(scores[2],10) #ARPA files are base-10 logs
+                        translation = tuple(targetpattern.split())
+                        outputfragment = Fragment(translation, inputfragment.id)
+                        candidatesentence = sentencepair.replacefragment(inputfragment, outputfragment, sentencepair.output)
+                        candidatesentences.append( ( candidatesentence, targetpattern, tscore, lm.score(candidatesentence.split()) ) )
+                    #get the strongest sentence
+                    maxscore = -9999999999
+                    for candidatesentence, targetpattern, tscore, lmscore in candidatesentences:
+                        score = tweight * tscore  + lmweight * lmscore
+                        if score > maxscore:
+                            maxscore = score
+                            translation = targetpattern
+                else:
+                    maxscore = 0
+                    for targetpattern, scores in ttable[str(inputfragment)]:
+                        if scores[2] > maxscore:
+                            maxscore = scores[2]
+                            translation = targetpattern
                 translation = tuple(translation.split())
                 outputfragment = Fragment(translation, inputfragment.id)
                 print("\t" + str(inputfragment) + " -> " + str(outputfragment), file=sys.stderr)
+                sentencepair.output = sentencepair.replacefragment(inputfragment, outputfragment, sentencepair.output)
             else:
                 outputfragment = Fragment(None, inputfragment.id)
                 print("\t" + str(inputfragment) + " -> NO TRANSLATION", file=sys.stderr)
-            sentencepair.output = sentencepair.replacefragment(inputfragment, outputfragment, sentencepair.output)
+                sentencepair.output = sentencepair.replacefragment(inputfragment, outputfragment, sentencepair.output)
         output.write(sentencepair)
     testset.close()
     output.close()
