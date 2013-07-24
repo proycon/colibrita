@@ -174,7 +174,9 @@ class ClassifierExperts:
             targetfragments = sentencepair.reffragmentsdict()
             usedclassifier = False
             for left, inputfragment, right in sentencepair.inputfragments():
-                assert str(inputfragment) in tcount
+                if not str(inputfragment) in tcount:
+                    print("WARNING: Inputfragment " + str(inputfragment) + " not found in count! Skipping!!", file=sys.stderr)
+                    continue
                 left = tuple(left.split())
                 right = tuple(right.split())
                 if len(tcount[str(inputfragment)]) > 1:
@@ -321,6 +323,7 @@ def main():
     parser.add_argument("--ka",dest="compute_bow_params", help="Attempt to automatically compute --kt,--kp and --kg parameters", action='store_false',default=True)
     parser.add_argument('-O', dest='timbloptions', help="Timbl Classifier options", type=str,action='store',default="-k 1")
     parser.add_argument('-o','--output',type=str,help="Output prefix", required = True)
+    parser.add_argument('-L','--lm',type=str, help="Use language model (file in ARPA format, as produced by for instance SRILM)", action='store',default="")
 
     args = parser.parse_args()
 
