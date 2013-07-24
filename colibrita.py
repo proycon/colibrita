@@ -15,6 +15,9 @@ from copy import copy
 
 from colibrita.format import Writer, Reader, Fragment
 from colibrita.common import extractpairs, makesentencepair, runcmd, makeset
+from colibrita.baseline import makebaseline
+from pynlpl.lm import ARPALanguageModel
+from pynlpl.formats.moses import PhraseTable
 
 
 class ClassifierExperts:
@@ -143,6 +146,7 @@ class ClassifierExperts:
     def build(self, reader, leftcontext, rightcontext, dokeywords, compute_bow_params, bow_absolute_threshold, bow_prob_threshold,bow_filter_threshold, timbloptions):
         assert (isinstance(reader, Reader))
 
+
         if dokeywords:
             print("Counting keywords", file=sys.stderr)
             wcount, tcount, kwcount, wcount_total = self.countkeywords(reader, dokeywords, compute_bow_params, bow_absolute_threshold, bow_prob_threshold,bow_filter_threshold)
@@ -167,6 +171,12 @@ class ClassifierExperts:
                 if bag:
                     self.keywords[source] = bag
         dttable.close()
+
+
+
+        if not dokeywords and not leftcontext and not rightcontext:
+            print("No classifiers needed, skipping...", file=sys.stderr)
+            return
 
         index = open(self.workdir + '/index.table','w',encoding='utf-8')
         #now loop over corpus and build classifiers for those where disambiguation is needed
@@ -323,7 +333,9 @@ def main():
     parser.add_argument("--ka",dest="compute_bow_params", help="Attempt to automatically compute --kt,--kp and --kg parameters", action='store_false',default=True)
     parser.add_argument('-O', dest='timbloptions', help="Timbl Classifier options", type=str,action='store',default="-k 1")
     parser.add_argument('-o','--output',type=str,help="Output prefix", required = True)
-    parser.add_argument('-L','--lm',type=str, help="Use language model (file in ARPA format, as produced by for instance SRILM)", action='store',default="")
+    parser.add_argument('--baseline',type=str, help="Baseline test (use with --test, requires no previous --train)", action='store_true',default=False)
+    parser.add_argument('--lm',type=str, help="Use language model in testing (file in ARPA format, as produced by for instance SRILM)", action='store',default="")
+    parser.add_argument('-T','--ttable', type=str,help="Phrase translation table (file) to use when testing with --lm and without classifier training", action='store',default="")
 
     args = parser.parse_args()
 
@@ -336,6 +348,12 @@ def main():
 
 
     if args.settype == 'train':
+        if args.baseline:
+            print("Baseline does not need further training, use --test instead", file=sys.stderr)
+            sys.exit(2)
+        elif args.lm:
+            print("WARNING: Language model specified during training, will be ignored", file=sys.stderr)
+
         experts = ClassifierExperts(args.output)
 
         data = Reader(args.dataset)
@@ -349,19 +367,35 @@ def main():
             experts.load(args.timbloptions)
         experts.train()
     elif args.settype == 'test':
-        if not os.path.isdir(args.output):
-            print("Output directory " + args.output + " does not exist, did you forget to train the system first?", file=sys.stderr)
-            sys.exit(2)
-        if not os.path.exists(args.output + '/directtranslation.table'):
-            print("Direct translation table does not exist, did you forget to train the system first?", file=sys.stderr)
-            sys.exit(2)
 
-        experts = ClassifierExperts(args.output)
-        print("Loading classifiers",file=sys.stderr)
-        experts.load(args.timbloptions)
-        print("Running...",file=sys.stderr)
-        data = Reader(args.dataset)
-        experts.test(data, args.output + '.output.xml', args.leftcontext, args.rightcontext, args.keywords, args.timbloptions)
+        if args.lm:
+            print("Loading Language model", file=sys.stderr)
+            lm = ARPALanguageModel(args.lm)
+
+        if args.leftcontext or args.rightcontext or args.keywords:
+            if not os.path.isdir(args.output):
+                print("Output directory " + args.output + " does not exist, did you forget to train the system first?", file=sys.stderr)
+                sys.exit(2)
+            if not os.path.exists(args.output + '/directtranslation.table'):
+                print("Direct translation table does not exist, did you forget to train the system first?", file=sys.stderr)
+                sys.exit(2)
+            experts = ClassifierExperts(args.output)
+            print("Loading classifiers",file=sys.stderr)
+            experts.load(args.timbloptions)
+            print("Running...",file=sys.stderr)
+            data = Reader(args.dataset)
+            experts.test(data, args.output + '.output.xml', args.leftcontext, args.rightcontext, args.keywords, args.timbloptions)
+        elif args.ttable:
+            print("Loading translation table",file=sys.stderr)
+            ttable = PhraseTable(args.ttable,False, False, "|||", 3, 0,None, None)
+            data = Reader(args.dataset)
+            if args.lm:
+                #TODO
+                pass
+            elif args.baseline:
+                makebaseline(ttable, args.output + '.output.xml', data)
+        else:
+            print("Don't know what to do! Specify some classifier options or -T with --lm or --baseline", file=sys.stderr)
 
     print("All done.", file=sys.stderr)
     return True
