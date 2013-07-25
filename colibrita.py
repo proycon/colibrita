@@ -336,7 +336,7 @@ def main():
     parser.add_argument("--ka",dest="compute_bow_params", help="Attempt to automatically compute --kt,--kp and --kg parameters", action='store_false',default=True)
     parser.add_argument('-O', dest='timbloptions', help="Timbl Classifier options", type=str,action='store',default="-k 1")
     parser.add_argument('-o','--output',type=str,help="Output prefix", required = True)
-    parser.add_argument('--baseline',type=str, help="Baseline test (use with --test, requires no previous --train)", action='store_true',default=False)
+    parser.add_argument('--baseline', help="Baseline test (use with --test, requires no previous --train)", action='store_true',default=False)
     parser.add_argument('--lm',type=str, help="Use language model in testing (file in ARPA format, as produced by for instance SRILM)", action='store',default="")
     parser.add_argument('-T','--ttable', type=str,help="Phrase translation table (file) to use when testing with --lm and without classifier training", action='store',default="")
 
