@@ -248,8 +248,9 @@ class ClassifierExperts:
     def train(self):
         print("Training " + str(len(self.classifiers)) + " classifiers", file=sys.stderr)
         for classifier in self.classifiers:
-            self.classifiers[classifier].train()
-            self.classifiers[classifier].save()
+            if os.path.exists(self.classifiers[classifier].fileprefix + '.train'):
+                self.classifiers[classifier].train()
+                self.classifiers[classifier].save()
 
     def test(self, data, outputfile, leftcontext, rightcontext, dokeywords, timbloptions):
         dttable = {}
