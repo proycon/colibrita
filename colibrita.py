@@ -233,7 +233,10 @@ class ClassifierExperts:
                             index.write(str(target) + "\t" + str(c))
                         index.write("\n")
 
-                    self.classifiers[str(inputfragment)].append( features, str(targetfragment) )
+                    if not features:
+                        print("WARNING: No features extracted for " + str(inputfragment) + ", skipping classifier!", file=sys.stderr)
+                    else:
+                        self.classifiers[str(inputfragment)].append( features, str(targetfragment) )
 
             if usedclassifier:
                 print("Built classifier(s) for @" + str(sentencepair.id), file=sys.stderr)
