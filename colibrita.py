@@ -339,6 +339,8 @@ def main():
     parser.add_argument('-o','--output',type=str,help="Output prefix", required = True)
     parser.add_argument('--baseline', help="Baseline test (use with --test, requires no previous --train)", action='store_true',default=False)
     parser.add_argument('--lm',type=str, help="Use language model in testing (file in ARPA format, as produced by for instance SRILM)", action='store',default="")
+    parser.add_argument('--lmweight',type=float, help="Language model weight (when --lm is used)", action='store',default=1)
+    parser.add_argument('--tmweight',type=float, help="Translation model weight (when --lm is used)", action='store',default=1)
     parser.add_argument('-T','--ttable', type=str,help="Phrase translation table (file) to use when testing with --lm and without classifier training", action='store',default="")
 
     args = parser.parse_args()
@@ -393,9 +395,10 @@ def main():
             print("Loading translation table",file=sys.stderr)
             ttable = PhraseTable(args.ttable,False, False, "|||", 3, 0,None, None)
             data = Reader(args.dataset)
+            print("Making baseline",file=sys.stderr)
             if args.lm:
-                #TODO
-                pass
+                print("(with LM)",file=sys.stderr)
+                makebaseline(ttable, args.output + '.output.xml', data, lm, args.tmweight, args.lmweight)
             elif args.baseline:
                 makebaseline(ttable, args.output + '.output.xml', data)
         else:
