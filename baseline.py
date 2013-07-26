@@ -26,7 +26,7 @@ def makebaseline(ttable, outputfile, testset,lm=None,tweight=1, lmweight=1):
                 if lm:
                     candidatesentences = []
                     for targetpattern, scores in ttable[str(inputfragment)]:
-                        tscore = math.log(scores[2],10) #ARPA files are base-10 logs
+                        tscore = math.log(scores[2]) #convert to base-e log (LM is converted to base-e upon load)
                         translation = tuple(targetpattern.split())
                         outputfragment = Fragment(translation, inputfragment.id)
                         candidatesentence = sentencepair.replacefragment(inputfragment, outputfragment, sentencepair.output)
