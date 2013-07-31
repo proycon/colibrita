@@ -283,13 +283,13 @@ class ClassifierExperts:
                         f_left = list(left[-leftcontext:])
                         if len(f_left) < leftcontext:
                             f_left = list(["<s>"] * (leftcontext - len(f_left))) + f_left
-                    features += f_left
+                        features += f_left
 
                     if rightcontext:
                         f_right = list(right[:rightcontext])
                         if len(f_right) < rightcontext:
                             f_right = f_right + list(["</s>"] * (rightcontext - len(f_right)))
-                    features += f_right
+                        features += f_right
 
 
                     #extract global context
