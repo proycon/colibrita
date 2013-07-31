@@ -309,7 +309,7 @@ class ClassifierExperts:
                     #pass to classifier
                     classlabel, distribution, distance =  self.classifiers[str(inputfragment)].classify(features)
                     classlabel = classlabel.replace('\_',' ')
-                    if lm:
+                    if lm and len(distribution) > 1:
                         print("\tClassifier translation prior to LM: " + str(inputfragment) + " -> [ DISTRIBUTION:" + str(repr(distribution))+" ]", file=sys.stderr)
                         candidatesentences = []
                         bestlmscore = -999999999
