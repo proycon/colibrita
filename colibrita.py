@@ -240,6 +240,7 @@ class ClassifierExperts:
                     if not features:
                         print("WARNING: No features extracted for " + str(inputfragment) + ", skipping classifier!", file=sys.stderr)
                     else:
+                        print("\tAppending training instance: " +str(inputfragment) + " -> " + str(targetfragment),file=sys.stderr )
                         self.classifiers[str(inputfragment)].append( features, str(targetfragment) )
 
             if usedclassifier:
