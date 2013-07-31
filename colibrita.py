@@ -111,7 +111,7 @@ class ClassifierExperts:
 
 
     def extract_keywords(self, sourcefragment, bow_absolute_threshold, bow_prob_threshold, bow_filter_threshold, kwcount, wcount):
-        print("Extracting keywords for " + sourcefragment + "...")
+        print("Extracting keywords for " + sourcefragment + "...", file=sys.stderr)
 
         sourcefragment = str(sourcefragment)
 
@@ -254,6 +254,7 @@ class ClassifierExperts:
     def train(self):
         print("Training " + str(len(self.classifiers)) + " classifiers", file=sys.stderr)
         for classifier in self.classifiers:
+            self.classifiers[classifier].flush()
             if os.path.exists(self.classifiers[classifier].fileprefix + '.train'):
                 self.classifiers[classifier].train()
                 self.classifiers[classifier].save()
