@@ -327,7 +327,7 @@ class ClassifierExperts:
                                 bestlmscore = lmscore
                             if tscore > besttscore:
                                 besttscore = tscore
-                            candidatesentences.append( ( candidatesentence, targetpattern, tscore, lmscore ) )
+                            candidatesentences.append( ( candidatesentence, outputfragment, tscore, lmscore ) )
 
                         #get the strongest sentence
                         maxscore = -9999999999
@@ -338,7 +338,7 @@ class ClassifierExperts:
                             print("\t LM candidate " + str(inputfragment) + " -> " + str(targetpattern) + "   score=tscore+lmscore=" + str(tscore) + "+" + str(lmscore) + "=" + str(score), file=sys.stderr)
                             if score > maxscore:
                                 maxscore = score
-                                outputfragment = Fragment(targetpattern, inputfragment.id)
+                                outputfragment = targetpattern  #Fragment(targetpattern, inputfragment.id)
                         print("\tClassifier translation after LM: " + str(inputfragment) + " -> " + str(outputfragment) + " score= " + str(score), file=sys.stderr)
 
                     else:
