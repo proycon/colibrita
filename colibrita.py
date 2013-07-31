@@ -231,6 +231,7 @@ class ClassifierExperts:
                         #Build classifier
                         cid = quote_plus(str(inputfragment))
                         cidfile = self.workdir + '/' +  cid
+                        print("\tInitiating classifier for " + str(inputfragment) + " -- " + cidfile + '.train',file=sys.stderr )
                         self.classifiers[str(inputfragment)] = timbl.TimblClassifier(cidfile, timbloptions)
                         index.write(cid + "\t" + str(inputfragment) + "\t" + str(sum(tcount[str(inputfragment)].values())) + "\t")
                         for target, c in tcount[str(inputfragment)].items():
