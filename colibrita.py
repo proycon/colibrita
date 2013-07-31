@@ -338,7 +338,7 @@ class ClassifierExperts:
                             print("\t LM candidate " + str(inputfragment) + " -> " + str(targetpattern) + "   score=tscore+lmscore=" + str(tscore) + "+" + str(lmscore) + "=" + str(score), file=sys.stderr)
                             if score > maxscore:
                                 maxscore = score
-                                outputfragment = targetpattern
+                                outputfragment = Fragment(targetpattern, inputfragment.id)
                         print("\tClassifier translation after LM: " + str(inputfragment) + " -> " + str(outputfragment) + " score= " + str(score), file=sys.stderr)
 
                     else:
