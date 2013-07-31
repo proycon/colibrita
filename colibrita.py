@@ -8,6 +8,7 @@ import os
 import subprocess
 import itertools
 import glob
+import math
 import timbl
 from collections import defaultdict
 from urllib.parse import quote_plus, unquote_plus
@@ -253,7 +254,7 @@ class ClassifierExperts:
                 self.classifiers[classifier].train()
                 self.classifiers[classifier].save()
 
-    def test(self, data, outputfile, leftcontext, rightcontext, dokeywords, timbloptions):
+    def test(self, data, outputfile, leftcontext, rightcontext, dokeywords, timbloptions, lm=None,tweight=1,lmweight=1):
         dttable = {}
         f = open(self.workdir + '/directtranslation.table')
         for line in f:
@@ -308,8 +309,40 @@ class ClassifierExperts:
                     #pass to classifier
                     classlabel, distribution, distance =  self.classifiers[str(inputfragment)].classify(features)
                     classlabel = classlabel.replace('\_',' ')
-                    outputfragment = Fragment(tuple(classlabel.split()), inputfragment.id)
-                    print("\tClassifier translation " + str(inputfragment) + " -> " + str(outputfragment) + "\t[ DISTRIBUTION:" + str(repr(distribution))+" ]", file=sys.stderr)
+                    if lm:
+                        print("\tClassifier translation prior to LM: " + str(inputfragment) + " -> [ DISTRIBUTION:" + str(repr(distribution))+" ]", file=sys.stderr)
+                        candidatesentences = []
+                        bestlmscore = -999999999
+                        besttscore = -999999999
+                        for targetpattern, score in distribution.items():
+                            tscore = math.log(score) #convert to base-e log (LM is converted to base-e upon load)
+                            translation = tuple(targetpattern.split())
+                            outputfragment = Fragment(translation, inputfragment.id)
+                            candidatesentence = sentencepair.replacefragment(inputfragment, outputfragment, sentencepair.output)
+                            lminput = " ".join(sentencepair._str(candidatesentence)).split(" ") #joining and splitting deliberately to ensure each word is one item
+                            lmscore = lm.score(lminput)
+                            if lmscore > bestlmscore:
+                                bestlmscore = lmscore
+                            if tscore > besttscore:
+                                besttscore = tscore
+                            candidatesentences.append( ( candidatesentence, targetpattern, tscore, lmscore ) )
+
+                        #get the strongest sentence
+                        maxscore = -9999999999
+                        for candidatesentence, targetpattern, tscore, lmscore in candidatesentences:
+                            tscore = tweight * (tscore/besttscore)
+                            lmscore = lmweight * (lmscore/bestlmscore)
+                            score = tscore + lmscore
+                            print("\t LM candidate " + str(inputfragment) + " -> " + str(targetpattern) + "   score=tscore+lmscore=" + str(tscore) + "+" + str(lmscore) + "=" + str(score), file=sys.stderr)
+                            if score > maxscore:
+                                maxscore = score
+                                translation = targetpattern
+                        print("\tClassifier translation after LM: " + str(inputfragment) + " -> " + str(targetpattern) + " score= " + str(score), file=sys.stderr)
+
+                    else:
+                        outputfragment = Fragment(tuple(classlabel.split()), inputfragment.id)
+                        print("\tClassifier translation " + str(inputfragment) + " -> " + str(outputfragment) + "\t[ DISTRIBUTION:" + str(repr(distribution))+" ]", file=sys.stderr)
+
                 else:
                     #no translation found
                     outputfragment = Fragment(None, inputfragment.id)
@@ -378,6 +411,8 @@ def main():
         if args.lm:
             print("Loading Language model", file=sys.stderr)
             lm = ARPALanguageModel(args.lm)
+        else:
+            lm = None
 
         if args.leftcontext or args.rightcontext or args.keywords:
             if not os.path.isdir(args.output):
@@ -391,7 +426,7 @@ def main():
             experts.load(args.timbloptions)
             print("Running...",file=sys.stderr)
             data = Reader(args.dataset)
-            experts.test(data, args.output + '.output.xml', args.leftcontext, args.rightcontext, args.keywords, args.timbloptions)
+            experts.test(data, args.output + '.output.xml', args.leftcontext, args.rightcontext, args.keywords, args.timbloptions, lm, args.tmweight, args.lmweight)
         elif args.ttable:
             print("Loading translation table",file=sys.stderr)
             ttable = PhraseTable(args.ttable,False, False, "|||", 3, 0,None, None)

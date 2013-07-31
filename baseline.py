@@ -25,17 +25,26 @@ def makebaseline(ttable, outputfile, testset,lm=None,tweight=1, lmweight=1):
             if str(inputfragment) in ttable:
                 if lm:
                     candidatesentences = []
+                    bestlmscore = -999999999
+                    besttscore = -999999999
                     for targetpattern, scores in ttable[str(inputfragment)]:
                         tscore = math.log(scores[2]) #convert to base-e log (LM is converted to base-e upon load)
                         translation = tuple(targetpattern.split())
                         outputfragment = Fragment(translation, inputfragment.id)
                         candidatesentence = sentencepair.replacefragment(inputfragment, outputfragment, sentencepair.output)
                         lminput = " ".join(sentencepair._str(candidatesentence)).split(" ") #joining and splitting deliberately to ensure each word is one item
-                        candidatesentences.append( ( candidatesentence, targetpattern, tscore, lm.score(lminput) ) )
+                        lmscore = lm.score(lminput)
+                        if lmscore > bestlmscore:
+                            bestlmscore = lmscore
+                        if tscore > besttscore:
+                            besttscore = tscore
+                        candidatesentences.append( ( candidatesentence, targetpattern, tscore, lmscore ) )
                     #get the strongest sentence
                     maxscore = -9999999999
                     for candidatesentence, targetpattern, tscore, lmscore in candidatesentences:
-                        score = tweight * tscore  + lmweight * lmscore
+                        tscore = tweight * (tscore/besttscore)
+                        lmscore = lmweight * (lmscore/bestlmscore)
+                        score = tscore + lmscore
                         if score > maxscore:
                             maxscore = score
                             translation = targetpattern
