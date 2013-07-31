@@ -41,6 +41,8 @@ class ClassifierExperts:
             f = open(f, 'r', encoding='utf-8')
             for line in f:
                 keyword, target, c, p = line.split("\t")
+                c = int(c)
+                p = float(p)
                 self.keywords[sourcefragment].append((keyword, target,c,p))
             f.close()
 
@@ -307,7 +309,7 @@ class ClassifierExperts:
                             features.append(keyword+"="+str(bag[keyword]))
 
                     #pass to classifier
-                    print("\tClassifying " + str(inputfragment) + "...", file=sys.stderr)
+                    print("\tClassifying '" + str(inputfragment) + "' ...", file=sys.stderr)
                     classlabel, distribution, distance =  self.classifiers[str(inputfragment)].classify(features)
                     classlabel = classlabel.replace('\_',' ')
                     if lm and len(distribution) > 1:
