@@ -307,6 +307,7 @@ class ClassifierExperts:
                             features.append(keyword+"="+str(bag[keyword]))
 
                     #pass to classifier
+                    print("\tClassifying " + str(inputfragment) + "...", file=sys.stderr)
                     classlabel, distribution, distance =  self.classifiers[str(inputfragment)].classify(features)
                     classlabel = classlabel.replace('\_',' ')
                     if lm and len(distribution) > 1:
