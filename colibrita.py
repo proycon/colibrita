@@ -403,10 +403,10 @@ def main():
             os.mkdir(args.output)
         if not os.path.exists(args.output + '/directtranslation.table'):
             print("Building classifiers", file=sys.stderr)
-            experts.build(data, args.leftcontext, args.rightcontext, args.keywords, args.compute_bow_params, args.bow_absolute_threshold, args.bow_prob_threshold, args.bow_filter_threshold, args.timbloptions)
+            experts.build(data, args.leftcontext, args.rightcontext, args.keywords, args.compute_bow_params, args.bow_absolute_threshold, args.bow_prob_threshold, args.bow_filter_threshold, args.timbloptions + " -vdb -G0")
         else:
             print("Classifiers already built", file=sys.stderr)
-            experts.load(args.timbloptions)
+            experts.load(args.timbloptions + " +vdb -G0")
         experts.train()
     elif args.settype == 'test':
 
@@ -425,10 +425,10 @@ def main():
                 sys.exit(2)
             experts = ClassifierExperts(args.output)
             print("Loading classifiers",file=sys.stderr)
-            experts.load(args.timbloptions)
+            experts.load(args.timbloptions + " +vdb -G0")
             print("Running...",file=sys.stderr)
             data = Reader(args.dataset)
-            experts.test(data, args.output + '.output.xml', args.leftcontext, args.rightcontext, args.keywords, args.timbloptions, lm, args.tmweight, args.lmweight)
+            experts.test(data, args.output + '.output.xml', args.leftcontext, args.rightcontext, args.keywords, args.timbloptions + " +vdb -G0", lm, args.tmweight, args.lmweight)
         elif args.ttable:
             print("Loading translation table",file=sys.stderr)
             ttable = PhraseTable(args.ttable,False, False, "|||", 3, 0,None, None)
