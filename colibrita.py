@@ -295,7 +295,7 @@ class ClassifierExperts:
                     #extract global context
                     if dokeywords and str(inputfragment) in self.keywords:
                         bag = {}
-                        for keyword, target, freq,p in self.keywords[str(inputfragment)]:
+                        for keyword, target, freq,p in sorted(self.keywords[str(inputfragment)], key=lambda x: -1 *  x[3])[:MAXKEYWORDS]: #limit to 100 most potent keywords
                             bag[keyword] = 0
 
                         for word in itertools.chain(left, right):
