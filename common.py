@@ -3,6 +3,7 @@ from __future__ import print_function, unicode_literals, division, absolute_impo
 from colibrita.format import SentencePair, Fragment, Writer, Reader
 from pynlpl.formats.moses import PhraseTable
 from pynlpl.formats.giza import GizaModel
+from pynlpl.textprocessors import Tokeniser
 from pycolibri import ClassDecoder, ClassEncoder, IndexedPatternModel
 
 import sys
@@ -32,6 +33,29 @@ def makesentencepair(id, sourcepattern, targetpattern, sourceoffset, targetoffse
         return False, None
 
     return True, SentencePair(id, input, None, newtargetsentence)
+
+def plaintext2sentencepair(text,id=1):
+    tok = Tokeniser([text], False, True)
+    begin = -1
+    inp = []
+    frag = []
+    fragnum = 0
+    for i, token in enumerate(tok):
+        if token == '*':
+            if begin >=0:
+                begin = i
+                frag = []
+                fragnum += 1
+            else:
+                inp.append( Fragment( tuple(frag), fragnum) )
+                begin = -1
+        else:
+            if begin >= 0:
+                frag.append(token)
+            else:
+                inp.append(token)
+    return SentencePair(id, tuple(input), None, None)
+
 
 def extractpairs(ttablefile, gizamodelfile_s2t, gizamodelfile_t2s, patternmodelfile_source, patternmodelfile_target, classfile_source, classfile_target, joinedprobabilitythreshold, divergencefrombestthreshold, DEBUG):
     if DEBUG: print("Loading phrase-table", file=sys.stderr)
