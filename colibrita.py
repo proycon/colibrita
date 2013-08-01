@@ -20,6 +20,28 @@ from colibrita.baseline import makebaseline
 from pynlpl.lm.lm import ARPALanguageModel
 from pynlpl.formats.moses import PhraseTable
 
+try:
+    from twisted.web import server, resource
+    from twisted.internet import reactor
+
+    class ColibritaResource(resource.Resource):
+        isLeaf = True
+        numberRequests = 0
+
+        def render_GET(self, request):
+            self.numberRequests += 1
+            request.setHeader("content-type", "text/plain")
+            return "I am request #" + str(self.numberRequests) + "\n"
+
+    class ColibritaServer:
+        def __init__(self, port):
+            assert isinstance(port, int)
+            reactor.listenTCP(port, server.Site(ColibritaResource()))
+            reactor.run()
+
+except ImportError:
+    print("(Webserver support not available)",file=sys.stderr)
+
 MAXKEYWORDS = 100
 
 class ClassifierExperts:
@@ -259,116 +281,128 @@ class ClassifierExperts:
                 self.classifiers[classifier].train()
                 self.classifiers[classifier].save()
 
-    def test(self, data, outputfile, leftcontext, rightcontext, dokeywords, timbloptions, lm=None,tweight=1,lmweight=1):
-        dttable = {}
-        f = open(self.workdir + '/directtranslation.table')
-        for line in f:
-            if line:
-                fields = line.split('\t')
-                dttable[fields[0]] = fields[1]
-        f.close()
 
-        writer = Writer(outputfile)
-        for sentencepair in data:
-            print("Processing sentence " + str(sentencepair.id),file=sys.stderr)
-            sentencepair.ref = None
-            sentencepair.output = copy(sentencepair.input)
-            for left, inputfragment, right in sentencepair.inputfragments():
-                left = tuple(left.split())
-                right = tuple(right.split())
-                if str(inputfragment) in dttable:
-                    #direct translation
-                    outputfragment = Fragment(tuple(dttable[str(inputfragment)].split()), inputfragment.id)
-                    print("\tDirect translation " + str(inputfragment) + " -> " + str(outputfragment), file=sys.stderr)
-                elif str(inputfragment) in self.classifiers:
-                    #translation by classifier
-                    features = []
+    def processsentence(self, sentencepair, dttable, leftcontext, rightcontext, dokeywords, timbloptions, lm=None,tweight=1,lmweight=1):
+        print("Processing sentence " + str(sentencepair.id),file=sys.stderr)
+        sentencepair.ref = None
+        sentencepair.output = copy(sentencepair.input)
+        for left, inputfragment, right in sentencepair.inputfragments():
+            left = tuple(left.split())
+            right = tuple(right.split())
+            if str(inputfragment) in dttable:
+                #direct translation
+                outputfragment = Fragment(tuple(dttable[str(inputfragment)].split()), inputfragment.id)
+                print("\tDirect translation " + str(inputfragment) + " -> " + str(outputfragment), file=sys.stderr)
+            elif str(inputfragment) in self.classifiers:
+                #translation by classifier
+                features = []
 
-                    if leftcontext:
-                        f_left = list(left[-leftcontext:])
-                        if len(f_left) < leftcontext:
-                            f_left = list(["<s>"] * (leftcontext - len(f_left))) + f_left
-                        features += f_left
+                if leftcontext:
+                    f_left = list(left[-leftcontext:])
+                    if len(f_left) < leftcontext:
+                        f_left = list(["<s>"] * (leftcontext - len(f_left))) + f_left
+                    features += f_left
 
-                    if rightcontext:
-                        f_right = list(right[:rightcontext])
-                        if len(f_right) < rightcontext:
-                            f_right = f_right + list(["</s>"] * (rightcontext - len(f_right)))
-                        features += f_right
+                if rightcontext:
+                    f_right = list(right[:rightcontext])
+                    if len(f_right) < rightcontext:
+                        f_right = f_right + list(["</s>"] * (rightcontext - len(f_right)))
+                    features += f_right
 
 
-                    #extract global context
-                    if dokeywords and str(inputfragment) in self.keywords:
-                        bag = {}
-                        for keyword, target, freq,p in sorted(self.keywords[str(inputfragment)], key=lambda x: -1 *  x[3])[:MAXKEYWORDS]: #limit to 100 most potent keywords
-                            bag[keyword] = 0
+                #extract global context
+                if dokeywords and str(inputfragment) in self.keywords:
+                    bag = {}
+                    for keyword, target, freq,p in sorted(self.keywords[str(inputfragment)], key=lambda x: -1 *  x[3])[:MAXKEYWORDS]: #limit to 100 most potent keywords
+                        bag[keyword] = 0
 
-                        for word in itertools.chain(left, right):
-                            if word in bag:
-                                bag[keyword] = 1
+                    for word in itertools.chain(left, right):
+                        if word in bag:
+                            bag[keyword] = 1
 
-                        #add to features
-                        for keyword in sorted(bag.keys()):
-                            features.append(keyword+"="+str(bag[keyword]))
+                    #add to features
+                    for keyword in sorted(bag.keys()):
+                        features.append(keyword+"="+str(bag[keyword]))
 
-                    #pass to classifier
-                    print("\tClassifying '" + str(inputfragment) + "' ...", file=sys.stderr)
-                    classlabel, distribution, distance =  self.classifiers[str(inputfragment)].classify(features)
-                    classlabel = classlabel.replace('\_',' ')
-                    if lm and len(distribution) > 1:
-                        print("\tClassifier translation prior to LM: " + str(inputfragment) + " -> [ DISTRIBUTION:" + str(repr(distribution))+" ]", file=sys.stderr)
-                        candidatesentences = []
-                        bestlmscore = -999999999
-                        besttscore = -999999999
-                        for targetpattern, score in distribution.items():
-                            assert score >= 0 and score <= 1
-                            tscore = math.log(score) #convert to base-e log (LM is converted to base-e upon load)
-                            translation = tuple(targetpattern.split())
-                            outputfragment = Fragment(translation, inputfragment.id)
-                            candidatesentence = sentencepair.replacefragment(inputfragment, outputfragment, sentencepair.output)
-                            lminput = " ".join(sentencepair._str(candidatesentence)).split(" ") #joining and splitting deliberately to ensure each word is one item
-                            lmscore = lm.score(lminput)
-                            assert lmscore <= 0
-                            if lmscore > bestlmscore:
-                                bestlmscore = lmscore
-                            if tscore > besttscore:
-                                besttscore = tscore
-                            candidatesentences.append( ( candidatesentence, outputfragment, tscore, lmscore ) )
+                #pass to classifier
+                print("\tClassifying '" + str(inputfragment) + "' ...", file=sys.stderr)
+                classlabel, distribution, distance =  self.classifiers[str(inputfragment)].classify(features)
+                classlabel = classlabel.replace('\_',' ')
+                if lm and len(distribution) > 1:
+                    print("\tClassifier translation prior to LM: " + str(inputfragment) + " -> [ DISTRIBUTION:" + str(repr(distribution))+" ]", file=sys.stderr)
+                    candidatesentences = []
+                    bestlmscore = -999999999
+                    besttscore = -999999999
+                    for targetpattern, score in distribution.items():
+                        assert score >= 0 and score <= 1
+                        tscore = math.log(score) #convert to base-e log (LM is converted to base-e upon load)
+                        translation = tuple(targetpattern.split())
+                        outputfragment = Fragment(translation, inputfragment.id)
+                        candidatesentence = sentencepair.replacefragment(inputfragment, outputfragment, sentencepair.output)
+                        lminput = " ".join(sentencepair._str(candidatesentence)).split(" ") #joining and splitting deliberately to ensure each word is one item
+                        lmscore = lm.score(lminput)
+                        assert lmscore <= 0
+                        if lmscore > bestlmscore:
+                            bestlmscore = lmscore
+                        if tscore > besttscore:
+                            besttscore = tscore
+                        candidatesentences.append( ( candidatesentence, outputfragment, tscore, lmscore ) )
 
-                        #get the strongest sentence
-                        maxscore = -9999999999
-                        for candidatesentence, targetpattern, tscore, lmscore in candidatesentences:
-                            tscore = tweight * (tscore-besttscore)
-                            lmscore = lmweight * (lmscore-bestlmscore)
-                            score = tscore + lmscore
-                            print("\t LM candidate " + str(inputfragment) + " -> " + str(targetpattern) + "   score=tscore+lmscore=" + str(tscore) + "+" + str(lmscore) + "=" + str(score), file=sys.stderr)
-                            if score > maxscore:
-                                maxscore = score
-                                outputfragment = targetpattern  #Fragment(targetpattern, inputfragment.id)
-                        print("\tClassifier translation after LM: " + str(inputfragment) + " -> " + str(outputfragment) + " score= " + str(score), file=sys.stderr)
-
-                    else:
-                        outputfragment = Fragment(tuple(classlabel.split()), inputfragment.id)
-                        print("\tClassifier translation " + str(inputfragment) + " -> " + str(outputfragment) + "\t[ DISTRIBUTION:" + str(repr(distribution))+" ]", file=sys.stderr)
+                    #get the strongest sentence
+                    maxscore = -9999999999
+                    for candidatesentence, targetpattern, tscore, lmscore in candidatesentences:
+                        tscore = tweight * (tscore-besttscore)
+                        lmscore = lmweight * (lmscore-bestlmscore)
+                        score = tscore + lmscore
+                        print("\t LM candidate " + str(inputfragment) + " -> " + str(targetpattern) + "   score=tscore+lmscore=" + str(tscore) + "+" + str(lmscore) + "=" + str(score), file=sys.stderr)
+                        if score > maxscore:
+                            maxscore = score
+                            outputfragment = targetpattern  #Fragment(targetpattern, inputfragment.id)
+                    print("\tClassifier translation after LM: " + str(inputfragment) + " -> " + str(outputfragment) + " score= " + str(score), file=sys.stderr)
 
                 else:
-                    #no translation found
-                    outputfragment = Fragment(None, inputfragment.id)
-                    print("\tNo translation for " + str(inputfragment), file=sys.stderr)
-                sentencepair.output = sentencepair.replacefragment(inputfragment, outputfragment, sentencepair.output)
+                    outputfragment = Fragment(tuple(classlabel.split()), inputfragment.id)
+                    print("\tClassifier translation " + str(inputfragment) + " -> " + str(outputfragment) + "\t[ DISTRIBUTION:" + str(repr(distribution))+" ]", file=sys.stderr)
+
+            else:
+                #no translation found
+                outputfragment = Fragment(None, inputfragment.id)
+                print("\tNo translation for " + str(inputfragment), file=sys.stderr)
+            sentencepair.output = sentencepair.replacefragment(inputfragment, outputfragment, sentencepair.output)
+        return sentencepair
+
+    def loaddttable(self):
+        return loaddttable(self.workdir + '/directtranslation.table')
+
+    def test(self, data, outputfile, leftcontext, rightcontext, dokeywords, timbloptions, lm=None,tweight=1,lmweight=1):
+        dttable = self.loaddttable()
+        writer = Writer(outputfile)
+        for sentencepair in data:
+            sentencepair = self.processsentence(sentencepair, dttable, leftcontext, rightcontext, dokeywords, timbloptions, lm, tweight, lmweight)
             writer.write(sentencepair)
         writer.close()
 
 
+def loaddttable(filename):
+    dttable = {}
+    f = open()
+    for line in f:
+        if line:
+            fields = line.split('\t')
+            dttable[fields[0]] = fields[1]
+    f.close()
+    return dttable
 
 
 
 
 def main():
     parser = argparse.ArgumentParser(description="Colibrita - Translation Assistance", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('--train',dest='settype', action='store_const',const='train')
-    parser.add_argument('--test',dest='settype', action='store_const',const='test')
-    parser.add_argument('-f','--dataset', type=str,help="Dataset file", action='store',required=True)
+    parser.add_argument('--train',dest='settype',help="Training mode", action='store_const',const='train')
+    parser.add_argument('--test',dest='settype',help="Test mode (against a specific test set)", action='store_const',const='test')
+    parser.add_argument('--run',dest='settype',help="Run mode (reads input from stdin)", action='store_const',const='run')
+    parser.add_argument('--server',dest='settype', help="Server mode (RESTFUL HTTP Server)", action='store_const',const='server')
+    parser.add_argument('-f','--dataset', type=str,help="Dataset file", action='store',default="",required=False)
     parser.add_argument('--debug','-d', help="Debug", action='store_true', default=False)
     parser.add_argument('-l','--leftcontext',type=int, help="Left local context size", action='store',default=0)
     parser.add_argument('-r','--rightcontext',type=int,help="Right local context size", action='store',default=0)
@@ -395,9 +429,14 @@ def main():
         sys.exit(2)
 
 
+
+
     if args.settype == 'train':
         if args.baseline:
             print("Baseline does not need further training, use --test instead", file=sys.stderr)
+            sys.exit(2)
+        elif not args.dataset:
+            print("Specify a dataset to use for training! (-f)", file=sys.stderr)
             sys.exit(2)
         elif args.lm:
             print("WARNING: Language model specified during training, will be ignored", file=sys.stderr)
@@ -415,6 +454,10 @@ def main():
             experts.load(args.timbloptions + " +vdb -G0")
         experts.train()
     elif args.settype == 'test':
+
+        if not args.dataset:
+            print("Specify a dataset to use for testing! (-f)", file=sys.stderr)
+            sys.exit(2)
 
         if args.lm:
             print("Loading Language model", file=sys.stderr)
@@ -447,6 +490,45 @@ def main():
                 makebaseline(ttable, args.output + '.output.xml', data)
         else:
             print("Don't know what to do! Specify some classifier options or -T with --lm or --baseline", file=sys.stderr)
+    elif args.settype == 'run':
+        if args.lm:
+            print("Loading Language model", file=sys.stderr)
+            lm = ARPALanguageModel(args.lm)
+        else:
+            lm = None
+
+        experts = None
+        dttable = {}
+        if args.leftcontext or args.rightcontext or args.keywords:
+            if not os.path.exists(args.output + '/directtranslation.table'):
+                print("Direct translation table does not exist, did you forget to train the system first?", file=sys.stderr)
+                sys.exit(2)
+            else:
+                print("Loading direct translation table", file=sys.stderr)
+                dttable = loaddttable(args.output + '/directtranslation.table')
+            experts = ClassifierExperts(args.output)
+            print("Loading classifiers",file=sys.stderr)
+            experts.load(args.timbloptions + " +vdb -G0")
+        elif args.ttable:
+            print("Loading translation table",file=sys.stderr)
+            ttable = PhraseTable(args.ttable,False, False, "|||", 3, 0,None, None)
+
+        print("Reading from standard input, enclose words/phrases in fallback language in asteriskes (*), type q<enter> to quit",file=sys.stderr)
+        for line in sys.stdin:
+            line = line.strip()
+            if line == "q":
+                break
+            else:
+                sentencepair = plaintext2sentencepair(line)
+                if experts:
+                    sentencepair = experts.processsentence(sentencepair, dttable, args.leftcontext, args.rightcontext, args.keywords, args.timbloptions + " +vdb -G0", lm, args.tmweight, args.lmweight)
+                elif args.ttable:
+                    pass #TODO
+                print(str(sentencepair.output))
+
+
+    elif args.settype == 'server':
+        pass
 
     print("All done.", file=sys.stderr)
     return True
