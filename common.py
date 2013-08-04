@@ -260,7 +260,7 @@ def buildphrasetable(corpusname, mosesdir, bindir, sourcelang, targetlang):
     EXEC_MOSES_TRAINMODEL = mosesdir + '/scripts/training/train-model.perl'
     EXTERNALBIN = bindir
     #build phrasetable using moses
-    if not runcmd(EXEC_MOSES_TRAINMODEL + ' -external-bin-dir ' + EXTERNALBIN + " -root-dir . --corpus " + corpusname + " --f " + sourcelang + " --e " + targetlang + " --first-step " + str(1) + " --last-step " + str(8) + ' >&2 2> ' + corpusname + '-moses.log',"Creating word alignment and phrase table on test data", "model/phrase-table.gz"): return False
+    if not runcmd(EXEC_MOSES_TRAINMODEL + ' -external-bin-dir ' + EXTERNALBIN + " -root-dir . --corpus " + corpusname + " --f " + sourcelang + " --e " + targetlang + " --first-step " + str(1) + " --last-step " + str(8) + ' >&2 2> ' + corpusname + '-moses.log',"Creating word alignment and phrase table", "model/phrase-table.gz"): return False
     return True
 
 def buildpatternmodel(corpusname, sourcelang, targetlang, occurrencethreshold=2):
