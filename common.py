@@ -35,7 +35,7 @@ def makesentencepair(id, sourcepattern, targetpattern, sourceoffset, targetoffse
     return True, SentencePair(id, input, None, newtargetsentence)
 
 def plaintext2sentencepair(text,id=1):
-    tok = Tokeniser([text], False, True)
+    tok = Tokenizer([text], False, True)
     begin = -1
     inp = []
     frag = []

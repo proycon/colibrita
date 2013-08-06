@@ -15,7 +15,7 @@ from urllib.parse import quote_plus, unquote_plus
 from copy import copy
 
 from colibrita.format import Writer, Reader, Fragment
-from colibrita.common import extractpairs, makesentencepair, runcmd, makeset
+from colibrita.common import extractpairs, makesentencepair, runcmd, makeset, plaintext2sentencepair
 from colibrita.baseline import makebaseline
 from pynlpl.lm.lm import ARPALanguageModel
 from pynlpl.formats.moses import PhraseTable
