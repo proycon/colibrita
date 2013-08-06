@@ -286,6 +286,69 @@ class ClassifierExperts:
         index.close()
 
 
+
+
+
+    def leaveoneouttest(self, classifier, leftcontext, rightcontext, newleftcontext, newrightcontext, newdokeywords, timbloptions):
+        print("Auto-configuring " + str(len(self.classifiers)) + " classifiers, determining optimal feature configuration using leave-one-out", file=sys.stderr)
+        assert newleftcontext <= leftcontext
+        assert newrightcontext <= rightcontext
+        skip = []
+        for i in range(1,leftcontext+rightcontext+1): #TODO: TEST!!
+            if i <= leftcontext:
+                if i <= leftcontext - newleftcontext:
+                    skip.append(i)
+            elif i - leftcontext <= rightcontext:
+                if i - leftcontext > newrightcontext:
+                    skip.append(i)
+
+        timblskipopts = "-mO:I" + ",".join([ str(i) for i in skip ])
+
+        #leave one out classifier
+        classifier = timbl.TimblClassifier(self.classifiers[classifier].fileprefix, timbloptions + " " + timblskipopts + " -t leave_one_out")
+        classifier.train()
+        accuracy = classifier.test(self.classifiers[classifier].fileprefix + ".train")
+        return accuracy
+
+
+
+
+
+
+
+
+    def autoconf(self, leftcontext, rightcontext, dokeywords, timbloptions):
+        print("Auto-configuring " + str(len(self.classifiers)) + " classifiers, determining optimal feature configuration using leave-one-out", file=sys.stderr)
+        best = 0
+        for classifier in self.classifiers:
+            for c in range(1,max(leftcontext,rightcontext)):
+                accuracy = self.leaveoneouttest(self, classifier, leftcontext, rightcontext, c, c, False, timbloptions)
+                if accuracy > best:
+                    bestconfig = (c,c,False)
+                    best = accuracy
+                    os.rename(self.classifiers[classifier].fileprefix + '.train', self.classifiers[classifier].fileprefix + '.best'):
+                if keywords:
+                    accuracy = self.leaveoneouttest(self, classifier, leftcontext, rightcontext, c, c, dokeywords, timbloptions)
+
+
+                #if c != 0:
+                #    #add assymetry
+                #    self.leaveoneouttest(self, classifier, lefcontext, rightcontext, c, 0, False)
+                #    self.leaveoneouttest(self, classifier, lefcontext, rightcontext, 0, c, False)
+
+
+
+
+
+
+
+            if os.path.exists(self.classifiers[classifier].fileprefix + '.train'):
+                self.classifiers[classifier].train()
+                self.classifiers[classifier].save()
+
+
+
+
     def train(self):
         print("Training " + str(len(self.classifiers)) + " classifiers", file=sys.stderr)
         for classifier in self.classifiers:
@@ -293,6 +356,8 @@ class ClassifierExperts:
             if os.path.exists(self.classifiers[classifier].fileprefix + '.train'):
                 self.classifiers[classifier].train()
                 self.classifiers[classifier].save()
+
+
 
 
     def processsentence(self, sentencepair, dttable, leftcontext, rightcontext, dokeywords, timbloptions, lm=None,tweight=1,lmweight=1):
@@ -417,6 +482,7 @@ def main():
     parser.add_argument('--server',dest='settype', help="Server mode (RESTFUL HTTP Server)", action='store_const',const='server')
     parser.add_argument('-f','--dataset', type=str,help="Dataset file", action='store',default="",required=False)
     parser.add_argument('--debug','-d', help="Debug", action='store_true', default=False)
+    parser.add_argument('-a','--autoconf', help="Automatically determine best configuration per expert (validated using leave-one-out), values for -l and -r are considered maxima, set -k to consider keywords", action='store_const',default=0)
     parser.add_argument('-l','--leftcontext',type=int, help="Left local context size", action='store',default=0)
     parser.add_argument('-r','--rightcontext',type=int,help="Right local context size", action='store',default=0)
     parser.add_argument('-k','--keywords',help="Add global keywords in context", action='store_true',default=False)
