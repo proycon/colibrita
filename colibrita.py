@@ -28,15 +28,27 @@ try:
         isLeaf = True
         numberRequests = 0
 
+        def __init__(self, experts, dttable, ttable, lm, args):
+            self.experts = experts
+            self.dttable = dttable
+            self.ttable = ttable
+            self.args = args
+
         def render_GET(self, request):
             self.numberRequests += 1
-            request.setHeader("content-type", "text/plain")
-            return "I am request #" + str(self.numberRequests) + "\n"
+            request.setHeader("content-type", "text/xml")
+            line = request.args['line']
+            sentencepair = plaintext2sentencepair(line)
+            if self.experts:
+                sentencepair = experts.processsentence(sentencepair, self.dttable, self.args.leftcontext, self.args.rightcontext, self.args.keywords, self.args.timbloptions + " +vdb -G0", lm, self.args.tmweight, self.args.lmweight)
+            elif self.ttable:
+                pass #TODO
+            return sentencepair.xml()
 
     class ColibritaServer:
-        def __init__(self, port):
+        def __init__(self, port, experts, dttable, ttable, lm, args):
             assert isinstance(port, int)
-            reactor.listenTCP(port, server.Site(ColibritaResource()))
+            reactor.listenTCP(port, server.Site(ColibritaResource(experts,dttable, dttable, ttable,lm, args)))
             reactor.run()
 
 except ImportError:
@@ -417,6 +429,7 @@ def main():
     parser.add_argument('--lm',type=str, help="Use language model in testing (file in ARPA format, as produced by for instance SRILM)", action='store',default="")
     parser.add_argument('--lmweight',type=float, help="Language model weight (when --lm is used)", action='store',default=1)
     parser.add_argument('--tmweight',type=float, help="Translation model weight (when --lm is used)", action='store',default=1)
+    parser.add_argument('--port',type=int, help="Server port (use with --server)", action='store',default=7893)
     parser.add_argument('-T','--ttable', type=str,help="Phrase translation table (file) to use when testing with --lm and without classifier training", action='store',default="")
 
     args = parser.parse_args()
@@ -490,7 +503,7 @@ def main():
                 makebaseline(ttable, args.output + '.output.xml', data)
         else:
             print("Don't know what to do! Specify some classifier options or -T with --lm or --baseline", file=sys.stderr)
-    elif args.settype == 'run':
+    elif args.settype == 'run' or args.settypes == 'server':
         if args.lm:
             print("Loading Language model", file=sys.stderr)
             lm = ARPALanguageModel(args.lm)
@@ -513,22 +526,22 @@ def main():
             print("Loading translation table",file=sys.stderr)
             ttable = PhraseTable(args.ttable,False, False, "|||", 3, 0,None, None)
 
-        print("Reading from standard input, enclose words/phrases in fallback language in asteriskes (*), type q<enter> to quit",file=sys.stderr)
-        for line in sys.stdin:
-            line = line.strip()
-            if line == "q":
-                break
-            else:
-                sentencepair = plaintext2sentencepair(line)
-                if experts:
-                    sentencepair = experts.processsentence(sentencepair, dttable, args.leftcontext, args.rightcontext, args.keywords, args.timbloptions + " +vdb -G0", lm, args.tmweight, args.lmweight)
-                elif args.ttable:
-                    pass #TODO
-                print(sentencepair.outputstr())
-
-
-    elif args.settype == 'server':
-        pass
+        if args.settype == 'run':
+            print("Reading from standard input, enclose words/phrases in fallback language in asteriskes (*), type q<enter> to quit",file=sys.stderr)
+            for line in sys.stdin:
+                line = line.strip()
+                if line == "q":
+                    break
+                else:
+                    sentencepair = plaintext2sentencepair(line)
+                    if experts:
+                        sentencepair = experts.processsentence(sentencepair, dttable, args.leftcontext, args.rightcontext, args.keywords, args.timbloptions + " +vdb -G0", lm, args.tmweight, args.lmweight)
+                    elif args.ttable:
+                        pass #TODO
+                    print(sentencepair.outputstr())
+        elif args.settype == 'server':
+            print("Starting Colibrita server on port " + str(args.port),file=sys.stderr)
+            ColibritaServer(args.port, experts, dttable, ttable, lm, args)
 
     print("All done.", file=sys.stderr)
     return True
