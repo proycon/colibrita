@@ -54,7 +54,7 @@ def plaintext2sentencepair(text,id=1):
                 frag.append(token)
             else:
                 inp.append(token)
-    return SentencePair(id, tuple(input), None, None)
+    return SentencePair(id, tuple(inp), None, None)
 
 
 def extractpairs(ttablefile, gizamodelfile_s2t, gizamodelfile_t2s, patternmodelfile_source, patternmodelfile_target, classfile_source, classfile_target, joinedprobabilitythreshold, divergencefrombestthreshold, DEBUG):
