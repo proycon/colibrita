@@ -287,12 +287,7 @@ class ClassifierExperts:
 
 
 
-
-
-    def leaveoneouttest(self, classifier, leftcontext, rightcontext, newleftcontext, newrightcontext, newdokeywords, timbloptions):
-        print("Auto-configuring " + str(len(self.classifiers)) + " classifiers, determining optimal feature configuration using leave-one-out", file=sys.stderr)
-        assert newleftcontext <= leftcontext
-        assert newrightcontext <= rightcontext
+    def gettimblskipopts(self, leftcontext,rightcontext,newleftcontext,newrightcontext, skipkeywords):
         skip = []
         for i in range(1,leftcontext+rightcontext+1): #TODO: TEST!!
             if i <= leftcontext:
@@ -302,7 +297,15 @@ class ClassifierExperts:
                 if i - leftcontext > newrightcontext:
                     skip.append(i)
 
-        timblskipopts = "-mO:I" + ",".join([ str(i) for i in skip ])
+        #TODO: Add skip of keywords
+
+        return "-mO:I" + ",".join([ str(i) for i in skip ])
+
+    def leaveoneouttest(self, classifier, leftcontext, rightcontext, dokeywords,  newleftcontext, newrightcontext, newdokeywords, timbloptions):
+        print("Auto-configuring " + str(len(self.classifiers)) + " classifiers, determining optimal feature configuration using leave-one-out", file=sys.stderr)
+        assert newleftcontext <= leftcontext
+        assert newrightcontext <= rightcontext
+        timblskipopts = self.gettimblskipopts(leftcontext, rightcontext, newleftcontext, newrightcontext, dokeywords and not newdokeywords )
 
         #leave one out classifier
         classifier = timbl.TimblClassifier(self.classifiers[classifier].fileprefix, timbloptions + " " + timblskipopts + " -t leave_one_out")
@@ -313,22 +316,17 @@ class ClassifierExperts:
 
 
 
-
-
-
-
     def autoconf(self, leftcontext, rightcontext, dokeywords, timbloptions):
         print("Auto-configuring " + str(len(self.classifiers)) + " classifiers, determining optimal feature configuration using leave-one-out", file=sys.stderr)
         best = 0
         for classifier in self.classifiers:
             for c in range(1,max(leftcontext,rightcontext)):
-                accuracy = self.leaveoneouttest(self, classifier, leftcontext, rightcontext, c, c, False, timbloptions)
+                accuracy = self.leaveoneouttest(self, classifier, leftcontext, rightcontext, dokeywords,  c, c, False, timbloptions)
                 if accuracy > best:
                     bestconfig = (c,c,False)
                     best = accuracy
-                    os.rename(self.classifiers[classifier].fileprefix + '.train', self.classifiers[classifier].fileprefix + '.best'):
-                if keywords:
-                    accuracy = self.leaveoneouttest(self, classifier, leftcontext, rightcontext, c, c, dokeywords, timbloptions)
+                if dokeywords:
+                    accuracy = self.leaveoneouttest(self, classifier, leftcontext, rightcontext, dokeywords, c, c, True, timbloptions)
 
 
                 #if c != 0:
