@@ -3,7 +3,7 @@ from __future__ import print_function, unicode_literals, division, absolute_impo
 from colibrita.format import SentencePair, Fragment, Writer, Reader
 from pynlpl.formats.moses import PhraseTable
 from pynlpl.formats.giza import GizaModel
-from pynlpl.textprocessors import Tokeniser
+from pynlpl.textprocessors import Tokenizer
 from pycolibri import ClassDecoder, ClassEncoder, IndexedPatternModel
 
 import sys
