@@ -32,6 +32,7 @@ try:
             self.experts = experts
             self.dttable = dttable
             self.ttable = ttable
+            self.lm = lm
             self.args = args
 
         def render_GET(self, request):
@@ -40,7 +41,7 @@ try:
             line = request.args['line']
             sentencepair = plaintext2sentencepair(line)
             if self.experts:
-                sentencepair = experts.processsentence(sentencepair, self.dttable, self.args.leftcontext, self.args.rightcontext, self.args.keywords, self.args.timbloptions + " +vdb -G0", lm, self.args.tmweight, self.args.lmweight)
+                sentencepair = self.experts.processsentence(sentencepair, self.dttable, self.args.leftcontext, self.args.rightcontext, self.args.keywords, self.args.timbloptions + " +vdb -G0", self.lm, self.args.tmweight, self.args.lmweight)
             elif self.ttable:
                 pass #TODO
             return sentencepair.xml()
