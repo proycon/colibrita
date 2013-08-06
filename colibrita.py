@@ -524,7 +524,7 @@ def main():
                     sentencepair = experts.processsentence(sentencepair, dttable, args.leftcontext, args.rightcontext, args.keywords, args.timbloptions + " +vdb -G0", lm, args.tmweight, args.lmweight)
                 elif args.ttable:
                     pass #TODO
-                print(str(sentencepair.output))
+                print(sentencepair.outputstr())
 
 
     elif args.settype == 'server':

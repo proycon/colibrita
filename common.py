@@ -42,12 +42,13 @@ def plaintext2sentencepair(text,id=1):
     fragnum = 0
     for i, token in enumerate(tok):
         if token == '*':
-            if begin >=0:
+            if begin == -1:
                 begin = i
                 frag = []
                 fragnum += 1
-            else:
-                inp.append( Fragment( tuple(frag), fragnum) )
+            elif begin >= 0:
+                if frag:
+                    inp.append( Fragment( tuple(frag), fragnum) )
                 begin = -1
         else:
             if begin >= 0:
