@@ -385,7 +385,7 @@ class ClassifierExperts:
 
 def loaddttable(filename):
     dttable = {}
-    f = open()
+    f = open(filename)
     for line in f:
         if line:
             fields = line.split('\t')
