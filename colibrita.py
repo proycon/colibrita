@@ -37,20 +37,18 @@ try:
 
         def render_GET(self, request):
             self.numberRequests += 1
-            request.setHeader("content-type", "application/xml")
-            line = request.args['input']
-            sentencepair = plaintext2sentencepair(line)
-            if self.experts:
-                sentencepair = self.experts.processsentence(sentencepair, self.dttable, self.args.leftcontext, self.args.rightcontext, self.args.keywords, self.args.timbloptions + " +vdb -G0", self.lm, self.args.tmweight, self.args.lmweight)
-            elif self.ttable:
-                pass #TODO
-            return sentencepair.xml()
-
-    class ColibritaIndexResource(resource.Resource):
-        isleaf = False
-
-        def render_GET(self, request):
-            return """<?xml version="1.0" encoding="utf-8"?>
+            if 'input' in request.args:
+                request.setHeader("content-type", "application/xml")
+                line = request.args['input']
+                sentencepair = plaintext2sentencepair(line)
+                if self.experts:
+                    sentencepair = self.experts.processsentence(sentencepair, self.dttable, self.args.leftcontext, self.args.rightcontext, self.args.keywords, self.args.timbloptions + " +vdb -G0", self.lm, self.args.tmweight, self.args.lmweight)
+                elif self.ttable:
+                    pass #TODO
+                return sentencepair.xml()
+            else:
+                request.setHeader("content-type", "text/html")
+                return """<?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
 <html>
@@ -60,7 +58,7 @@ try:
   </head>
   <body>
       Enter text in target language, enclose fall-back language content in asteriskes (*):<br />
-      <form action="/process" method="post">
+      <form action="/" method="get">
           <input name="input" /><br />
           <input type="submit">
       </form>
@@ -70,9 +68,7 @@ try:
     class ColibritaServer:
         def __init__(self, port, experts, dttable, ttable, lm, args):
             assert isinstance(port, int)
-            root = ColibritaIndexResource()
-            root.putChild("process", ColibritaProcessorResource(experts,dttable, ttable,lm, args))
-            reactor.listenTCP(port, server.Site(root))
+            reactor.listenTCP(port, server.Site(ColibritaProcessorResource(experts,dttable, ttable,lm, args)))
             reactor.run()
 
 except ImportError:
