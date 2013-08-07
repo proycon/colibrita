@@ -38,7 +38,7 @@ try:
         def render_GET(self, request):
             self.numberRequests += 1
             request.setHeader("content-type", "application/xml")
-            line = request.args['line']
+            line = request.args['input']
             sentencepair = plaintext2sentencepair(line)
             if self.experts:
                 sentencepair = self.experts.processsentence(sentencepair, self.dttable, self.args.leftcontext, self.args.rightcontext, self.args.keywords, self.args.timbloptions + " +vdb -G0", self.lm, self.args.tmweight, self.args.lmweight)
@@ -53,8 +53,8 @@ try:
     class ColibritaServer:
         def __init__(self, port, experts, dttable, ttable, lm, args):
             assert isinstance(port, int)
-            root = static.File("webclient/index.html")
-            root.putChild("static", static.File("webclient/"))
+            root = static.File("web/index.html")
+            root.putChild("static", static.File("web/"))
             root.putChild("process", ColibritaProcessorResource(experts,dttable, ttable,lm, args))
             reactor.listenTCP(port, server.Site(root))
             reactor.run()
