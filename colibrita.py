@@ -508,6 +508,7 @@ def main():
     parser.add_argument('--test',dest='settype',help="Test mode (against a specific test set)", action='store_const',const='test')
     parser.add_argument('--run',dest='settype',help="Run mode (reads input from stdin)", action='store_const',const='run')
     parser.add_argument('--server',dest='settype', help="Server mode (RESTFUL HTTP Server)", action='store_const',const='server')
+    parser.add_argument('--igen',dest='settype',help="Instance generation without actual training", action='store_const',const='igen')
     parser.add_argument('-f','--dataset', type=str,help="Dataset file", action='store',default="",required=False)
     parser.add_argument('--debug','-d', help="Debug", action='store_true', default=False)
     parser.add_argument('-a','--autoconf', help="Automatically determine best feature configuration per expert (validated using leave-one-out), values for -l and -r are considered maxima, set -k to consider keywords, only needs to be specified at training time", action='store_const',default=0)
@@ -539,7 +540,7 @@ def main():
 
 
 
-    if args.settype == 'train':
+    if args.settype == 'train' or args.settype == 'igen':
         if args.baseline:
             print("Baseline does not need further training, use --test instead", file=sys.stderr)
             sys.exit(2)
@@ -557,12 +558,14 @@ def main():
         if not os.path.exists(args.output + '/directtranslation.table'):
             print("Building classifiers", file=sys.stderr)
             experts.build(data, args.leftcontext, args.rightcontext, args.keywords, args.compute_bow_params, args.bow_absolute_threshold, args.bow_prob_threshold, args.bow_filter_threshold, args.timbloptions + " -vdb -G0")
-        else:
+        elif args.settype == 'train':
             print("Classifiers already built", file=sys.stderr)
             experts.load(args.timbloptions + " +vdb -G0")
-        if args.autoconf:
+        else:
+            print("Instances already generated",file=sys.stderr)
+        if args.settype == 'train' and args.autoconf:
             experts.autoconf(args.leftcontext, args.rightcontext, args.keywords, args.timbloptions + " -vdb -G0")
-        experts.train()
+        if args.settype == 'train': experts.train()
     elif args.settype == 'test':
 
         if not args.dataset:
