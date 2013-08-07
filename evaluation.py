@@ -105,6 +105,7 @@ def evaluate(ref, out, matrexdir, workdir, casesensitive=True, alternatives=Fals
                             wordmatches += 1
                             break
                 else:
+                    #TODO: compute partial match against alternatives
                     misses += 1
                     if len(outputfragments[inputfragment.id]) == 0:
                         #missing output
