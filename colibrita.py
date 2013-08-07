@@ -15,7 +15,7 @@ from collections import defaultdict
 from urllib.parse import quote_plus, unquote_plus
 from copy import copy
 
-from colibrita.format import Writer, Reader, Fragment
+from colibrita.format import Writer, Reader, Fragment, Alternative
 from colibrita.common import extractpairs, makesentencepair, runcmd, makeset, plaintext2sentencepair
 from colibrita.baseline import makebaseline
 from pynlpl.lm.lm import ARPALanguageModel
@@ -464,7 +464,7 @@ class ClassifierExperts:
                         assert score >= 0 and score <= 1
                         tscore = math.log(score) #convert to base-e log (LM is converted to base-e upon load)
                         translation = tuple(targetpattern.split())
-                        outputfragment = Fragment(translation, inputfragment.id)
+                        outputfragment = Fragment(translation, inputfragment.id, score)
                         candidatesentence = sentencepair.replacefragment(inputfragment, outputfragment, sentencepair.output)
                         lminput = " ".join(sentencepair._str(candidatesentence)).split(" ") #joining and splitting deliberately to ensure each word is one item
                         lmscore = lm.score(lminput)
@@ -485,10 +485,19 @@ class ClassifierExperts:
                         if score > maxscore:
                             maxscore = score
                             outputfragment = targetpattern  #Fragment(targetpattern, inputfragment.id)
+                            outputfragment.confidence = score
+                    alternatives = []
+                    for candidatesentence, targetpattern, tscore, lmscore in candidatesentences:
+                        if targetpattern != outputfragment:
+                            outputfragment.alternatives.append( Alternative( tuple(targetpattern.split()), tweight* (tscore-besttscore) + lmweight * (lmscore-bestlmscore) )  )
                     print("\tClassifier translation after LM: " + str(inputfragment) + " -> " + str(outputfragment) + " score= " + str(score), file=sys.stderr)
 
                 else:
-                    outputfragment = Fragment(tuple(classlabel.split()), inputfragment.id)
+                    outputfragment = Fragment(tuple(classlabel.split()), inputfragment.id, max(distribution.values()))
+                    for targetpattern, score in distribution.items():
+                        tscore = math.log(score) #convert to base-e log (LM is converted to base-e upon load)
+                        if targetpattern != classlabel:
+                            outputfragment.alternatives.append( Alternative( tuple(targetpattern.split()), score) )
                     print("\tClassifier translation " + str(inputfragment) + " -> " + str(outputfragment) + "\t[ DISTRIBUTION:" + str(repr(distribution))+" ]", file=sys.stderr)
 
             else:
