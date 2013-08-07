@@ -10,6 +10,7 @@ import itertools
 import glob
 import math
 import timbl
+import lxml.etree
 from collections import defaultdict
 from urllib.parse import quote_plus, unquote_plus
 from copy import copy
@@ -46,7 +47,7 @@ try:
                     sentencepair = self.experts.processsentence(sentencepair, self.dttable, self.args.leftcontext, self.args.rightcontext, self.args.keywords, self.args.timbloptions + " +vdb -G0", self.lm, self.args.tmweight, self.args.lmweight)
                 elif self.ttable:
                     pass #TODO
-                return sentencepair.xml().encode('utf-8')
+                return lxml.etree.tostring(sentencepair.xml(), encoding='utf-8',xml_declaration=False, pretty_print=True)
             else:
                 request.setHeader(b"content-type", b"text/html")
                 return b"""<?xml version="1.0" encoding="utf-8"?>
