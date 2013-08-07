@@ -249,7 +249,7 @@ class Fragment:
         for a in self.alternatives:
             args.append( a.xml() )
         if not (self.confidence is None):
-            kwargs['confidence'] = self.confidence
+            kwargs['confidence'] = str(self.confidence)
         return E.f(*args, **kwargs)
 
     def __eq__(self, other):
