@@ -38,17 +38,17 @@ try:
         def render_GET(self, request):
             self.numberRequests += 1
             if 'input' in request.args:
-                #request.setHeader("content-type", "application/xml")
+                request.setHeader(b"content-type", b"application/xml")
                 line = request.args['input']
                 sentencepair = plaintext2sentencepair(line)
                 if self.experts:
                     sentencepair = self.experts.processsentence(sentencepair, self.dttable, self.args.leftcontext, self.args.rightcontext, self.args.keywords, self.args.timbloptions + " +vdb -G0", self.lm, self.args.tmweight, self.args.lmweight)
                 elif self.ttable:
                     pass #TODO
-                return sentencepair.xml()
+                return sentencepair.xml().encode('utf-8')
             else:
-                #request.setHeader("content-type", "text/html")
-                return """<?xml version="1.0" encoding="utf-8"?>
+                request.setHeader(b"content-type", b"text/html")
+                return b"""<?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
 <html>
