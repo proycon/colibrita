@@ -682,7 +682,7 @@ def main():
                         sentencepair = experts.processsentence(sentencepair, dttable, args.leftcontext, args.rightcontext, args.keywords, args.timbloptions + " +vdb -G0", lm, args.tmweight, args.lmweight)
                     elif args.ttable:
                         pass #TODO
-                    print(lxml.etree.tostring(sentencepair.xml(), encoding='utf-8',xml_declaration=False, pretty_print=True), file=sys.stderr)
+                    print(str(lxml.etree.tostring(sentencepair.xml(), encoding='utf-8',xml_declaration=False, pretty_print=True),'utf-8'), file=sys.stderr)
                     print(sentencepair.outputstr())
         elif args.settype == 'server':
             print("Starting Colibrita server on port " + str(args.port),file=sys.stderr)
