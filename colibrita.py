@@ -68,7 +68,15 @@ class ClassifierExperts:
             sourcefragment = unquote_plus(os.path.basename(f).replace('.train',''))
             print("Loading classifier " + sourcefragment, file=sys.stderr)
             self.classifiers[sourcefragment] = timbl.TimblClassifier(f[:-6], timbloptions)
+            conffile = f.replace('.train','.conf')
+            if os.path.exists(conffile):
+                configid, timblopts, accuracy = self.readconf(f[:-6])
+                if timblopts: self.classifiers[sourcefragment].timbloptions += ' ' + timblopts
+                print(" \- Loaded configuration " + configid, file=sys.stderr)
         print("Loaded " + str(len(self.classifiers)) + " classifiers",file=sys.stderr)
+        self.loadkeywords()
+
+    def loadkeywords(self):
         for f in glob.glob(self.workdir + '/*.keywords'):
             sourcefragment = unquote_plus(os.path.basename(f).replace('.keywords',''))
             self.keywords[sourcefragment] = []
@@ -287,7 +295,7 @@ class ClassifierExperts:
 
 
 
-    def gettimblskipopts(self, leftcontext,rightcontext,newleftcontext,newrightcontext, skipkeywords):
+    def gettimblskipopts(self, classifier, leftcontext,rightcontext,newleftcontext,newrightcontext, skipkeywords):
         skip = []
         for i in range(1,leftcontext+rightcontext+1): #TODO: TEST!!
             if i <= leftcontext:
@@ -297,21 +305,22 @@ class ClassifierExperts:
                 if i - leftcontext > newrightcontext:
                     skip.append(i)
 
-        #TODO: Add skip of keywords
-
-        return "-mO:I" + ",".join([ str(i) for i in skip ])
+        if skipkeywords:
+            return "-mO:I" + ",".join([ str(i) for i in skip ]) + "," + str(leftcontext+rightcontext+1) + "-999" #timbl allows out of range ends
+        else:
+            return "-mO:I" + ",".join([ str(i) for i in skip ])
 
     def leaveoneouttest(self, classifier, leftcontext, rightcontext, dokeywords,  newleftcontext, newrightcontext, newdokeywords, timbloptions):
         print("Auto-configuring " + str(len(self.classifiers)) + " classifiers, determining optimal feature configuration using leave-one-out", file=sys.stderr)
         assert newleftcontext <= leftcontext
         assert newrightcontext <= rightcontext
-        timblskipopts = self.gettimblskipopts(leftcontext, rightcontext, newleftcontext, newrightcontext, dokeywords and not newdokeywords )
+        timblskipopts = self.gettimblskipopts(classifier, leftcontext, rightcontext, newleftcontext, newrightcontext, dokeywords and not newdokeywords )
 
         #leave one out classifier
-        classifier = timbl.TimblClassifier(self.classifiers[classifier].fileprefix, timbloptions + " " + timblskipopts + " -t leave_one_out")
-        classifier.train()
-        accuracy = classifier.test(self.classifiers[classifier].fileprefix + ".train")
-        return accuracy
+        c = timbl.TimblClassifier(self.classifiers[classifier].fileprefix, timbloptions + " " + timblskipopts + " -t leave_one_out")
+        c.train()
+        accuracy = c.test(self.classifiers[classifier].fileprefix + ".train")
+        return accuracy, timblskipopts
 
 
 
@@ -319,39 +328,60 @@ class ClassifierExperts:
     def autoconf(self, leftcontext, rightcontext, dokeywords, timbloptions):
         print("Auto-configuring " + str(len(self.classifiers)) + " classifiers, determining optimal feature configuration using leave-one-out", file=sys.stderr)
         best = 0
+        bestconfig = None
         for classifier in self.classifiers:
+            self.classifiers[classifier].flush()
             for c in range(1,max(leftcontext,rightcontext)):
-                accuracy = self.leaveoneouttest(self, classifier, leftcontext, rightcontext, dokeywords,  c, c, False, timbloptions)
+                print("\tTesting '" + classifier + "' with configuration l" + str(c) + "r" + str(c), file=sys.stderr)
+                accuracy, timblskipopts = self.leaveoneouttest(classifier, leftcontext, rightcontext, dokeywords,  c, c, False, timbloptions)
                 if accuracy > best:
-                    bestconfig = (c,c,False)
+                    bestconfig = (c,c,False, timblskipopts)
                     best = accuracy
                 if dokeywords:
-                    accuracy = self.leaveoneouttest(self, classifier, leftcontext, rightcontext, dokeywords, c, c, True, timbloptions)
+                    accuracy, timblskopopts = self.leaveoneouttest(classifier, leftcontext, rightcontext, dokeywords, c, c, True, timbloptions)
+                    if accuracy > best:
+                        bestconfig = (c,c,False, timblskipopts)
+                        best = accuracy
+
+            configid = 'l' + str(bestconfig[0]) + 'r' + str(bestconfig[1])
+            if bestconfig[2]: configid += 'k'
+
+            f = open(self.classifiers[classifier].fileprefix + '.conf', 'w',encoding='utf-8')
+            f.write("config=" + configid+"\n")
+            f.write("timblopts=" + bestconfig[3] + "\n")
+            f.write("accuracy=" + str(best) + "\n")
+            f.close()
+            print("\tBest configuration for '" + classifier + "' is " + configid , file=sys.stderr)
 
 
-                #if c != 0:
-                #    #add assymetry
-                #    self.leaveoneouttest(self, classifier, lefcontext, rightcontext, c, 0, False)
-                #    self.leaveoneouttest(self, classifier, lefcontext, rightcontext, 0, c, False)
-
-
-
-
-
-
-
-            if os.path.exists(self.classifiers[classifier].fileprefix + '.train'):
-                self.classifiers[classifier].train()
-                self.classifiers[classifier].save()
-
-
-
+    def readconf(self, classifier):
+        configid = ""
+        timblopts = ""
+        accuracy = 0.0
+        f = open(self.classifiers[classifier].fileprefix + '.conf', 'r',encoding='utf-8')
+        for line in f:
+            line = line.strip()
+            if line[0:7] == 'config=':
+                configid = line[8:]
+            elif line[0:10] == 'timblopts=':
+                timblopts = line[11:]
+            elif line[0:9] == 'accuracy=':
+                accuracy = float(line[10:])
+            elif line and line[0] != '#':
+                raise ValueError("readconf(): Unable to parse: " + line)
+        f.close()
+        return configid, timblopts, accuracy
 
     def train(self):
         print("Training " + str(len(self.classifiers)) + " classifiers", file=sys.stderr)
         for classifier in self.classifiers:
             self.classifiers[classifier].flush()
+            if os.path.exists(self.classifiers[classifier].fileprefix + '.conf'):
+                configid, timblopts, accuracy = self.readconf(classifier)
+                if timblopts: self.classifiers[classifier].timbloptions += ' ' + timblopts
+                print("\tLoaded configuration " + configid + " for '" + classifier + "'", file=sys.stderr)
             if os.path.exists(self.classifiers[classifier].fileprefix + '.train'):
+                print("\tTraining '" + classifier + "'", file=sys.stderr)
                 self.classifiers[classifier].train()
                 self.classifiers[classifier].save()
 
