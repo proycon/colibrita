@@ -510,7 +510,7 @@ def main():
     parser.add_argument('--server',dest='settype', help="Server mode (RESTFUL HTTP Server)", action='store_const',const='server')
     parser.add_argument('-f','--dataset', type=str,help="Dataset file", action='store',default="",required=False)
     parser.add_argument('--debug','-d', help="Debug", action='store_true', default=False)
-    parser.add_argument('-a','--autoconf', help="Automatically determine best configuration per expert (validated using leave-one-out), values for -l and -r are considered maxima, set -k to consider keywords", action='store_const',default=0)
+    parser.add_argument('-a','--autoconf', help="Automatically determine best configuration per expert (validated using leave-one-out), values for -l and -r are considered maxima, set -k to consider keywords, only needs to be specified at training time", action='store_const',default=0)
     parser.add_argument('-l','--leftcontext',type=int, help="Left local context size", action='store',default=0)
     parser.add_argument('-r','--rightcontext',type=int,help="Right local context size", action='store',default=0)
     parser.add_argument('-k','--keywords',help="Add global keywords in context", action='store_true',default=False)
@@ -560,12 +560,16 @@ def main():
         else:
             print("Classifiers already built", file=sys.stderr)
             experts.load(args.timbloptions + " +vdb -G0")
+        if args.autoconf:
+            experts.autoconf(args.leftcontext, args.rightcontext, args.keywords, args.timbloptions + " -vdb -G0")
         experts.train()
     elif args.settype == 'test':
 
         if not args.dataset:
             print("Specify a dataset to use for testing! (-f)", file=sys.stderr)
             sys.exit(2)
+        if args.autoconf:
+            print("Warning: Autoconf specified at testing time, has no effect. Has to be specified at training time", file=sys.stderr)
 
         if args.lm:
             print("Loading Language model", file=sys.stderr)
@@ -604,6 +608,9 @@ def main():
             lm = ARPALanguageModel(args.lm)
         else:
             lm = None
+
+        if args.autoconf:
+            print("Warning: Autoconf specified at testing time, has no effect. Has to be specified at training time", file=sys.stderr)
 
         experts = None
         dttable = {}
