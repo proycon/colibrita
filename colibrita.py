@@ -21,10 +21,10 @@ from pynlpl.lm.lm import ARPALanguageModel
 from pynlpl.formats.moses import PhraseTable
 
 try:
-    from twisted.web import server, resource
+    from twisted.web import static, server, resource
     from twisted.internet import reactor
 
-    class ColibritaResource(resource.Resource):
+    class ColibritaProcessorResource(resource.Resource):
         isLeaf = True
         numberRequests = 0
 
@@ -37,7 +37,7 @@ try:
 
         def render_GET(self, request):
             self.numberRequests += 1
-            request.setHeader("content-type", "text/xml")
+            request.setHeader("content-type", "application/xml")
             line = request.args['line']
             sentencepair = plaintext2sentencepair(line)
             if self.experts:
@@ -46,10 +46,17 @@ try:
                 pass #TODO
             return sentencepair.xml()
 
+    class ColibritaIndexResource(resource.Resource):
+        isleaf = True
+
+
     class ColibritaServer:
         def __init__(self, port, experts, dttable, ttable, lm, args):
             assert isinstance(port, int)
-            reactor.listenTCP(port, server.Site(ColibritaResource(experts,dttable, ttable,lm, args)))
+            root = static.File("webclient/index.html")
+            root.putChild("static", static.File("webclient/"))
+            root.putChild("process", ColibritaProcessorResource(experts,dttable, ttable,lm, args))
+            reactor.listenTCP(port, server.Site(root))
             reactor.run()
 
 except ImportError:
