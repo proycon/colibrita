@@ -47,7 +47,7 @@ try:
             return sentencepair.xml()
 
     class ColibritaIndexResource(resource.Resource):
-        isleaf = True
+        isleaf = False
 
         def render_GET(self, request):
             return """<?xml version="1.0" encoding="utf-8"?>
