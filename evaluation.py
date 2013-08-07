@@ -18,9 +18,10 @@ def main():
     parser.add_argument('--debug','-d', help="Debug", action='store_true', default=False)
     parser.add_argument('--workdir','-w',type=str,help='Work directory', action='store',default=".")
     parser.add_argument('-i',dest='casesensitive',help='Measure translation accuracy without regard for case',action='store_false',default=True)
+    parser.add_argument('-a',dest='alternatives',help='Evaluate against alternatives as well (otherwise evaluation will be only against the best/selected option and alternatives will be ignored)',action='store_true',default=False)
     args = parser.parse_args()
 
-    totalavgaccuracy, totalwordavgaccuracy, totalavgrecall, matrexsrcfile, matrextgtfile, matrexoutfile = evaluate(Reader(args.ref), Reader(args.out), args.matrexdir, args.workdir, args.casesensitive)
+    totalavgaccuracy, totalwordavgaccuracy, totalavgrecall, matrexsrcfile, matrextgtfile, matrexoutfile = evaluate(Reader(args.ref), Reader(args.out), args.matrexdir, args.workdir, args.casesensitive, args.alternatives)
 
     outprefix = '.'.join(args.out.split('.')[:-1])
 
@@ -28,7 +29,7 @@ def main():
         mtscore(args.matrexdir, matrexsrcfile, matrextgtfile, matrexoutfile, totalavgaccuracy, totalwordavgaccuracy, totalavgrecall, outprefix, args.workdir)
 
 
-def evaluate(ref, out, matrexdir, workdir, casesensitive=True):
+def evaluate(ref, out, matrexdir, workdir, casesensitive=True, alternatives=False):
     ref_it = iter(ref)
     out_it = iter(out)
 
@@ -97,6 +98,12 @@ def evaluate(ref, out, matrexdir, workdir, casesensitive=True):
                 if eq(reffragments[inputfragment.id].value, outputfragments[inputfragment.id].value):
                     matches += 1
                     wordmatches += 1
+                elif alternatives and outputfragments[inputfragment.id].alternatives:
+                    for alt in outputfragments[inputfragment.id].alternatives:
+                        if eq(reffragments[inputfragment.id].value, alt.value):
+                            matches += 1
+                            wordmatches += 1
+                            break
                 else:
                     misses += 1
                     if len(outputfragments[inputfragment.id]) == 0:
