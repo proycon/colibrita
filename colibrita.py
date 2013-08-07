@@ -613,6 +613,14 @@ def main():
         else:
             print("Don't know what to do! Specify some classifier options or -T with --lm or --baseline", file=sys.stderr)
     elif args.settype == 'run' or args.settype == 'server':
+
+        if args.settype == 'server':
+            try:
+                ColibritaServer
+            except:
+                print("Server not available, twisted not loaded...", file=sys.stderr)
+                sys.exit(2)
+
         if args.lm:
             print("Loading Language model", file=sys.stderr)
             lm = ARPALanguageModel(args.lm)
