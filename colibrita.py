@@ -340,7 +340,7 @@ class ClassifierExperts:
         #leave one out classifier
         c = timbl.TimblClassifier(self.classifiers[classifier].fileprefix, timbloptions + " " + timblskipopts + " -t leave_one_out")
         c.train()
-        accuracy = c.test(self.classifiers[classifier].fileprefix + ".train")
+        accuracy = c.test(self.classifiers[classifier].fileprefix + b".train")
         return accuracy, timblskipopts
 
 
