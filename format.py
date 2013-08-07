@@ -268,7 +268,7 @@ class Alternative(Fragment):
     def xml(self):
         kwargs = {}
         if not (self.confidence is None):
-            kwargs['confidence'] = self.confidence
+            kwargs['confidence'] = str(self.confidence)
         if self.value:
             return E.alt(" ".join(self.value), **kwargs)
         else:
