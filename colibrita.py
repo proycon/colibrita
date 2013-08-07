@@ -531,10 +531,10 @@ def main():
     args = parser.parse_args()
 
     try:
-        if not args.settype in ['train','test','run','server']:
+        if not args.settype in ['train','test','run','server', 'igen']:
             raise ValueError
     except:
-        print("Specify either --train, --test, --run, --server")
+        print("Specify either --train, --test, --run, --server, --igen")
         sys.exit(2)
 
 
