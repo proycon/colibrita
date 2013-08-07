@@ -511,7 +511,7 @@ def main():
     parser.add_argument('--igen',dest='settype',help="Instance generation without actual training", action='store_const',const='igen')
     parser.add_argument('-f','--dataset', type=str,help="Dataset file", action='store',default="",required=False)
     parser.add_argument('--debug','-d', help="Debug", action='store_true', default=False)
-    parser.add_argument('-a','--autoconf', help="Automatically determine best feature configuration per expert (validated using leave-one-out), values for -l and -r are considered maxima, set -k to consider keywords, only needs to be specified at training time", action='store_const',default=0)
+    parser.add_argument('-a','--autoconf', help="Automatically determine best feature configuration per expert (validated using leave-one-out), values for -l and -r are considered maxima, set -k to consider keywords, only needs to be specified at training time", action='store_true',default=False)
     parser.add_argument('-l','--leftcontext',type=int, help="Left local context size", action='store',default=0)
     parser.add_argument('-r','--rightcontext',type=int,help="Right local context size", action='store',default=0)
     parser.add_argument('-k','--keywords',help="Add global keywords in context", action='store_true',default=False)
