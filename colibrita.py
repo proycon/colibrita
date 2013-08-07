@@ -617,6 +617,7 @@ def main():
 
         experts = None
         dttable = {}
+        ttable = None
         if args.leftcontext or args.rightcontext or args.keywords:
             if not os.path.exists(args.output + '/directtranslation.table'):
                 print("Direct translation table does not exist, did you forget to train the system first?", file=sys.stderr)
