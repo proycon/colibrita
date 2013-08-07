@@ -38,7 +38,7 @@ try:
         def render_GET(self, request):
             self.numberRequests += 1
             if 'input' in request.args:
-                request.setHeader("content-type", "application/xml")
+                #request.setHeader("content-type", "application/xml")
                 line = request.args['input']
                 sentencepair = plaintext2sentencepair(line)
                 if self.experts:
@@ -47,7 +47,7 @@ try:
                     pass #TODO
                 return sentencepair.xml()
             else:
-                request.setHeader("content-type", "text/html")
+                #request.setHeader("content-type", "text/html")
                 return """<?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
