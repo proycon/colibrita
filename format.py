@@ -68,9 +68,14 @@ class SentencePair:
         for subnode in node:
             if subnode.tag == "f":
                 if subnode.text:
-                    content.append( Fragment(tuple([ x.strip() for x in subnode.text.split() if x and x.strip() ]), subnode.attrib.get('id',1) ) )
+                    f = Fragment(tuple([ x.strip() for x in subnode.text.split() if x and x.strip() ]), subnode.attrib.get('id',1), subnode.attrib.get('confidence',None) )
+                    content.append(f)
                 else:
-                    content.append( Fragment(None, subnode.attrib.get('id',1)))
+                    f =  Fragment(None, subnode.attrib.get('id',1), subnode.attrib.get('confidence',None))
+                    content.append(f)
+                for subsubnode in subnode:
+                    if subsubnode.tag == 'alt':
+                        f.alternatives.append( Alternative(tuple([ x.strip() for x in subsubnode.text.split() if x and x.strip() ]), subsubnode.attrib.get('confidence',None) ) )
             elif subnode.text:
                 for t in subnode.text.split():
                     if t: content.append(t)
@@ -201,10 +206,12 @@ class SentencePair:
         return E.s(*children, id = str(self.id))
 
 class Fragment:
-    def __init__(self, value,id=1):
+    def __init__(self, value,id=1, confidence=None):
         assert isinstance(value, tuple) or value is None
         self.id = id
         self.value = value
+        self.confidence = confidence
+        self.alternatives = []
 
     def __str__(self):
         if self.value:
@@ -236,13 +243,34 @@ class Fragment:
             return False
 
     def xml(self):
-        if self.value:
-            return E.f(" ".join(self.value), id=str(self.id))
-        else:
-            return E.f(id=str(self.id))
+        kwargs = {'id': str(self.id)}
+        args = []
+        if self.value: args.append(" ".join(self.value))
+        for a in self.alternatives:
+            args.append( a.xml() )
+        if not (self.confidence is None):
+            kwargs['confidence'] = self.confidence
+        return E.f(*args, **kwargs)
 
     def __eq__(self, other):
         if isinstance(other, Fragment):
             return (self.id == other.id and self.value == other.value)
         else:
             return False
+
+class Alternative(Fragment):
+    def __init__(self, value, confidence=None):
+        assert isinstance(value, tuple) or value is None
+        self.value = value
+        self.confidence = confidence
+        self.id = None
+
+    def xml(self):
+        kwargs = {}
+        if not (self.confidence is None):
+            kwargs['confidence'] = self.confidence
+        if self.value:
+            return E.f(" ".join(self.value), **kwargs)
+        else:
+            return E.f(**kwargs)
+
