@@ -39,7 +39,7 @@ try:
             self.numberRequests += 1
             if b'input' in request.args:
                 request.setHeader(b"content-type", b"application/xml")
-                line = request.args[b'input']
+                line = str(request.args[b'input'],'utf-8')
                 sentencepair = plaintext2sentencepair(line)
                 if self.experts:
                     sentencepair = self.experts.processsentence(sentencepair, self.dttable, self.args.leftcontext, self.args.rightcontext, self.args.keywords, self.args.timbloptions + " +vdb -G0", self.lm, self.args.tmweight, self.args.lmweight)

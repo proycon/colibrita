@@ -35,6 +35,7 @@ def makesentencepair(id, sourcepattern, targetpattern, sourceoffset, targetoffse
     return True, SentencePair(id, input, None, newtargetsentence)
 
 def plaintext2sentencepair(text,id=1):
+    assert isinstance(text,str)
     tok = Tokenizer([text], False, True)
     begin = -1
     inp = []
