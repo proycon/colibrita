@@ -21,7 +21,7 @@ from pynlpl.lm.lm import ARPALanguageModel
 from pynlpl.formats.moses import PhraseTable
 
 try:
-    from twisted.web import static, server, resource
+    from twisted.web import server, resource
     from twisted.internet import reactor
 
     class ColibritaProcessorResource(resource.Resource):
@@ -49,12 +49,15 @@ try:
     class ColibritaIndexResource(resource.Resource):
         isleaf = True
 
+        def render_GET(self, request):
+            request.setHeader("content-type", "text/html")
+            return open("web/index.html").read()
+
 
     class ColibritaServer:
         def __init__(self, port, experts, dttable, ttable, lm, args):
             assert isinstance(port, int)
-            root = static.File("web/index.html")
-            root.putChild("static", static.File("web/"))
+            root = ColibritaIndexResource()
             root.putChild("process", ColibritaProcessorResource(experts,dttable, ttable,lm, args))
             reactor.listenTCP(port, server.Site(root))
             reactor.run()
