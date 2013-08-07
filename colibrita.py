@@ -49,7 +49,7 @@ try:
     class ColibritaServer:
         def __init__(self, port, experts, dttable, ttable, lm, args):
             assert isinstance(port, int)
-            reactor.listenTCP(port, server.Site(ColibritaResource(experts,dttable, dttable, ttable,lm, args)))
+            reactor.listenTCP(port, server.Site(ColibritaResource(experts,dttable, ttable,lm, args)))
             reactor.run()
 
 except ImportError:
