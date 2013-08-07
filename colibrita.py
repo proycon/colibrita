@@ -605,7 +605,7 @@ def main():
                 makebaseline(ttable, args.output + '.output.xml', data)
         else:
             print("Don't know what to do! Specify some classifier options or -T with --lm or --baseline", file=sys.stderr)
-    elif args.settype == 'run' or args.settypes == 'server':
+    elif args.settype == 'run' or args.settype == 'server':
         if args.lm:
             print("Loading Language model", file=sys.stderr)
             lm = ARPALanguageModel(args.lm)
