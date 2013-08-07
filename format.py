@@ -270,7 +270,7 @@ class Alternative(Fragment):
         if not (self.confidence is None):
             kwargs['confidence'] = self.confidence
         if self.value:
-            return E.f(" ".join(self.value), **kwargs)
+            return E.alt(" ".join(self.value), **kwargs)
         else:
-            return E.f(**kwargs)
+            return E.alt(**kwargs)
 
