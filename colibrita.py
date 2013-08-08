@@ -362,7 +362,7 @@ class ClassifierExperts:
             for i, line in enumerate(fin):
                 f = i % folds
                 fold[f].write(line)
-            for f in fold:
+            for f in fold.values():
                 f.close()
         fin.close()
 
