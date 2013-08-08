@@ -433,11 +433,11 @@ class ClassifierExperts:
         for line in f:
             line = line.strip()
             if line[0:7] == 'config=':
-                configid = line[8:]
+                configid = line[7:]
             elif line[0:10] == 'timblopts=':
-                timblopts = line[11:]
+                timblopts = line[10:]
             elif line[0:9] == 'accuracy=':
-                accuracy = float(line[10:])
+                accuracy = float(line[9:])
             elif line and line[0] != '#':
                 raise ValueError("readconf(): Unable to parse: " + line)
         f.close()
