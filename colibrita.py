@@ -11,6 +11,7 @@ import glob
 import math
 import timbl
 import lxml.etree
+import random
 from collections import defaultdict
 from urllib.parse import quote_plus, unquote_plus
 from copy import copy
@@ -331,23 +332,62 @@ class ClassifierExperts:
         else:
             return "-mO:I" + ",".join([ str(i) for i in skip ])
 
-    def leaveoneouttest(self, classifier, leftcontext, rightcontext, dokeywords,  newleftcontext, newrightcontext, newdokeywords, timbloptions):
-        print("Auto-configuring " + str(len(self.classifiers)) + " classifiers, determining optimal feature configuration using leave-one-out", file=sys.stderr)
+    def leaveoneouttest(self, classifier, folds, leftcontext, rightcontext, dokeywords,  newleftcontext, newrightcontext, newdokeywords, timbloptions):
+        print("Auto-configuring " + str(len(self.classifiers)) + " classifiers, determining optimal feature configuration using cross validation", file=sys.stderr)
         assert newleftcontext <= leftcontext
         assert newrightcontext <= rightcontext
         timblskipopts = self.gettimblskipopts(classifier, leftcontext, rightcontext, newleftcontext, newrightcontext, dokeywords and not newdokeywords )
 
-        #leave one out classifier
-        c = timbl.TimblClassifier(self.classifiers[classifier].fileprefix, timbloptions + " " + timblskipopts + " -t leave_one_out --sloppy=true")
-        c.train()
+        #check that the number of lines exceeds the number of folds
+        enoughlines = False
         trainfile = self.classifiers[classifier].fileprefix + ".train"
-        accuracy = c.test(trainfile)
+        fin = open(trainfile,'r','utf-8')
+        linecount = 0
+        for line in fin:
+            linecount += 1
+            if linecount > folds:
+                enoughlines = True
+                break
+        if enoughlines:
+            #ok, let's make us some folds!
+            tmpid = os.path.basename(trainfile) + '/' + str(hex(random.getrandbits(128)))
+            fold = {}
+            foldconfig = open(tmpid + '.folds','w', encoding='utf-8') #will hold the fold-containing files, one per line.. as timbl likes it
+            for i in range(0,folds):
+                fold[i] = open(tmpid + '.fold' + str(i), 'w', encoding='utf-8')
+                foldconfig.write(tmpid + '.fold' + str(i) + '\n')
+            foldconfig.close()
+            #make folds:
+            fin.seek(0)
+            for i, line in enumerate(fin):
+                f = i % folds
+                fold[f].write(line)
+            for f in fold:
+                f.close()
+        fin.close()
+
+        if not enoughlines:
+            #Do simply leave one out
+            c = timbl.TimblClassifier(self.classifiers[classifier].fileprefix, timbloptions + " " + timblskipopts + " -t leave_one_out")
+            c.train()
+            accuracy = c.test(trainfile)
+        else:
+            #Do cross validation
+            c = timbl.TimblClassifier(self.classifiers[classifier].fileprefix, timbloptions + " " + timblskipopts + " -t cross_validate")
+            c.train()
+            accuracy = c.test(tmpid + '.folds')
+
+            #cleanup
+            os.unlink(tmpid + '.folds')
+            for i in range(0,folds):
+                os.unlink(tmpid + '.fold' + str(i))
+
         return accuracy, timblskipopts
 
 
 
 
-    def autoconf(self, leftcontext, rightcontext, dokeywords, timbloptions):
+    def autoconf(self, folds,  leftcontext, rightcontext, dokeywords, timbloptions):
         print("Auto-configuring " + str(len(self.classifiers)) + " classifiers, determining optimal feature configuration using leave-one-out", file=sys.stderr)
         best = 0
         bestconfig = None
@@ -357,13 +397,13 @@ class ClassifierExperts:
             print("=================== #" + str(i) + "/" + str(l) + " - Autoconfiguring '" + classifier + " ===================", file=sys.stderr)
             for c in range(1,max(leftcontext,rightcontext)+1):
                 print("- - - - - - - - - - - - Testing '" + classifier + "' with configuration l" + str(c) + "r" + str(c) + " - - - - - - - - - - -", file=sys.stderr)
-                accuracy, timblskipopts = self.leaveoneouttest(classifier, leftcontext, rightcontext, dokeywords,  c, c, False, timbloptions)
+                accuracy, timblskipopts = self.leaveoneouttest(classifier, folds, leftcontext, rightcontext, dokeywords,  c, c, False, timbloptions)
                 if accuracy > best:
                     bestconfig = (c,c,False, timblskipopts)
                     best = accuracy
                 if dokeywords:
                     print("- - - - - - - - - - - - Testing '" + classifier + "' with configuration l" + str(c) + "r" + str(c) + "k - - - - - - - - - - -", file=sys.stderr)
-                    accuracy, timblskopopts = self.leaveoneouttest(classifier, leftcontext, rightcontext, dokeywords, c, c, True, timbloptions)
+                    accuracy, timblskopopts = self.leaveoneouttest(classifier, folds, leftcontext, rightcontext, dokeywords, c, c, True, timbloptions)
                     if accuracy > best:
                         bestconfig = (c,c,False, timblskipopts)
                         best = accuracy
@@ -545,7 +585,7 @@ def main():
     parser.add_argument('--igen',dest='settype',help="Instance generation without actual training", action='store_const',const='igen')
     parser.add_argument('-f','--dataset', type=str,help="Dataset file", action='store',default="",required=False)
     parser.add_argument('--debug','-d', help="Debug", action='store_true', default=False)
-    parser.add_argument('-a','--autoconf', help="Automatically determine best feature configuration per expert (validated using leave-one-out), values for -l and -r are considered maxima, set -k to consider keywords, only needs to be specified at training time", action='store_true',default=False)
+    parser.add_argument('-a','--autoconf', help="Automatically determine best feature configuration per expert (cross-validated), values for -l and -r are considered maxima, set -k to consider keywords, only needs to be specified at training time", action='store_true',default=False)
     parser.add_argument('-l','--leftcontext',type=int, help="Left local context size", action='store',default=0)
     parser.add_argument('-r','--rightcontext',type=int,help="Right local context size", action='store',default=0)
     parser.add_argument('-k','--keywords',help="Add global keywords in context", action='store_true',default=False)
@@ -560,6 +600,7 @@ def main():
     parser.add_argument('--lmweight',type=float, help="Language model weight (when --lm is used)", action='store',default=1)
     parser.add_argument('--tmweight',type=float, help="Translation model weight (when --lm is used)", action='store',default=1)
     parser.add_argument('--port',type=int, help="Server port (use with --server)", action='store',default=7893)
+    parser.add_argument('--folds',type=int, help="Number of folds to use in for cross-validatio (used with -a)", action='store',default=10)
     parser.add_argument('-T','--ttable', type=str,help="Phrase translation table (file) to use when testing with --lm and without classifier training", action='store',default="")
 
     args = parser.parse_args()
@@ -598,7 +639,7 @@ def main():
         else:
             print("Instances already generated",file=sys.stderr)
         if args.settype == 'train' and args.autoconf:
-            experts.autoconf(args.leftcontext, args.rightcontext, args.keywords, args.timbloptions + " -vdb -G0")
+            experts.autoconf(args.folds, args.leftcontext, args.rightcontext, args.keywords, args.timbloptions + " -vdb -G0")
         if args.settype == 'train': experts.train()
     elif args.settype == 'test':
 
