@@ -92,7 +92,7 @@ class ClassifierExperts:
             self.classifiers[sourcefragment] = timbl.TimblClassifier(f[:-6], timbloptions)
             conffile = f.replace('.train','.conf')
             if os.path.exists(conffile):
-                configid, timblopts, accuracy = self.readconf(f[:-6])
+                configid, timblopts, accuracy = self.readconf(sourcefragment)
                 if timblopts: self.classifiers[sourcefragment].timbloptions += ' ' + timblopts
                 print(" \- Loaded configuration " + configid, file=sys.stderr)
         print("Loaded " + str(len(self.classifiers)) + " classifiers",file=sys.stderr)
