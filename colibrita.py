@@ -338,7 +338,7 @@ class ClassifierExperts:
         timblskipopts = self.gettimblskipopts(classifier, leftcontext, rightcontext, newleftcontext, newrightcontext, dokeywords and not newdokeywords )
 
         #leave one out classifier
-        c = timbl.TimblClassifier(self.classifiers[classifier].fileprefix, timbloptions + " " + timblskipopts + " -t leave_one_out")
+        c = timbl.TimblClassifier(self.classifiers[classifier].fileprefix, timbloptions + " " + timblskipopts + " -t leave_one_out --sloppy=true")
         c.train()
         trainfile = self.classifiers[classifier].fileprefix + ".train"
         accuracy = c.test(trainfile)
@@ -354,13 +354,15 @@ class ClassifierExperts:
         l= len(self.classifiers)
         for i, classifier in enumerate(self.classifiers):
             self.classifiers[classifier].flush()
+            print("=================== #" + str(i) + "/" + str(l) + " - Autoconfiguring '" + classifier + " ===================", file=sys.stderr)
             for c in range(1,max(leftcontext,rightcontext)+1):
-                print("=================== #" + str(i) + "/" + str(l) + " - Testing '" + classifier + "' with configuration l" + str(c) + "r" + str(c) + " ===================", file=sys.stderr)
+                print("- - - - - - - - - - - - Testing '" + classifier + "' with configuration l" + str(c) + "r" + str(c) + " - - - - - - - - - - -", file=sys.stderr)
                 accuracy, timblskipopts = self.leaveoneouttest(classifier, leftcontext, rightcontext, dokeywords,  c, c, False, timbloptions)
                 if accuracy > best:
                     bestconfig = (c,c,False, timblskipopts)
                     best = accuracy
                 if dokeywords:
+                    print("- - - - - - - - - - - - Testing '" + classifier + "' with configuration l" + str(c) + "r" + str(c) + "k - - - - - - - - - - -", file=sys.stderr)
                     accuracy, timblskopopts = self.leaveoneouttest(classifier, leftcontext, rightcontext, dokeywords, c, c, True, timbloptions)
                     if accuracy > best:
                         bestconfig = (c,c,False, timblskipopts)
