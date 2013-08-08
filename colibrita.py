@@ -351,10 +351,11 @@ class ClassifierExperts:
         print("Auto-configuring " + str(len(self.classifiers)) + " classifiers, determining optimal feature configuration using leave-one-out", file=sys.stderr)
         best = 0
         bestconfig = None
-        for classifier in self.classifiers:
+        l= len(self.classifiers)
+        for i, classifier in enumerate(self.classifiers):
             self.classifiers[classifier].flush()
-            for c in range(1,max(leftcontext,rightcontext)):
-                print("\tTesting '" + classifier + "' with configuration l" + str(c) + "r" + str(c), file=sys.stderr)
+            for c in range(1,max(leftcontext,rightcontext)+1):
+                print("=================== #" + str(i) + "/" + str(l) + " - Testing '" + classifier + "' with configuration l" + str(c) + "r" + str(c) + " ===================", file=sys.stderr)
                 accuracy, timblskipopts = self.leaveoneouttest(classifier, leftcontext, rightcontext, dokeywords,  c, c, False, timbloptions)
                 if accuracy > best:
                     bestconfig = (c,c,False, timblskipopts)
