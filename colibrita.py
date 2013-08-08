@@ -314,6 +314,8 @@ class ClassifierExperts:
             elif int(sentencepair.id) % 1000 == 0:
                 print("Skipped @" + str(sentencepair.id), file=sys.stderr)
         index.close()
+        for i, classifier in enumerate(self.classifiers):
+            self.classifiers[classifier].flush()
 
 
 
