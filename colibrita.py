@@ -381,6 +381,7 @@ class ClassifierExperts:
             os.unlink(tmpid + '.folds')
             for i in range(0,folds):
                 os.unlink(tmpid + '.fold' + str(i))
+                os.unlink(tmpid + '.fold' + str(i) + '.cv')
 
         return accuracy, timblskipopts
 
