@@ -393,7 +393,7 @@ class ClassifierExperts:
     def autoconf(self, folds,  leftcontext, rightcontext, dokeywords, timbloptions):
         print("Auto-configuring " + str(len(self.classifiers)) + " classifiers, determining optimal feature configuration using leave-one-out", file=sys.stderr)
         best = 0
-        bestconfig = None
+        bestconfig = (leftcontext,rightcontext,dokeywords,"")
         l= len(self.classifiers)
         for i, classifier in enumerate(self.classifiers):
             self.classifiers[classifier].flush()
