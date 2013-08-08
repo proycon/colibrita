@@ -332,7 +332,7 @@ class ClassifierExperts:
         else:
             return "-mO:I" + ",".join([ str(i) for i in skip ])
 
-    def leaveoneouttest(self, classifier, folds, leftcontext, rightcontext, dokeywords,  newleftcontext, newrightcontext, newdokeywords, timbloptions):
+    def crossvalidate(self, classifier, folds, leftcontext, rightcontext, dokeywords,  newleftcontext, newrightcontext, newdokeywords, timbloptions):
         print("Auto-configuring " + str(len(self.classifiers)) + " classifiers, determining optimal feature configuration using cross validation", file=sys.stderr)
         assert newleftcontext <= leftcontext
         assert newrightcontext <= rightcontext
@@ -341,7 +341,7 @@ class ClassifierExperts:
         #check that the number of lines exceeds the number of folds
         enoughlines = False
         trainfile = self.classifiers[classifier].fileprefix + ".train"
-        fin = open(trainfile,'r','utf-8')
+        fin = open(trainfile,'r',encoding='utf-8')
         linecount = 0
         for line in fin:
             linecount += 1
@@ -397,13 +397,13 @@ class ClassifierExperts:
             print("=================== #" + str(i) + "/" + str(l) + " - Autoconfiguring '" + classifier + " ===================", file=sys.stderr)
             for c in range(1,max(leftcontext,rightcontext)+1):
                 print("- - - - - - - - - - - - Testing '" + classifier + "' with configuration l" + str(c) + "r" + str(c) + " - - - - - - - - - - -", file=sys.stderr)
-                accuracy, timblskipopts = self.leaveoneouttest(classifier, folds, leftcontext, rightcontext, dokeywords,  c, c, False, timbloptions)
+                accuracy, timblskipopts = self.crossvalidate(classifier, folds, leftcontext, rightcontext, dokeywords,  c, c, False, timbloptions)
                 if accuracy > best:
                     bestconfig = (c,c,False, timblskipopts)
                     best = accuracy
                 if dokeywords:
                     print("- - - - - - - - - - - - Testing '" + classifier + "' with configuration l" + str(c) + "r" + str(c) + "k - - - - - - - - - - -", file=sys.stderr)
-                    accuracy, timblskopopts = self.leaveoneouttest(classifier, folds, leftcontext, rightcontext, dokeywords, c, c, True, timbloptions)
+                    accuracy, timblskopopts = self.crossvalidate(classifier, folds, leftcontext, rightcontext, dokeywords, c, c, True, timbloptions)
                     if accuracy > best:
                         bestconfig = (c,c,False, timblskipopts)
                         best = accuracy
