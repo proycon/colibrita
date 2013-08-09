@@ -373,7 +373,7 @@ class ClassifierExperts:
 
         if not enoughlines:
             #Do simply leave one out
-            c = timbl.TimblClassifier(self.classifiers[classifier].fileprefix, timbloptions + " " + timblskipopt)
+            c = timbl.TimblClassifier(self.classifiers[classifier].fileprefix, timbloptions + " " + timblskipopts)
             #c.train() not possible with LOO
             accuracy = c.leaveoneout(trainfile)
         else:
