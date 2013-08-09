@@ -374,22 +374,22 @@ class ClassifierExperts:
         if not enoughlines:
             #Do simply leave one out
             c = timbl.TimblClassifier(self.classifiers[classifier].fileprefix, timbloptions + " " + timblskipopts + " -t leave_one_out")
-            c.train()
+            #c.train() not possible with LOO
             accuracy = c.test(trainfile)
         else:
             #Do cross validation
             c = timbl.TimblClassifier(self.classifiers[classifier].fileprefix, timbloptions + " " + timblskipopts + " -t cross_validate")
-            c.train()
-            accuracy = c.test(tmpid + '.folds')
+            #c.train() #not possible with CV
+            accuracy = c.crossvalidate(tmpid + '.folds')
 
             #cleanup
-            #os.unlink(tmpid + '.folds')
-            #for i in range(0,folds):
-            #    os.unlink(tmpid + '.fold' + str(i))
-            #    if os.path.exists(tmpid + '.fold' + str(i) + '.cv'):
-            #        os.unlink(tmpid + '.fold' + str(i) + '.cv')
-            #    else:
-            #        print("WARNING: No timbl output for fold " + str(i) + "!", file=sys.stderr)
+            os.unlink(tmpid + '.folds')
+            for i in range(0,folds):
+                os.unlink(tmpid + '.fold' + str(i))
+                if os.path.exists(tmpid + '.fold' + str(i) + '.cv'):
+                    os.unlink(tmpid + '.fold' + str(i) + '.cv')
+                else:
+                    print("WARNING: No timbl output for fold " + str(i) + "!", file=sys.stderr)
 
         return accuracy, timblskipopts
 
