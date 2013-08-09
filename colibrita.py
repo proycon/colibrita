@@ -383,13 +383,13 @@ class ClassifierExperts:
             accuracy = c.test(tmpid + '.folds')
 
             #cleanup
-            os.unlink(tmpid + '.folds')
-            for i in range(0,folds):
-                os.unlink(tmpid + '.fold' + str(i))
-                if os.path.exists(tmpid + '.fold' + str(i) + '.cv'):
-                    os.unlink(tmpid + '.fold' + str(i) + '.cv')
-                else:
-                    print("WARNING: No timbl output for fold " + str(i) + "!", file=sys.stderr)
+            #os.unlink(tmpid + '.folds')
+            #for i in range(0,folds):
+            #    os.unlink(tmpid + '.fold' + str(i))
+            #    if os.path.exists(tmpid + '.fold' + str(i) + '.cv'):
+            #        os.unlink(tmpid + '.fold' + str(i) + '.cv')
+            #    else:
+            #        print("WARNING: No timbl output for fold " + str(i) + "!", file=sys.stderr)
 
         return accuracy, timblskipopts
 
