@@ -627,7 +627,7 @@ def main():
         sys.exit(2)
 
 
-    timbloptions = "-a 0 -vdb -G0 -k " + str(args.timbl_k)
+    timbloptions = "-vdb -G0 -k " + str(args.timbl_k) #if I add -a 0 explicitly (default anyway)   leave_one_out and crossvalidate won't work!!!
     if args.timbl_clones > 1:
         timbloptions += " --clones=" + str(args.timbl_clones)
 
