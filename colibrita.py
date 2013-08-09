@@ -330,6 +330,9 @@ class ClassifierExperts:
                 if i - leftcontext > newrightcontext:
                     skip.append(i)
 
+        if not skip and not skipkeywords:
+            return ""
+
         o =  "-mO:I" + ",".join([ str(i) for i in skip ])
 
         if skipkeywords:
