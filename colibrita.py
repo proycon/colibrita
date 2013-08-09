@@ -330,10 +330,12 @@ class ClassifierExperts:
                 if i - leftcontext > newrightcontext:
                     skip.append(i)
 
+        o =  "-mO:I" + ",".join([ str(i) for i in skip ])
+
         if skipkeywords:
-            return "-mO:I" + ",".join([ str(i) for i in skip ]) + "," + str(leftcontext+rightcontext+1) + "-999" #timbl allows out of range ends
-        else:
-            return "-mO:I" + ",".join([ str(i) for i in skip ])
+            if skip: o += ","
+            o += str(leftcontext+rightcontext+1) + "-999" #timbl allows out of range ends
+        return o
 
     def crossvalidate(self, classifier, folds, leftcontext, rightcontext, dokeywords,  newleftcontext, newrightcontext, newdokeywords, timbloptions):
         print("Auto-configuring " + str(len(self.classifiers)) + " classifiers, determining optimal feature configuration using cross validation", file=sys.stderr)
