@@ -425,7 +425,7 @@ class ClassifierExperts:
             f.write("timblopts=" + bestconfig[3] + "\n")
             f.write("accuracy=" + str(best) + "\n")
             f.close()
-            print("\tBest configuration for '" + classifier + "' is " + configid , file=sys.stderr)
+            print("\tBest configuration for '" + classifier + "' is " + configid + " with accuracy " + str(best), file=sys.stderr)
 
 
     def readconf(self, classifier):
