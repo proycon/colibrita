@@ -375,7 +375,7 @@ class ClassifierExperts:
             #Do simply leave one out
             c = timbl.TimblClassifier(self.classifiers[classifier].fileprefix, timbloptions + " " + timblskipopts)
             #c.train() not possible with LOO
-            accuracy = c.leaveoneout(trainfile)
+            accuracy = c.leaveoneout()
         else:
             #Do cross validation
             c = timbl.TimblClassifier(self.classifiers[classifier].fileprefix, timbloptions + " " + timblskipopts)
