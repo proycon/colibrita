@@ -390,7 +390,7 @@ class ClassifierExperts:
                 else:
                     print("WARNING: No timbl output for fold " + str(i) + "!", file=sys.stderr)
 
-        print("\tAccuracy=",accuracy, sys.stderr)
+        print("\tAccuracy=",accuracy, file=sys.stderr)
         return accuracy, timblskipopts
 
 
