@@ -30,12 +30,13 @@ try:
         isLeaf = True
         numberRequests = 0
 
-        def __init__(self, experts, dttable, ttable, lm, args):
+        def __init__(self, experts, dttable, ttable, lm, args, timbloptions):
             self.experts = experts
             self.dttable = dttable
             self.ttable = ttable
             self.lm = lm
             self.args = args
+            self.timbloptions = timbloptions
 
         def render_GET(self, request):
             self.numberRequests += 1
@@ -45,7 +46,7 @@ try:
                 line = str(request.args[b'input'][0],'utf-8')
                 sentencepair = plaintext2sentencepair(line)
                 if self.experts:
-                    sentencepair = self.experts.processsentence(sentencepair, self.dttable, self.args.leftcontext, self.args.rightcontext, self.args.keywords, self.args.timbloptions + " +vdb -G0", self.lm, self.args.tmweight, self.args.lmweight)
+                    sentencepair = self.experts.processsentence(sentencepair, self.dttable, self.args.leftcontext, self.args.rightcontext, self.args.keywords, self.timbloptions, self.lm, self.args.tmweight, self.args.lmweight)
                 elif self.ttable:
                     pass #TODO
                 return lxml.etree.tostring(sentencepair.xml(), encoding='utf-8',xml_declaration=False, pretty_print=True)
@@ -69,9 +70,9 @@ try:
 </html>"""
 
     class ColibritaServer:
-        def __init__(self, port, experts, dttable, ttable, lm, args):
+        def __init__(self, port, experts, dttable, ttable, lm, args, timbloptions):
             assert isinstance(port, int)
-            reactor.listenTCP(port, server.Site(ColibritaProcessorResource(experts,dttable, ttable,lm, args)))
+            reactor.listenTCP(port, server.Site(ColibritaProcessorResource(experts,dttable, ttable,lm, args, timbloptions)))
             reactor.run()
 
 except ImportError:
@@ -599,7 +600,9 @@ def main():
     parser.add_argument("--kp",dest="bow_prob_threshold", help="minimal P(translation|keyword)", type=int, action='store',default=0.001)
     parser.add_argument("--kg",dest="bow_filter_threshold", help="Keyword needs to occur at least this many times globally in the entire corpus (absolute number)", type=int, action='store',default=20)
     parser.add_argument("--ka",dest="compute_bow_params", help="Attempt to automatically compute --kt,--kp and --kg parameters", action='store_false',default=True)
-    parser.add_argument('-O', dest='timbloptions', help="Timbl Classifier options", type=str,action='store',default="-k 1")
+    #parser.add_argument('-O', dest='timbloptions', help="Timbl Classifier options", type=str,action='store',default="-k 1")
+    parser.add_argument('--Tk', dest='timbl_k', help="Timbl k", type=int,action='store',default=1)
+    parser.add_argument('--Tclones', dest='timbl_clones', help="Timbl clones (number of CPUs to use for parallel processing)", type=int,action='store',default=1)
     parser.add_argument('-o','--output',type=str,help="Output prefix", required = True)
     parser.add_argument('--baseline', help="Baseline test (use with --test, requires no previous --train)", action='store_true',default=False)
     parser.add_argument('--lm',type=str, help="Use language model in testing (file in ARPA format, as produced by for instance SRILM)", action='store',default="")
@@ -619,6 +622,9 @@ def main():
         sys.exit(2)
 
 
+    timbloptions = "-a 0 -vdb -G0 -k " + str(args.timbl_k)
+    if args.timbl_clones > 1:
+        timbloptions += " --clones=" + str(args.timbl_clones)
 
 
     if args.settype == 'train' or args.settype == 'igen':
@@ -638,14 +644,14 @@ def main():
             os.mkdir(args.output)
         if not os.path.exists(args.output + '/directtranslation.table'):
             print("Building classifiers", file=sys.stderr)
-            experts.build(data, args.leftcontext, args.rightcontext, args.keywords, args.compute_bow_params, args.bow_absolute_threshold, args.bow_prob_threshold, args.bow_filter_threshold, args.timbloptions + " -vdb -G0")
+            experts.build(data, args.leftcontext, args.rightcontext, args.keywords, args.compute_bow_params, args.bow_absolute_threshold, args.bow_prob_threshold, args.bow_filter_threshold, timbloptions)
         elif args.settype == 'train':
             print("Classifiers already built", file=sys.stderr)
-            experts.load(args.timbloptions + " +vdb -G0")
+            experts.load(timbloptions)
         else:
             print("Instances already generated",file=sys.stderr)
         if args.settype == 'train' and args.autoconf:
-            experts.autoconf(args.folds, args.leftcontext, args.rightcontext, args.keywords, args.timbloptions + " -vdb -G0")
+            experts.autoconf(args.folds, args.leftcontext, args.rightcontext, args.keywords, timbloptions)
         if args.settype == 'train': experts.train()
     elif args.settype == 'test':
 
@@ -670,10 +676,10 @@ def main():
                 sys.exit(2)
             experts = ClassifierExperts(args.output)
             print("Loading classifiers",file=sys.stderr)
-            experts.load(args.timbloptions + " +vdb -G0")
+            experts.load(timbloptions)
             print("Running...",file=sys.stderr)
             data = Reader(args.dataset)
-            experts.test(data, args.output + '.output.xml', args.leftcontext, args.rightcontext, args.keywords, args.timbloptions + " +vdb -G0", lm, args.tmweight, args.lmweight)
+            experts.test(data, args.output + '.output.xml', args.leftcontext, args.rightcontext, args.keywords, timbloptions , lm, args.tmweight, args.lmweight)
         elif args.ttable:
             print("Loading translation table",file=sys.stderr)
             ttable = PhraseTable(args.ttable,False, False, "|||", 3, 0,None, None)
@@ -716,7 +722,7 @@ def main():
                 dttable = loaddttable(args.output + '/directtranslation.table')
             experts = ClassifierExperts(args.output)
             print("Loading classifiers",file=sys.stderr)
-            experts.load(args.timbloptions + " +vdb -G0")
+            experts.load(timbloptions)
         elif args.ttable:
             print("Loading translation table",file=sys.stderr)
             ttable = PhraseTable(args.ttable,False, False, "|||", 3, 0,None, None)
@@ -730,14 +736,14 @@ def main():
                 else:
                     sentencepair = plaintext2sentencepair(line)
                     if experts:
-                        sentencepair = experts.processsentence(sentencepair, dttable, args.leftcontext, args.rightcontext, args.keywords, args.timbloptions + " +vdb -G0", lm, args.tmweight, args.lmweight)
+                        sentencepair = experts.processsentence(sentencepair, dttable, args.leftcontext, args.rightcontext, args.keywords, timbloptions, lm, args.tmweight, args.lmweight)
                     elif args.ttable:
                         pass #TODO
                     print(str(lxml.etree.tostring(sentencepair.xml(), encoding='utf-8',xml_declaration=False, pretty_print=True),'utf-8'), file=sys.stderr)
                     print(sentencepair.outputstr())
         elif args.settype == 'server':
             print("Starting Colibrita server on port " + str(args.port),file=sys.stderr)
-            ColibritaServer(args.port, experts, dttable, ttable, lm, args)
+            ColibritaServer(args.port, experts, dttable, ttable, lm, args, timbloptions)
 
     print("All done.", file=sys.stderr)
     return True
