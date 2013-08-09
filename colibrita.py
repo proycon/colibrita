@@ -373,12 +373,12 @@ class ClassifierExperts:
 
         if not enoughlines:
             #Do simply leave one out
-            c = timbl.TimblClassifier(self.classifiers[classifier].fileprefix, timbloptions + " " + timblskipopts + " -t leave_one_out")
+            c = timbl.TimblClassifier(self.classifiers[classifier].fileprefix, timbloptions + " " + timblskipopt)
             #c.train() not possible with LOO
-            accuracy = c.test(trainfile)
+            accuracy = c.leaveoneout(trainfile)
         else:
             #Do cross validation
-            c = timbl.TimblClassifier(self.classifiers[classifier].fileprefix, timbloptions + " " + timblskipopts + " -t cross_validate")
+            c = timbl.TimblClassifier(self.classifiers[classifier].fileprefix, timbloptions + " " + timblskipopts)
             #c.train() #not possible with CV
             accuracy = c.crossvalidate(tmpid + '.folds')
 
