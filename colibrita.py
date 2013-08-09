@@ -338,7 +338,6 @@ class ClassifierExperts:
         return o
 
     def crossvalidate(self, classifier, folds, leftcontext, rightcontext, dokeywords,  newleftcontext, newrightcontext, newdokeywords, timbloptions):
-        print("Auto-configuring " + str(len(self.classifiers)) + " classifiers, determining optimal feature configuration using cross validation", file=sys.stderr)
         assert newleftcontext <= leftcontext
         assert newrightcontext <= rightcontext
         timblskipopts = self.gettimblskipopts(classifier, leftcontext, rightcontext, newleftcontext, newrightcontext, dokeywords and not newdokeywords )
@@ -391,6 +390,7 @@ class ClassifierExperts:
                 else:
                     print("WARNING: No timbl output for fold " + str(i) + "!", file=sys.stderr)
 
+        print("\tAccuracy=",accuracy, sys.stderr)
         return accuracy, timblskipopts
 
 
