@@ -391,6 +391,7 @@ class ClassifierExperts:
             #Do cross validation
             c = timbl.TimblClassifier(self.classifiers[classifier].fileprefix, timbloptions + " " + timblskipopts)
             #c.train() #not possible with CV
+            print("\tCross-validating using CV: " + tmpid + '.folds')
             accuracy = c.crossvalidate(tmpid + '.folds')
 
             #cleanup
@@ -401,6 +402,7 @@ class ClassifierExperts:
                     os.unlink(tmpid + '.fold' + str(i) + '.cv')
                 else:
                     print("WARNING: No timbl output for fold " + str(i) + "!", file=sys.stderr)
+            del c
 
         print("\tAccuracy=",accuracy, file=sys.stderr)
         return accuracy, timblskipopts
@@ -421,12 +423,14 @@ class ClassifierExperts:
             print("=================== #" + str(i) + "/" + str(l) + " - Autoconfiguring '" + classifier + "' ===================", file=sys.stderr)
             for c in range(1,max(leftcontext,rightcontext)+1):
                 print("- - - - - - - - - - - - Testing '" + classifier + "' with configuration l" + str(c) + "r" + str(c) + " - - - - - - - - - - -", file=sys.stderr)
+                sys.stderr.flush()
                 accuracy, timblskipopts = self.crossvalidate(classifier, folds, leftcontext, rightcontext, dokeywords,  c, c, False, timbloptions)
                 if accuracy > best:
                     bestconfig = (c,c,False, timblskipopts)
                     best = accuracy
                 if dokeywords:
                     print("- - - - - - - - - - - - Testing '" + classifier + "' with configuration l" + str(c) + "r" + str(c) + "k - - - - - - - - - - -", file=sys.stderr)
+                    sys.stderr.flush()
                     accuracy, timblskipopts = self.crossvalidate(classifier, folds, leftcontext, rightcontext, dokeywords, c, c, True, timbloptions)
                     if accuracy > best:
                         bestconfig = (c,c,False, timblskipopts)
