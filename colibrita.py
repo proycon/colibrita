@@ -17,7 +17,7 @@ from urllib.parse import quote_plus, unquote_plus
 from copy import copy
 
 from colibrita.format import Writer, Reader, Fragment, Alternative
-from colibrita.common import extractpairs, makesentencepair, runcmd, makeset, plaintext2sentencepair
+from colibrita.common import plaintext2sentencepair
 from colibrita.baseline import makebaseline
 from pynlpl.lm.lm import ARPALanguageModel
 from pynlpl.formats.moses import PhraseTable
@@ -190,8 +190,8 @@ class ClassifierExperts:
         #select all words that occur at least 3 times for a sense, and have a probability_sense_given_keyword >= 0.001
         for targetfragment in kwcount[sourcefragment]:
             for keyword, freq in kwcount[sourcefragment][targetfragment].items():
-                 if (wcount[keyword] >= bow_filter_threshold): #filter very rare words (occuring less than 20 times)
-                     if freq>= bow_absolute_threshold:
+                if (wcount[keyword] >= bow_filter_threshold): #filter very rare words (occuring less than 20 times)
+                    if freq>= bow_absolute_threshold:
                         p = self.probability_translation_given_keyword(sourcefragment, targetfragment, keyword, kwcount, wcount)
                         if p >= bow_prob_threshold:
                             bag.append( (keyword, targetfragment, freq, p) )
@@ -415,7 +415,7 @@ class ClassifierExperts:
                     best = accuracy
                 if dokeywords:
                     print("- - - - - - - - - - - - Testing '" + classifier + "' with configuration l" + str(c) + "r" + str(c) + "k - - - - - - - - - - -", file=sys.stderr)
-                    accuracy, timblskopopts = self.crossvalidate(classifier, folds, leftcontext, rightcontext, dokeywords, c, c, True, timbloptions)
+                    accuracy, timblskipopts = self.crossvalidate(classifier, folds, leftcontext, rightcontext, dokeywords, c, c, True, timbloptions)
                     if accuracy > best:
                         bestconfig = (c,c,False, timblskipopts)
                         best = accuracy
@@ -510,7 +510,7 @@ class ClassifierExperts:
                 #pass to classifier
                 print("\tClassifying '" + str(inputfragment) + "' ...", file=sys.stderr)
                 classlabel, distribution, distance =  self.classifiers[str(inputfragment)].classify(features)
-                classlabel = classlabel.replace('\_',' ')
+                classlabel = classlabel.replace(r'\_',' ')
                 if lm and len(distribution) > 1:
                     print("\tClassifier translation prior to LM: " + str(inputfragment) + " -> [ DISTRIBUTION:" + str(repr(distribution))+" ]", file=sys.stderr)
                     candidatesentences = []
@@ -542,7 +542,6 @@ class ClassifierExperts:
                             maxscore = score
                             outputfragment = targetpattern  #Fragment(targetpattern, inputfragment.id)
                             outputfragment.confidence = score
-                    alternatives = []
                     for candidatesentence, targetpattern, tscore, lmscore in candidatesentences:
                         if targetpattern != outputfragment:
                             outputfragment.alternatives.append( Alternative( tuple(targetpattern.split()), tweight* (tscore-besttscore) + lmweight * (lmscore-bestlmscore) )  )
@@ -622,7 +621,7 @@ def main():
     try:
         if not args.settype in ['train','test','run','server', 'igen']:
             raise ValueError
-    except:
+    except ValueError:
         print("Specify either --train, --test, --run, --server, --igen")
         sys.exit(2)
 
