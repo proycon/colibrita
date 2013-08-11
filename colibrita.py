@@ -418,7 +418,7 @@ class ClassifierExperts:
             self.classifiers[classifier].flush()
             best = 0
             bestconfig = (leftcontext,rightcontext,dokeywords,"")
-            print("=================== #" + str(i) + "/" + str(l) + " - Autoconfiguring '" + classifier + " ===================", file=sys.stderr)
+            print("=================== #" + str(i) + "/" + str(l) + " - Autoconfiguring '" + classifier + "' ===================", file=sys.stderr)
             for c in range(1,max(leftcontext,rightcontext)+1):
                 print("- - - - - - - - - - - - Testing '" + classifier + "' with configuration l" + str(c) + "r" + str(c) + " - - - - - - - - - - -", file=sys.stderr)
                 accuracy, timblskipopts = self.crossvalidate(classifier, folds, leftcontext, rightcontext, dokeywords,  c, c, False, timbloptions)
