@@ -86,9 +86,12 @@ class ClassifierExperts:
         self.classifiers = {}
         self.keywords = {}
 
-    def load(self, timbloptions):
+    def load(self, timbloptions, limit=None):
         for f in glob.glob(self.workdir + '/*.train'):
             sourcefragment = unquote_plus(os.path.basename(f).replace('.train',''))
+            if limit and not sourcefragment in limit:
+                print("NOTICE: Classifier '" + sourcefragment + "' not found in testset, skipping...", file=sys.stderr)
+                continue
             print("Loading classifier " + sourcefragment, file=sys.stderr)
             self.classifiers[sourcefragment] = timbl.TimblClassifier(f[:-6], timbloptions)
             conffile = f.replace('.train','.conf')
@@ -99,9 +102,12 @@ class ClassifierExperts:
         print("Loaded " + str(len(self.classifiers)) + " classifiers",file=sys.stderr)
         self.loadkeywords()
 
-    def loadkeywords(self):
+    def loadkeywords(self, limit = None):
         for f in glob.glob(self.workdir + '/*.keywords'):
             sourcefragment = unquote_plus(os.path.basename(f).replace('.keywords',''))
+            if limit and not sourcefragment in limit:
+                print("NOTICE: Keywords for '" + sourcefragment + "' not needed in testset, skipping...", file=sys.stderr)
+                continue
             self.keywords[sourcefragment] = []
             print("Loading keywords for " + sourcefragment, file=sys.stderr)
             f = open(f, 'r', encoding='utf-8')
@@ -213,7 +219,7 @@ class ClassifierExperts:
 
 
 
-    def build(self, reader, leftcontext, rightcontext, dokeywords, compute_bow_params, bow_absolute_threshold, bow_prob_threshold,bow_filter_threshold, timbloptions):
+    def build(self, reader, leftcontext, rightcontext, dokeywords, compute_bow_params, bow_absolute_threshold, bow_prob_threshold,bow_filter_threshold, timbloptions, limit=None):
         assert (isinstance(reader, Reader))
 
 
@@ -256,6 +262,9 @@ class ClassifierExperts:
             for left, inputfragment, right in sentencepair.inputfragments():
                 if not str(inputfragment) in tcount:
                     print("WARNING: Inputfragment " + str(inputfragment) + " not found in count! Skipping!!", file=sys.stderr)
+                    continue
+                if limit and not str(inputfragment) in limit:
+                    print("NOTICE: Inputfragment " + str(inputfragment) + " not found in testset, skipping...", file=sys.stderr)
                     continue
                 left = tuple(left.split())
                 right = tuple(right.split())
@@ -399,10 +408,13 @@ class ClassifierExperts:
 
 
 
-    def autoconf(self, folds,  leftcontext, rightcontext, dokeywords, timbloptions):
+    def autoconf(self, folds,  leftcontext, rightcontext, dokeywords, timbloptions, limit=None):
         print("Auto-configuring " + str(len(self.classifiers)) + " classifiers, determining optimal feature configuration using leave-one-out", file=sys.stderr)
         l= len(self.classifiers)
         for i, classifier in enumerate(self.classifiers):
+            if limit and not classifier in limit:
+                print("NOTICE: Inputfragment " + classifier + " not found in testset, skipping...", file=sys.stderr)
+                continue
             self.classifiers[classifier].flush()
             best = 0
             bestconfig = (leftcontext,rightcontext,dokeywords,"")
@@ -449,9 +461,12 @@ class ClassifierExperts:
         f.close()
         return configid, timblopts, accuracy
 
-    def train(self):
+    def train(self, limit=None):
         print("Training " + str(len(self.classifiers)) + " classifiers", file=sys.stderr)
         for classifier in self.classifiers:
+            if limit and not classifier in limit:
+                print("NOTICE: Inputfragment " + classifier + " not found in testset, skipping...", file=sys.stderr)
+                continue
             self.classifiers[classifier].flush()
             if os.path.exists(self.classifiers[classifier].fileprefix + '.conf'):
                 configid, timblopts, accuracy = self.readconf(classifier)
@@ -584,6 +599,12 @@ def loaddttable(filename):
     f.close()
     return dttable
 
+def getlimit(testset):
+    limit = set()
+    for sentencepair in testset:
+        for left, sourcefragment, right in sentencepair.inputfragments():
+            limit.add( str(sourcefragment) )
+    return limit
 
 
 
@@ -614,6 +635,7 @@ def main():
     parser.add_argument('--tmweight',type=float, help="Translation model weight (when --lm is used)", action='store',default=1)
     parser.add_argument('--port',type=int, help="Server port (use with --server)", action='store',default=7893)
     parser.add_argument('--folds',type=int, help="Number of folds to use in for cross-validatio (used with -a)", action='store',default=10)
+    parser.add_argument('--trainfortest',type=str, help="Do only limited training that covers a particular test set (speeds up training considerably)", action='store',default="")
     parser.add_argument('-T','--ttable', type=str,help="Phrase translation table (file) to use when testing with --lm and without classifier training", action='store',default="")
 
     args = parser.parse_args()
@@ -642,21 +664,26 @@ def main():
             print("WARNING: Language model specified during training, will be ignored", file=sys.stderr)
 
         experts = ClassifierExperts(args.output)
+        if args.trainfortest:
+            testset = Reader(args.trainfortest)
+            limit = getlimit(testset)
+        else:
+            limit = None
 
         data = Reader(args.dataset)
         if not os.path.isdir(args.output):
             os.mkdir(args.output)
         if not os.path.exists(args.output + '/directtranslation.table'):
             print("Building classifiers", file=sys.stderr)
-            experts.build(data, args.leftcontext, args.rightcontext, args.keywords, args.compute_bow_params, args.bow_absolute_threshold, args.bow_prob_threshold, args.bow_filter_threshold, timbloptions)
+            experts.build(data, args.leftcontext, args.rightcontext, args.keywords, args.compute_bow_params, args.bow_absolute_threshold, args.bow_prob_threshold, args.bow_filter_threshold, timbloptions, limit)
         elif args.settype == 'train':
             print("Classifiers already built", file=sys.stderr)
-            experts.load(timbloptions)
+            experts.load(timbloptions, limit)
         else:
             print("Instances already generated",file=sys.stderr)
         if args.settype == 'train' and args.autoconf:
-            experts.autoconf(args.folds, args.leftcontext, args.rightcontext, args.keywords, timbloptions)
-        if args.settype == 'train': experts.train()
+            experts.autoconf(args.folds, args.leftcontext, args.rightcontext, args.keywords, timbloptions, limit)
+        if args.settype == 'train': experts.train(limit)
     elif args.settype == 'test':
 
         if not args.dataset:
