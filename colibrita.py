@@ -355,6 +355,10 @@ class ClassifierExperts:
         assert newrightcontext <= rightcontext
         timblskipopts = self.gettimblskipopts(classifier, leftcontext, rightcontext, newleftcontext, newrightcontext, dokeywords and not newdokeywords )
 
+        timbloptions = timbloptions.replace("-vdb","")
+        timbloptions = timbloptions.replace("-G0","")
+
+
         #check that the number of lines exceeds the number of folds
         enoughlines = False
         trainfile = self.classifiers[classifier].fileprefix + ".train"
