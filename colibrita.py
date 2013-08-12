@@ -12,6 +12,7 @@ import math
 import timbl
 import lxml.etree
 import random
+import datetime
 from collections import defaultdict
 from urllib.parse import quote_plus, unquote_plus
 from copy import copy
@@ -420,7 +421,7 @@ class ClassifierExperts:
             self.classifiers[classifier].flush()
             best = 0
             bestconfig = (leftcontext,rightcontext,dokeywords,"")
-            print("=================== #" + str(i) + "/" + str(l) + " - Autoconfiguring '" + classifier + "' ===================", file=sys.stderr)
+            print("=================== #" + str(i) + "/" + str(l) + " - Autoconfiguring '" + classifier + "' (" + datetime.datetime.now().strftime("%H:%M:%S") + ") ===================", file=sys.stderr)
             for c in range(1,max(leftcontext,rightcontext)+1):
                 print("- - - - - - - - - - - - Testing '" + classifier + "' with configuration l" + str(c) + "r" + str(c) + " - - - - - - - - - - -", file=sys.stderr)
                 sys.stderr.flush()
