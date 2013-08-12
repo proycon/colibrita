@@ -367,9 +367,9 @@ class ClassifierExperts:
                 break
         if enoughlines:
             #ok, let's make us some folds!
-            tmpid = os.path.dirname(trainfile) + '/' + str(hex(random.getrandbits(128)))
+            tmpid = self.classifiers[classifier].fileprefix
             fold = {}
-            foldconfig = open(tmpid + '.folds','w', encoding='utf-8') #will hold the fold-containing files, one per line.. as timbl likes it
+            foldconfig = open(tmpid+ '.folds','w', encoding='utf-8') #will hold the fold-containing files, one per line.. as timbl likes it
             for i in range(0,folds):
                 fold[i] = open(tmpid + '.fold' + str(i), 'w', encoding='utf-8')
                 foldconfig.write(tmpid + '.fold' + str(i) + '\n')
