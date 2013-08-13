@@ -568,7 +568,7 @@ class ClassifierExperts:
                             outputfragment.confidence = score
                     for candidatesentence, targetpattern, tscore, lmscore in candidatesentences:
                         if targetpattern != outputfragment:
-                            outputfragment.alternatives.append( Alternative( tuple(targetpattern.split()), tweight* (tscore-besttscore) + lmweight * (lmscore-bestlmscore) )  )
+                            outputfragment.alternatives.append( Alternative( tuple(str(targetpattern).split()), tweight* (tscore-besttscore) + lmweight * (lmscore-bestlmscore) )  )
                     print("\tClassifier translation after LM: " + str(inputfragment) + " -> " + str(outputfragment) + " score= " + str(score), file=sys.stderr)
 
                 else:
