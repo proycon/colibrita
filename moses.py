@@ -47,11 +47,10 @@ def main():
     f.write("[ttable-limit]\n20\n\n")
     f.write("[weight-d]\n" + str(args.dweight) + "\n\n")
     f.write("[weight-l]\n" + str(args.lmweight) + "\n\n")
-    f.write("[weight-t]\n" + "\n".join(args.tmweights) + "\n\n")
+    f.write("[weight-t]\n" + "\n".join(args.tmweights.split(',')) + "\n\n")
     f.write("[weight-w]\n-1\n")
     f.write("[distortion-limit]\n6\n")
     f.close()
-
 
 
 if __name__ == '__main__':
