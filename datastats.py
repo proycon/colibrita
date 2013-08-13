@@ -16,11 +16,13 @@ def main():
     hist = defaultdict(int)
     nhist = defaultdict(int)
     fragcount = 0
+    paircount = 0
     for sentencepair in data:
         for left, sourcefragment, right in sentencepair.inputfragments():
             if args.hist: hist[str(sourcefragment)] += 1
             if args.nhist: nhist[len(sourcefragment)] += 1
             fragcount += 1
+        paircount += 1
 
     if args.hist:
         print("HISTOGRAM",file=sys.stderr)
@@ -29,10 +31,10 @@ def main():
 
     if args.nhist:
         print("N-HISTOGRAM",file=sys.stderr)
-        for n, freq in sorted(hist.items()):
+        for n, freq in sorted(nhist.items()):
             print(str(n) + "\t" + str(freq))
 
-    print("Sentencepairs = ", len(data))
+    print("Sentencepairs = ", paircount)
     print("Fragments = ", fragcount)
 
 
