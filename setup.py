@@ -34,6 +34,7 @@ setup(
             'colibrita-setgen = colibrita.setgen:main',
             'colibrita-evaluate = colibrita.evaluation:main',
             'colibrita-baseline = colibrita.baseline:main',
+            'colibrita-datastats = colibrita.datastats:main',
             'colibrita = colibrita.colibrita:main',
         ]
     },
