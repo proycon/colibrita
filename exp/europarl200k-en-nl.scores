@@ -1,0 +1,41 @@
+==> baseline.summary.score <==
+Accuracy Word-Accuracy Recall BLEU METEOR NIST TER WER PER
+0.683 0.7086714285714281 0.9698 0.9751 0.9702655 16.9633 0 1.2994 1.2652
+
+==> lmbaseline.output.summary.score <==
+Accuracy Word-Accuracy Recall BLEU METEOR NIST TER WER PER
+0.6988 0.721288095238095 0.9698 0.9765 0.9709264 16.9951 0 1.2565 1.2337
+
+==> exp-l1r0.output.summary.score <==
+Accuracy Word-Accuracy Recall BLEU METEOR NIST TER WER PER
+0.725 0.7422780952380947 0.9498 0.977 0.9712923 16.9718 0 1.2527 1.2283
+
+==> exp-l1r1.output.summary.score <==
+Accuracy Word-Accuracy Recall BLEU METEOR NIST TER WER PER
+0.7636 0.7783080952380949 0.9498 0.9799 0.9729998 17.0061 0 1.1339 1.1133
+
+==> exp-l1r1k.output.summary.score <==
+Accuracy Word-Accuracy Recall BLEU METEOR NIST TER WER PER
+0.7636 0.7783080952380949 0.9498 0.9799 0.9730067 17.006 0 1.1334 1.1128
+
+==> exp-l1r1lm.output.summary.score <==
+Accuracy Word-Accuracy Recall BLEU METEOR NIST TER WER PER
+0.7804 0.7933280952380949 0.9498 0.9811 0.9737183 17.0194 0 1.0769 1.0574
+
+==> exp-l2r0.output.summary.score <==
+Accuracy Word-Accuracy Recall BLEU METEOR NIST TER WER PER
+0.7226 0.7398247619047614 0.9498 0.9769 0.9711975 16.969 0 1.2619 1.2365
+
+==> exp-l2r2.output.summary.score <==
+Accuracy Word-Accuracy Recall BLEU METEOR NIST TER WER PER
+0.761 0.7752447619047615 0.9498 0.9797 0.9728356 17.0007 0 1.1502 1.129
+
+==> exp-l3r0.output.summary.score <==
+Accuracy Word-Accuracy Recall BLEU METEOR NIST TER WER PER
+0.2272 0.2288547619047619 0.2482 0.9074 0.9458192 15.9453 0 6.3966 6.3911
+
+==> exp-l3r3.output.summary.score <==
+Accuracy Word-Accuracy Recall BLEU METEOR NIST TER WER PER
+0.7564 0.7702614285714282 0.9498 0.9794 0.9726433 16.9958 0 1.1708 1.1502
+
+
