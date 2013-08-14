@@ -57,8 +57,8 @@ def main():
     p = subprocess.Popen('moses -f ' + args.output + '.moses.ini',shell=True,stdout=subprocess.PIPE,stdin=subprocess.PIPE,stderr=subprocess.PIPE)
     for sentencepair in data:
         for left, sourcefragment, right in sentencepair.inputfragments():
-            p.stdin.write(str(sourcefragment)+'\n')
-    solutions = p.communicate()[0].split("\n")
+            p.stdin.write( (str(sourcefragment) + "\n").encode('utf-8'))
+    solutions = p.communicate()[0].split(b"\n")
     p.stdin.close()
 
     data.reset()
@@ -69,7 +69,7 @@ def main():
     solutionindex = 0
     for sentencepair in data:
         for left, inputfragment, right in sentencepair.inputfragments():
-            outputfragment = Fragment(solutions[solutionindex], inputfragment.id)
+            outputfragment = Fragment(str(solutions[solutionindex],'utf-8'), inputfragment.id)
             print("\t" + str(inputfragment) + " -> " + str(outputfragment), file=sys.stderr)
             sentencepair.output = sentencepair.replacefragment(inputfragment, outputfragment, sentencepair.output)
             solutionindex += 1
