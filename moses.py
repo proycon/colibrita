@@ -73,7 +73,9 @@ def main():
             if solution[-1] == '.': solution = solution[:-1]
             outputfragment = Fragment(tuple(str(solution,'utf-8').split()), inputfragment.id)
             print("\t" + str(inputfragment) + " -> " + str(outputfragment), file=sys.stderr)
+            sentencepair.output = sentencepair.ref
             sentencepair.output = sentencepair.replacefragment(inputfragment, outputfragment, sentencepair.output)
+            sentencepair.ref = None
             solutionindex += 1
             writer.write(sentencepair)
     writer.close()
