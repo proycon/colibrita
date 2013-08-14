@@ -23,11 +23,11 @@ def main():
 
     args = parser.parse_args()
 
-    if os.path.exists(args.output):
-        print("Output already " + args.output + " already exists, doing nothing..",file=sys.stderr)
-        sys.exit(2)
-    else:
-        os.mkdir(args.output)
+    #if os.path.exists(args.output):
+    #    print("Output already " + args.output + " already exists, doing nothing..",file=sys.stderr)
+    #    sys.exit(2)
+    #else:
+    #    os.mkdir(args.output)
 
     if not os.path.exists(args.ttable):
         print("Translation table " + args.ttable + " does not exist", file=sys.stderr)
