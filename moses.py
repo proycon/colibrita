@@ -70,7 +70,7 @@ def main():
     for sentencepair in data:
         for left, inputfragment, right in sentencepair.inputfragments():
             solution = solutions[solutionindex]
-            if solution[-1].strip() == '.': solution = solution.strip()[:-1]
+            if solution[-1] == '.': solution = solution[:-1]
             outputfragment = Fragment(tuple(str(solution,'utf-8').split()), inputfragment.id)
             print("\t" + str(inputfragment) + " -> " + str(outputfragment), file=sys.stderr)
             sentencepair.output = sentencepair.replacefragment(inputfragment, outputfragment, sentencepair.output)
