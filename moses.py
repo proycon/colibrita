@@ -44,7 +44,7 @@ def main():
     f.write("[input-factors]\n0\n\n")
     f.write("[mapping]\n0 T 0\n\n")
     f.write("[ttable-file]\n0 0 0 5 " + args.ttable + "\n\n")
-    f.write("[languagemodel-file]\n0 0 " + str(args.lmorder) + " " + args.lm + "\n\n")
+    f.write("[lmodel-file]\n0 0 " + str(args.lmorder) + " " + args.lm + "\n\n")
     f.write("[ttable-limit]\n20\n\n")
     f.write("[weight-d]\n" + str(args.dweight) + "\n\n")
     f.write("[weight-l]\n" + str(args.lmweight) + "\n\n")
