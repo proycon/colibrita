@@ -6,11 +6,7 @@ import argparse
 import sys
 import os
 import subprocess
-import itertools
-import glob
-import math
-import subprocess
-from pynlpl.net import GenericWrapperServer
+from colibrita.format import Reader, Writer, Fragment
 
 
 def main():
@@ -41,7 +37,10 @@ def main():
         print("Language model " + args.lm + " does not exist", file=sys.stderr)
         sys.exit(2)
 
-    f = open(args.output + '/moses.ini','w',encoding='utf-8')
+
+    data = Reader(args.dataset)
+
+    f = open(args.output + '.moses.ini','w',encoding='utf-8')
     f.write("[input-factors]\n0\n\n")
     f.write("[mapping]\n0 T 0\n\n")
     f.write("[ttable-file]\n0 0 0 5 " + args.ttable + "\n\n")
@@ -54,9 +53,30 @@ def main():
     f.write("[distortion-limit]\n6\n")
     f.close()
 
+    print("Calling moses...",file=sys.stderr)
+    p = subprocess.Popen('moses -f ' + args.output + '.moses.ini',shell=True,stdout=subprocess.PIPE,stdin=subprocess.PIPE,stderr=subprocess.PIPE)
+    for sentencepair in data:
+        for left, sourcefragment, right in sentencepair.inputfragments():
+            p.stdin.write(str(sourcefragment)+'\n')
+    solutions = p.communicate()[0].split("\n")
+    p.stdin.close()
 
-    subprocess.Popen('moses -f ' + args.output + '/moses.ini',shell=True,stdout=subprocess.PIPE,stdin=subprocess.PIPE,stderr=subprocess.PIPE)
+    data.reset()
 
+    print("Processing moses output...",file=sys.stderr)
+    writer = Writer(args.output + '.output.xml')
+
+    solutionindex = 0
+    for sentencepair in data:
+        for left, inputfragment, right in sentencepair.inputfragments():
+            outputfragment = Fragment(solutions[solutionindex], inputfragment.id)
+            print("\t" + str(inputfragment) + " -> " + str(outputfragment), file=sys.stderr)
+            sentencepair.output = sentencepair.replacefragment(inputfragment, outputfragment, sentencepair.output)
+            solutionindex += 1
+            writer.write(sentencepair)
+    writer.close()
+
+    print("All done.", file=sys.stderr)
 
 
 if __name__ == '__main__':
