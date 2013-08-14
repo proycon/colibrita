@@ -53,7 +53,7 @@ def main():
     f.write("[distortion-limit]\n6\n")
     f.close()
 
-    print("Calling moses...",file=sys.stderr)
+    print("Calling moses: moses -f " + args.output + '.moses.ini' ,file=sys.stderr)
     p = subprocess.Popen('moses -f ' + args.output + '.moses.ini',shell=True,stdout=subprocess.PIPE,stdin=subprocess.PIPE,stderr=subprocess.PIPE)
     for sentencepair in data:
         for left, sourcefragment, right in sentencepair.inputfragments():
