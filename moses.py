@@ -9,6 +9,8 @@ import subprocess
 import itertools
 import glob
 import math
+import subprocess
+from pynlpl.net import GenericWrapperServer
 
 
 def main():
@@ -51,6 +53,10 @@ def main():
     f.write("[weight-w]\n-1\n")
     f.write("[distortion-limit]\n6\n")
     f.close()
+
+
+    subprocess.Popen('moses -f ' + args.output + '/moses.ini',shell=True,stdout=subprocess.PIPE,stdin=subprocess.PIPE,stderr=subprocess.PIPE)
+
 
 
 if __name__ == '__main__':
