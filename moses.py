@@ -69,7 +69,9 @@ def main():
     solutionindex = 0
     for sentencepair in data:
         for left, inputfragment, right in sentencepair.inputfragments():
-            outputfragment = Fragment(tuple(str(solutions[solutionindex],'utf-8').split()), inputfragment.id)
+            solution = solutions[solutionindex]
+            if solution[-1] == '.': solution = solution[:-1]
+            outputfragment = Fragment(tuple(str(solution,'utf-8').split()), inputfragment.id)
             print("\t" + str(inputfragment) + " -> " + str(outputfragment), file=sys.stderr)
             sentencepair.output = sentencepair.replacefragment(inputfragment, outputfragment, sentencepair.output)
             solutionindex += 1
