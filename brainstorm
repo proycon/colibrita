@@ -1,0 +1,50 @@
+
+- context: done -> best result with size 1 l r
+
+- keywords: implemented -> little effect
+
+- lm integration: done -> positive effect
+    - parameter optimisation on LM weight?
+ 
+- parameter optimisation
+    - find different configurations per expert
+        - test performance on leave-one-out/cross-validation (implemented, running, fairly slow though)
+        - test on a devset?
+            - then we need to extract features specifically for each expert
+              using a development set... not trivial (devset may not cover all of training set if selected independently)
+    - different timbl settings
+        - was very prone to overfitting (in WSD2
+
+- split long unknown fragments into known parts and recombine solutions using
+  mini-decoder (TODO!)
+
+- relocation (separate problem, TODO)
+    - move a marked phrase to a better position
+
+- build web interface (done, simple webinterface)
+
+- can we use skipgrams in this problem? (I don't expect much from this)
+    - input-side skipgrams: solve two unknowns dependently
+    - output-side skipgrams: 
+    - first address colibri question: how to find good skipgrams
+
+
+- learning curve experiment (TODO)
+
+- bilingual lexicon baseline (TODO if a good bilingual lexicon can be found)
+
+- compare with MT
+
+Building a more comprehensive translation assistant:
+    - autocompletion (separate problem) 
+        - integrate soothsayer?
+        - autocompletion of L1 fallback content?
+    - spelling correction
+        - integrate valkuil/fowlt?
+    - language detection
+    - comprehensive web app
+
+
+- code switching
+ - welke switches maken mensen?
+
