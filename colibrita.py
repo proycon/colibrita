@@ -518,6 +518,7 @@ class ClassifierExperts:
 
 
                 #extract global context
+                keywordsfound = 0
                 if dokeywords and str(inputfragment) in self.keywords:
                     bag = {}
                     for keyword, target, freq,p in sorted(self.keywords[str(inputfragment)], key=lambda x: -1 *  x[3])[:MAXKEYWORDS]: #limit to 100 most potent keywords
@@ -525,6 +526,8 @@ class ClassifierExperts:
 
                     for word in itertools.chain(left, right):
                         if word in bag:
+                            if bag[word] != 0:
+                                keywordsfound += 1
                             bag[word] = 1
 
                     #add to features
@@ -532,7 +535,10 @@ class ClassifierExperts:
                         features.append(keyword+"="+str(bag[keyword]))
 
                 #pass to classifier
-                print("\tClassifying '" + str(inputfragment) + "' ...", file=sys.stderr)
+                if keywordsfound:
+                    print("\tClassifying '" + str(inputfragment) + "' (" + str(keywordsfound) + " keyword(s) found)...", file=sys.stderr)
+                else:
+                    print("\tClassifying '" + str(inputfragment) + "' ...", file=sys.stderr)
                 classlabel, distribution, distance =  self.classifiers[str(inputfragment)].classify(features)
                 classlabel = classlabel.replace(r'\_',' ')
                 if lm and len(distribution) > 1:
