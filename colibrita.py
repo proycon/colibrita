@@ -525,7 +525,7 @@ class ClassifierExperts:
 
                     for word in itertools.chain(left, right):
                         if word in bag:
-                            bag[keyword] = 1
+                            bag[word] = 1
 
                     #add to features
                     for keyword in sorted(bag.keys()):
