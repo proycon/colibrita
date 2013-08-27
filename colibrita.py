@@ -539,6 +539,7 @@ class ClassifierExperts:
                     print("\tClassifying '" + str(inputfragment) + "' (" + str(keywordsfound) + " keyword(s) found)...", file=sys.stderr)
                 else:
                     print("\tClassifying '" + str(inputfragment) + "' ...", file=sys.stderr)
+                print("\tFeature vector: " + " ||| ".join(features),file=sys.stderr)
                 classlabel, distribution, distance =  self.classifiers[str(inputfragment)].classify(features)
                 classlabel = classlabel.replace(r'\_',' ')
                 if lm and len(distribution) > 1:
