@@ -11,7 +11,7 @@ def read(fname):
 
 setup(
     name = "colibrita",
-    version = "0.1.4",
+    version = "0.1.5",
     author = "Maarten van Gompel",
     author_email = "proycon@anaproy.nl",
     description = (""),

@@ -440,9 +440,11 @@ class ClassifierExperts:
                     if accuracy > best:
                         bestconfig = (c,c,False, timblskipopts)
                         best = accuracy
-
-            configid = 'l' + str(bestconfig[0]) + 'r' + str(bestconfig[1])
-            if bestconfig[2]: configid += 'k'
+            if best == 0:
+                configid = 'l1r1'
+            else:
+                configid = 'l' + str(bestconfig[0]) + 'r' + str(bestconfig[1])
+                if bestconfig[2]: configid += 'k'
 
             f = open(self.classifiers[classifier].fileprefix + '.conf', 'w',encoding='utf-8')
             f.write("config=" + configid+"\n")
