@@ -524,7 +524,9 @@ class ClassifierExperts:
                     for keyword, target, freq,p in sorted(self.keywords[str(inputfragment)], key=lambda x: -1 *  x[3])[:MAXKEYWORDS]: #limit to 100 most potent keywords
                         bag[keyword] = 0
 
+                    print("Bag", repr(bag), file=sys.stderr)
                     for word in itertools.chain(left, right):
+                        print(repr(word),file=sys.stderr)
                         if word in bag:
                             if bag[word] != 0:
                                 keywordsfound += 1
