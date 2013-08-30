@@ -87,7 +87,6 @@ def main():
     makebaseline(ttable, outputfile, testset)
 
 
-    return True
 
 
 if __name__ == '__main__':
