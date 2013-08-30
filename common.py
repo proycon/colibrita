@@ -127,7 +127,7 @@ def extractpairs(ttablefile, gizamodelfile_s2t, gizamodelfile_t2s, patternmodelf
         #iterate over all source patterns found in this sentence
         for sourcepattern in sourcepatterns:
             sourcepattern = sourcepattern.decode(classdecoder_source)
-            if any(( ispunct(x) for x in sourcepattern.split() ) ):
+            if any(( noword(x) for x in sourcepattern.split() ) ):
                 continue
 
 
@@ -146,7 +146,7 @@ def extractpairs(ttablefile, gizamodelfile_s2t, gizamodelfile_t2s, patternmodelf
                 for targetpattern, scores in ttable[sourcepattern]:
                     if DEBUG: print("(extractpatterns) -- considering target pattern from phrase-table: " + str(targetpattern) , file=sys.stderr)
                     if targetpattern in targetpatterns:
-                        if any(( ispunct(x) for x in targetpattern.split() ) ):
+                        if any(( noword(x) for x in targetpattern.split() ) ):
                             continue
                         joinedprob = scores[0] * scores[2]
                         if joinedprob < bestscore * divergencefrombestthreshold:
@@ -277,6 +277,9 @@ def buildpatternmodel(corpusname, sourcelang, targetlang, occurrencethreshold=2)
 
 def ispunct(s):
     return s in ('.',',',':',';','/','\\','_','(',')','[',']','{','}')
+
+def noword(s):
+    return all([ispunct(x) or x.isdigit() for x in s])
 
 #move to seperate module?
 

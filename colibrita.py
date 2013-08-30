@@ -5,13 +5,11 @@ from __future__ import print_function, unicode_literals, division, absolute_impo
 import argparse
 import sys
 import os
-import subprocess
 import itertools
 import glob
 import math
 import timbl
 import lxml.etree
-import random
 import datetime
 from collections import defaultdict
 from urllib.parse import quote_plus, unquote_plus
@@ -332,7 +330,7 @@ class ClassifierExperts:
 
     def gettimblskipopts(self, classifier, leftcontext,rightcontext,newleftcontext,newrightcontext, skipkeywords):
         skip = []
-        for i in range(1,leftcontext+rightcontext+1): #TODO: TEST!!
+        for i in range(1,leftcontext+rightcontext+1):
             if i <= leftcontext:
                 if i <= leftcontext - newleftcontext:
                     skip.append(i)
