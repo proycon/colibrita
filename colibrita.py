@@ -683,6 +683,8 @@ def main():
         elif args.lm:
             print("WARNING: Language model specified during training, will be ignored", file=sys.stderr)
 
+        print("Parameters: ", repr(args), file=sys.stderr)
+
         experts = ClassifierExperts(args.output)
         if args.trainfortest:
             testset = Reader(args.trainfortest)
@@ -711,6 +713,8 @@ def main():
             sys.exit(2)
         if args.autoconf:
             print("Warning: Autoconf specified at testing time, has no effect. Has to be specified at training time", file=sys.stderr)
+
+        print("Parameters: ", repr(args), file=sys.stderr)
 
         if args.lm:
             print("Loading Language model", file=sys.stderr)
@@ -752,6 +756,7 @@ def main():
                 print("Server not available, twisted not loaded...", file=sys.stderr)
                 sys.exit(2)
 
+        print("Parameters: ", repr(args), file=sys.stderr)
         if args.lm:
             print("Loading Language model", file=sys.stderr)
             lm = ARPALanguageModel(args.lm)
