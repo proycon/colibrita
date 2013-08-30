@@ -491,7 +491,7 @@ class ClassifierExperts:
         f.close()
         return configid, timblopts, accuracy
 
-    def train(self, limit=None):
+    def train(self, leftcontext, rightcontext, dokeywords, limit=None):
         print("Training " + str(len(self.classifiers)) + " classifiers", file=sys.stderr)
         for classifier in self.classifiers:
             if limit and not classifier in limit:
@@ -502,6 +502,14 @@ class ClassifierExperts:
                 configid, timblopts, accuracy = self.readconf(classifier)
                 if timblopts: self.classifiers[classifier].timbloptions += ' ' + timblopts
                 print("\tLoaded configuration " + configid + " for '" + classifier + "'", file=sys.stderr)
+            else:
+                f = open(self.classifiers[classifier].fileprefix + '.conf', 'w',encoding='utf-8')
+                f.write("config=l" + str(leftcontext) + 'r' + str(rightcontext))
+                if dokeywords:
+                    f.write('k')
+                f.write("\n")
+                f.close()
+
             if os.path.exists(self.classifiers[classifier].fileprefix + '.train'):
                 print("\tTraining '" + classifier + "'", file=sys.stderr)
                 self.classifiers[classifier].train()
@@ -744,7 +752,7 @@ def main():
             print("Instances already generated",file=sys.stderr)
         if args.settype == 'train' and args.autoconf:
             experts.autoconf(args.folds, args.leftcontext, args.rightcontext, args.keywords, timbloptions, limit)
-        if args.settype == 'train': experts.train(limit)
+        if args.settype == 'train': experts.train(args.leftcontext, args.rightcontext, args.keywords, limit)
     elif args.settype == 'test':
 
         if not args.dataset:
