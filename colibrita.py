@@ -127,7 +127,8 @@ class ClassifierExperts:
             if limit and not sourcefragment in limit:
                 print("NOTICE: Keywords for '" + sourcefragment + "' not needed in testset, skipping...", file=sys.stderr)
                 continue
-            self.classifiers[sourcefragment].keywords = True
+            if sourcefragment in self.classifiers:
+                self.classifiers[sourcefragment].keywords = True
             self.keywords[sourcefragment] = []
             print("Loading keywords for " + sourcefragment, file=sys.stderr)
             f = open(f, 'r', encoding='utf-8')
