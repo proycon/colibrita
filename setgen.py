@@ -6,6 +6,7 @@ import argparse
 import sys
 import os
 import subprocess
+import random
 
 from colibrita.format import Writer
 from colibrita.common import extractpairs, makesentencepair, runcmd, makeset
@@ -28,6 +29,7 @@ def main():
     parser.add_argument('-D', dest='divergencefrombestthreshold', help="Maximum divergence from best translation option. If set to 0.8, the only alternatives considered are those that have a joined probability of equal or above 80\% of that the best translation option", type=float,action='store',default=0.8)
     parser.add_argument('-O', dest='occurrencethreshold', help="Patterns occurring below this threshold will not be considered", type=int,action='store',default=2)
     parser.add_argument('-n', dest='size', help="Size of set to construct (random selection, 0=maximum size)", type=int,action='store',default=0)
+    parser.add_argument('--seed', help="Seed for random number generator (0=use current system time, default)", type=int,action='store',default=0)
     args = parser.parse_args()
 
     try:
@@ -39,6 +41,8 @@ def main():
 
     print("Building " + args.settype + " set", file=sys.stderr)
     workdir = args.settype + '-' + args.output # pylint: disable=E1101
+    if args.seed:
+        random.seed(args.seed)
     makeset(args.output, args.settype, workdir, args.source, args.target, args.sourcelang, args.targetlang, args.mosesdir, args.bindir, args.size, args.joinedprobabilitythreshold, args.divergencefrombestthreshold, args.occurrencethreshold, args.debug)
 
     return True
