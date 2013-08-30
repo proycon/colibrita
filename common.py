@@ -222,10 +222,10 @@ def generate(testoutput, ttablefile, gizamodelfile_s2t, gizamodelfile_t2s, patte
 
 def makeset(output, settype, workdir, source, target, sourcelang, targetlang, mosesdir, bindir, size, joinedprobabilitythreshold, divergencefrombestthreshold, occurrencethreshold, debug):
     if not os.path.exists(source): # pylint: disable=E1101
-        print("Source corpus " + source + " does not exist")# pylint: disable=E1101
+        print("Source corpus " + source + " does not exist", file=sys.stderr)# pylint: disable=E1101
         sys.exit(2)
     if not os.path.exists(target): # pylint: disable=E1101
-        print("Target corpus " + target + " does not exist")# pylint: disable=E1101
+        print("Target corpus " + target + " does not exist", file=sys.stderr)# pylint: disable=E1101
         sys.exit(2)
 
     ttablefile = workdir + '/model/phrase-table.gz'
