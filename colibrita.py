@@ -104,7 +104,7 @@ class ClassifierExperts:
                     l = configid.find('l')
                     r = configid.find('r')
                     self.classifiers[sourcefragment].leftcontext = int(configid[l+1:l+2])
-                    self.classifiers[sourcefragment].rightcontext = (configid[r+1:r+2])
+                    self.classifiers[sourcefragment].rightcontext = int(configid[r+1:r+2])
                     self.classifiers[sourcefragment].keywords = False #will be set to True by loadkeywords
 
                 if autoconf and timblopts:
