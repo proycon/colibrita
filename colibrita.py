@@ -839,7 +839,6 @@ def main():
             ColibritaServer(args.port, experts, dttable, ttable, lm, args, timbloptions)
 
     print("All done.", file=sys.stderr)
-    return True
 
 
 if __name__ == '__main__':
