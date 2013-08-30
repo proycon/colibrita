@@ -5,6 +5,7 @@
 #corpus should already be tokenised!
 if [ $# -ne 6 ]; then
   echo "Syntax: exp.sh sourcecorpus targetcorpus setsize sourcelang targetlang expname" >&2
+  exit 2
 fi
 
 SOURCECORPUS=$1
