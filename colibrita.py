@@ -85,7 +85,7 @@ class ClassifierExperts:
         self.classifiers = {}
         self.keywords = {}
 
-    def load(self, timbloptions, limit=None):
+    def load(self, timbloptions, leftcontext, rightcontext,dokeywords, limit=None, autoconf=False):
         for f in glob.glob(self.workdir + '/*.train'):
             sourcefragment = unquote_plus(os.path.basename(f).replace('.train',''))
             if limit and not sourcefragment in limit:
@@ -96,7 +96,27 @@ class ClassifierExperts:
             conffile = f.replace('.train','.conf')
             if os.path.exists(conffile):
                 configid, timblopts, accuracy = self.readconf(sourcefragment)
-                if timblopts: self.classifiers[sourcefragment].timbloptions += ' ' + timblopts
+                if configid:
+                    #warning supports only one-digit contexts
+                    l = configid.find('l')
+                    r = configid.find('r')
+                    self.classifiers[sourcefragment].leftcontext = int(configid[l+1:l+2])
+                    self.classifiers[sourcefragment].rightcontext = (configid[r+1:r+2])
+                    self.classifiers[sourcefragment].keywords = False #will be set to True by loadkeywords
+                else:
+                    self.classifiers[sourcefragment].leftcontext = None
+                    self.classifiers[sourcefragment].rightcontext = None
+                    self.classifiers[sourcefragment].keywords = None
+
+                if autoconf and timblopts:
+                    self.classifiers[sourcefragment].timbloptions += ' ' + timblopts
+                elif not autoconf:
+                    assert leftcontext <= self.classifiers[sourcefragment].leftcontext
+                    assert rightcontext <= self.classifiers[sourcefragment].rightcontext
+                    kwfile = f.replace('.train','.keywords')
+                    self.classifiers[sourcefragment].timbloptions += ' '  + self.gettimblskipopts(sourcefragment, self.classifier[sourcefragment].leftcontext,self.classifier[sourcefragment].rightcontext,leftcontext,rightcontext, os.path.exists(kwfile) and not dokeywords )
+
+
                 print(" \- Loaded configuration " + configid, file=sys.stderr)
         print("Loaded " + str(len(self.classifiers)) + " classifiers",file=sys.stderr)
         self.loadkeywords()
@@ -107,6 +127,7 @@ class ClassifierExperts:
             if limit and not sourcefragment in limit:
                 print("NOTICE: Keywords for '" + sourcefragment + "' not needed in testset, skipping...", file=sys.stderr)
                 continue
+            self.classifiers[sourcefragment].keywords = True
             self.keywords[sourcefragment] = []
             print("Loading keywords for " + sourcefragment, file=sys.stderr)
             f = open(f, 'r', encoding='utf-8')
@@ -502,39 +523,59 @@ class ClassifierExperts:
                 print("\tDirect translation " + str(inputfragment) + " -> " + str(outputfragment), file=sys.stderr)
             elif str(inputfragment) in self.classifiers:
                 #translation by classifier
+                classifier = self.classifiers[str(inputfragment)]
+
+
+
                 features = []
 
                 if leftcontext:
                     f_left = list(left[-leftcontext:])
                     if len(f_left) < leftcontext:
                         f_left = list(["<s>"] * (leftcontext - len(f_left))) + f_left
+                    if not (classifier.leftcontext is None):
+                        if classifier.leftcontext < leftcontext:
+                            f_left = f_left[-classifier.leftcontext:]
+                        elif leftcontext < classifier.leftcontext:
+                            f_left = list(["<DUMMY-IGNORED>"] * (classifier.leftcontext - leftcontext)) + f_left
                     features += f_left
+
+
 
                 if rightcontext:
                     f_right = list(right[:rightcontext])
                     if len(f_right) < rightcontext:
                         f_right = f_right + list(["</s>"] * (rightcontext - len(f_right)))
+                    if not (classifier.rightcontext is None):
+                        if classifier.rightcontext < rightcontext:
+                            f_right = f_right[:-classifier.rightcontext]
+                        elif rightcontext < rightcontext.rightcontext:
+                            f_right = f_right + list(["<DUMMY-IGNORED>"] * (classifier.rightcontext - rightcontext))
                     features += f_right
 
 
                 #extract global context
                 keywordsfound = 0
-                if dokeywords and str(inputfragment) in self.keywords:
-                    bag = {}
-                    for keyword, target, freq,p in sorted(self.keywords[str(inputfragment)], key=lambda x: -1 *  x[3])[:MAXKEYWORDS]: #limit to 100 most potent keywords
-                        bag[keyword] = 0
+                if str(inputfragment) in self.keywords:
+                    if dokeywords:
+                        bag = {}
+                        for keyword, target, freq,p in sorted(self.keywords[str(inputfragment)], key=lambda x: -1 *  x[3])[:MAXKEYWORDS]: #limit to 100 most potent keywords
+                            bag[keyword] = 0
 
-                    #print("Bag", repr(bag), file=sys.stderr)
-                    for word in itertools.chain(left, right):
-                        #print(repr(word),file=sys.stderr)
-                        if word in bag:
-                            if bag[word] == 0:
-                                keywordsfound += 1
-                            bag[word] = 1
+                        #print("Bag", repr(bag), file=sys.stderr)
+                        for word in itertools.chain(left, right):
+                            #print(repr(word),file=sys.stderr)
+                            if word in bag:
+                                if bag[word] == 0:
+                                    keywordsfound += 1
+                                bag[word] = 1
 
-                    #add to features
-                    for keyword in sorted(bag.keys()):
-                        features.append(keyword+"="+str(bag[keyword]))
+                        #add to features
+                        for keyword in sorted(bag.keys()):
+                            features.append(keyword+"="+str(bag[keyword]))
+                    elif classifier.keywords: #classifier was trained with keywords, need dummies
+                        for keyword, target, freq,p in sorted(self.keywords[str(inputfragment)], key=lambda x: -1 *  x[3])[:MAXKEYWORDS]: #limit to 100 most potent keywords
+                            features.append("<IGNOREDKEYWORD>")
 
                 #pass to classifier
                 if keywordsfound > 0:
@@ -542,7 +583,7 @@ class ClassifierExperts:
                 else:
                     print("\tClassifying '" + str(inputfragment) + "' ...", file=sys.stderr)
                 print("\tFeature vector: " + " ||| ".join(features),file=sys.stderr)
-                classlabel, distribution, distance =  self.classifiers[str(inputfragment)].classify(features)
+                classlabel, distribution, distance =  classifier.classify(features)
                 classlabel = classlabel.replace(r'\_',' ')
                 if lm and len(distribution) > 1:
                     print("\tClassifier translation prior to LM: " + str(inputfragment) + " -> [ DISTRIBUTION:" + str(repr(distribution))+" ]", file=sys.stderr)
@@ -635,7 +676,7 @@ def main():
     parser.add_argument('--igen',dest='settype',help="Instance generation without actual training", action='store_const',const='igen')
     parser.add_argument('-f','--dataset', type=str,help="Dataset file", action='store',default="",required=False)
     parser.add_argument('--debug','-d', help="Debug", action='store_true', default=False)
-    parser.add_argument('-a','--autoconf', help="Automatically determine best feature configuration per expert (cross-validated), values for -l and -r are considered maxima, set -k to consider keywords, only needs to be specified at training time", action='store_true',default=False)
+    parser.add_argument('-a','--autoconf', help="Automatically determine best feature configuration per expert (cross-validated), values for -l and -r are considered maxima, set -k to consider keywords, needs to be specified both at training time and at test time!", action='store_true',default=False)
     parser.add_argument('-l','--leftcontext',type=int, help="Left local context size", action='store',default=0)
     parser.add_argument('-r','--rightcontext',type=int,help="Right local context size", action='store',default=0)
     parser.add_argument('-k','--keywords',help="Add global keywords in context", action='store_true',default=False)
@@ -698,7 +739,7 @@ def main():
             experts.build(data, args.leftcontext, args.rightcontext, args.keywords, args.compute_bow_params, args.bow_absolute_threshold, args.bow_prob_threshold, args.bow_filter_threshold, timbloptions, limit)
         elif args.settype == 'train':
             print("Classifiers already built", file=sys.stderr)
-            experts.load(timbloptions, limit)
+            experts.load(timbloptions, args.leftcontext, args.rightcontext, args.keywords, limit, args.autoconf)
         else:
             print("Instances already generated",file=sys.stderr)
         if args.settype == 'train' and args.autoconf:
@@ -709,8 +750,6 @@ def main():
         if not args.dataset:
             print("Specify a dataset to use for testing! (-f)", file=sys.stderr)
             sys.exit(2)
-        if args.autoconf:
-            print("Warning: Autoconf specified at testing time, has no effect. Has to be specified at training time", file=sys.stderr)
 
         print("Parameters: ", repr(args), file=sys.stderr)
 
@@ -729,7 +768,7 @@ def main():
                 sys.exit(2)
             experts = ClassifierExperts(args.output)
             print("Loading classifiers",file=sys.stderr)
-            experts.load(timbloptions)
+            experts.load(timbloptions, args.leftcontext, args.rightcontext, args.keywords, None, args.autoconf)
             print("Running...",file=sys.stderr)
             data = Reader(args.dataset)
             experts.test(data, args.output + '.output.xml', args.leftcontext, args.rightcontext, args.keywords, timbloptions , lm, args.tmweight, args.lmweight)
@@ -776,7 +815,7 @@ def main():
                 dttable = loaddttable(args.output + '/directtranslation.table')
             experts = ClassifierExperts(args.output)
             print("Loading classifiers",file=sys.stderr)
-            experts.load(timbloptions)
+            experts.load(timbloptions, args.leftcontext, args.rightcontext, args.keywords)
         elif args.ttable:
             print("Loading translation table",file=sys.stderr)
             ttable = PhraseTable(args.ttable,False, False, "|||", 3, 0,None, None)
