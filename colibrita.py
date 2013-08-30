@@ -88,14 +88,14 @@ class ClassifierExperts:
     def load(self, timbloptions, leftcontext, rightcontext,dokeywords, limit=None, autoconf=False):
         for f in glob.glob(self.workdir + '/*.train'):
             sourcefragment = unquote_plus(os.path.basename(f).replace('.train',''))
-            self.classifiers[sourcefragment].leftcontext = None
-            self.classifiers[sourcefragment].rightcontext = None
-            self.classifiers[sourcefragment].keywords = None
             if limit and not sourcefragment in limit:
                 print("NOTICE: Classifier '" + sourcefragment + "' not found in testset, skipping...", file=sys.stderr)
                 continue
             print("Loading classifier " + sourcefragment, file=sys.stderr)
             self.classifiers[sourcefragment] = timbl.TimblClassifier(f[:-6], timbloptions)
+            self.classifiers[sourcefragment].leftcontext = None
+            self.classifiers[sourcefragment].rightcontext = None
+            self.classifiers[sourcefragment].keywords = None
             conffile = f.replace('.train','.conf')
             if os.path.exists(conffile):
                 configid, timblopts, accuracy = self.readconf(sourcefragment)
