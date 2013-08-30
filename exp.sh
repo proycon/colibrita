@@ -11,10 +11,6 @@ SOURCELANG=$4
 TARGETLANG=$5
 EXPNAME=$6
 
-SOURCETRAINCORPUS=$1
-TARGETTRAINCORPUS=$2
-SOURCETESTCORPUS=$3
-TARGETTESTCORPUS=$4
 
 SEED=12345
 
@@ -33,6 +29,7 @@ function forkconfig {
   cd $1
   find ../exp-l5r5k/ -name "*.train" | xargs -I{} cp -s {} .
   find ../exp-l5r5k/ -name "*.keywords" | xargs -I{} cp -s {} .
+  find ../exp-l5r5k/ -name "*.conf" | xargs -I{} cp -s {} .
   cd ..
 }
 
@@ -86,6 +83,8 @@ forkconfig exp-l2r0
 forkconfig exp-l3r0
 
 
+forkconfig exp-l2r1
+
 forkconfig exp-al5r5k
 
 
@@ -137,6 +136,11 @@ echo "===== Running configuration l3r0 =====" >&2
 colibrita --train -f $TRAINSET -l 3 -r 0 -o exp-l3r0 --trainfortest $TESTSET 
 colibrita --test -f $TESTSET -l 3 -r 0 -o exp-l3r0
 colibrita-evaluate --matrexdir $MATREXDIR --ref $TESTSET --out exp-l3r0.output.xml
+
+echo "===== Running configuration l2r1 =====" >&2
+colibrita --train -f $TRAINSET -l 2 -r 1 -o exp-l2r1 --trainfortest $TESTSET 
+colibrita --test -f $TESTSET -l 2 -r 1 -o exp-l2r1
+colibrita-evaluate --matrexdir $MATREXDIR --ref $TESTSET --out exp-l2r1.output.xml
 
 echo "===== Running configuration l1r1lm =====" >&2
 ln -s exp-l1r1 exp-l1r1lm
