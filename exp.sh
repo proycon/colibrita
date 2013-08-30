@@ -14,6 +14,10 @@ EXPNAME=$6
 
 SEED=12345
 
+#only for cross-validation
+CLONES=16
+FOLDS=10
+
 MOSESDIR=/vol/customopt/machine-translation/src/mosesdecoder
 BINDIR=/vol/customopt/machine-translation/bin
 SAMPLER=/vol/customopt/uvt-ru/src/pynlpl/tools/sampler.py #part of pynlpl
@@ -158,7 +162,7 @@ colibrita --test -f $TESTSET -l 2 -r 2 --lm $LM -o exp-l2r2lm
 colibrita-evaluate --matrexdir $MATREXDIR --ref $TESTSET --out exp-l2r2lm.output.xml
 
 echo "===== Running auto configuration =====" >&2
-colibrita --train -f $TRAINSET -l 5 -r 5 -k -a --Tclones 16 --folds 10 --trainfortest $TESTSET -o exp-al5r5k
+colibrita --train -f $TRAINSET -l 5 -r 5 -k -a --Tclones $CLONES --folds $FOLDS --trainfortest $TESTSET -o exp-al5r5k
 colibrita --test -f $TESTSET -l 5 -r 5 -k -a -o exp-al5r5k
 colibrita-evaluate --matrexdir $MATREXDIR --ref $TESTSET --out exp-al5r5k.output.xml
 
