@@ -153,10 +153,15 @@ ln -s exp-l2r2 exp-l2r2lm
 colibrita --test -f $TESTSET -l 2 -r 2 --lm $LM -o exp-l2r2lm
 colibrita-evaluate --matrexdir $MATREXDIR --ref $TESTSET --out exp-l2r2lm.output.xml
 
-echo "===== Running configuration al5r5k =====" >&2
+echo "===== Running auto configuration =====" >&2
 colibrita --train -f $TRAINSET -l 5 -r 5 -k -a --Tclones 16 --folds 10 --trainfortest $TESTSET -o exp-al5r5k
 colibrita --test -f $TESTSET -l 5 -r 5 -k -a -o exp-al5r5k
 colibrita-evaluate --matrexdir $MATREXDIR --ref $TESTSET --out exp-al5r5k.output.xml
+
+echo "===== Running auto configuration with LM =====" >&2
+ln -s exp-al5r5k exp-al5r5klm
+colibrita --test -f $TESTSET -l 5 -r 5 -k -a --lm $LM -o exp-al5r5klm
+colibrita-evaluate --matrexdir $MATREXDIR --ref $TESTSET --out exp-al5r5klm.output.xml
 
 
 
