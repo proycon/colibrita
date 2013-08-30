@@ -40,6 +40,7 @@ def main():
         sys.exit(2)
 
     print("Building " + args.settype + " set", file=sys.stderr)
+    print("Parameters: " + repr(args), file=sys.stderr)
     workdir = args.settype + '-' + args.output # pylint: disable=E1101
     if args.seed:
         random.seed(args.seed)
