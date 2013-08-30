@@ -25,7 +25,7 @@ def main():
     parser.add_argument('--targetlang','-T', type=str,help="Target language code (the intended language)", action='store',required=True)
     parser.add_argument('--debug','-d', help="Debug", action='store_true', default=False)
     parser.add_argument('-p', dest='joinedprobabilitythreshold', help="Joined probabiity threshold for inclusion of fragments from phrase translation-table: min(P(s|t) * P(t|s))", type=float,action='store',default=0.01)
-    parser.add_argument('-D', dest='divergencefrombestthreshold', help="Maximum divergence from best translation option", type=float,action='store',default=0.01)
+    parser.add_argument('-D', dest='divergencefrombestthreshold', help="Maximum divergence from best translation option. If set to 0.8, the only alternatives considered are those that have a joined probability of equal or above 80\% of that the best translation option", type=float,action='store',default=0.8)
     parser.add_argument('-O', dest='occurrencethreshold', help="Patterns occurring below this threshold will not be considered", type=int,action='store',default=2)
     parser.add_argument('-n', dest='size', help="Size of set to construct (random selection, 0=maximum size)", type=int,action='store',default=0)
     args = parser.parse_args()
