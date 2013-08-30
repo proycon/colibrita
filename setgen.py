@@ -46,9 +46,8 @@ def main():
         random.seed(args.seed)
     makeset(args.output, args.settype, workdir, args.source, args.target, args.sourcelang, args.targetlang, args.mosesdir, args.bindir, args.size, args.joinedprobabilitythreshold, args.divergencefrombestthreshold, args.occurrencethreshold, args.debug)
 
-    return True
-
 
 if __name__ == '__main__':
     main()
+    sys.exit(0)
 
