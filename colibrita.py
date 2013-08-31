@@ -368,6 +368,8 @@ class ClassifierExperts:
             if skip: o += ","
             l = max(MAXKEYWORDS, len(self.keywords[classifier]))
             o += str(leftcontext+rightcontext+1) + "-" + str(leftcontext+rightcontext+l)
+        if o[-2:] == ":I":
+            o = o[:-2]
         return o
 
     def crossvalidate(self, classifier, folds, leftcontext, rightcontext, dokeywords,  newleftcontext, newrightcontext, newdokeywords, timbloptions):
