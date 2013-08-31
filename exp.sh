@@ -81,7 +81,7 @@ if [[ ! -f baseline.xml ]]; then
   colibrita-baseline -t $TESTSET -T train-$EXPNAME/model/phrase-table.gz -o baseline || exit 2
 fi
 
-if [[ ! -f lmbaseline.xml ]]; then
+if [[ ! -f lmbaseline.output.xml ]]; then
   echo "===== Building LM-informed baseline =====" >&2
   colibrita --test -f $TESTSET --lm $LM -T train-$EXPNAME/model/phrase-table.gz -o lmbaseline || exit 2
 fi
