@@ -557,7 +557,7 @@ class ClassifierExperts:
                     if not (classifier.rightcontext is None):
                         if classifier.rightcontext < rightcontext:
                             f_right = f_right[:-classifier.rightcontext]
-                        elif rightcontext < rightcontext.rightcontext:
+                        elif rightcontext < classifier.rightcontext:
                             f_right = f_right + list(["<DUMMY-IGNORED>"] * (classifier.rightcontext - rightcontext))
                     features += f_right
 
