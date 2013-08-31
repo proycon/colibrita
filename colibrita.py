@@ -364,9 +364,10 @@ class ClassifierExperts:
 
         o =  "-mO:I" + ",".join([ str(i) for i in skip ])
 
-        if skipkeywords:
+        if skipkeywords and classifier in self.keywords:
             if skip: o += ","
-            o += str(leftcontext+rightcontext+1) + "-999" #timbl allows out of range ends
+            l = max(MAXKEYWORDS, len(self.keywords[classifier]))
+            o += str(leftcontext+rightcontext+1) + "-" + str(leftcontext+rightcontext+l)
         return o
 
     def crossvalidate(self, classifier, folds, leftcontext, rightcontext, dokeywords,  newleftcontext, newrightcontext, newdokeywords, timbloptions):
