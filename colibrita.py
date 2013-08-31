@@ -113,7 +113,7 @@ class ClassifierExperts:
                     assert leftcontext <= self.classifiers[sourcefragment].leftcontext
                     assert rightcontext <= self.classifiers[sourcefragment].rightcontext
                     kwfile = f.replace('.train','.keywords')
-                    self.classifiers[sourcefragment].timbloptions += ' '  + self.gettimblskipopts(sourcefragment, self.classifier[sourcefragment].leftcontext,self.classifier[sourcefragment].rightcontext,leftcontext,rightcontext, os.path.exists(kwfile) and not dokeywords )
+                    self.classifiers[sourcefragment].timbloptions += ' '  + self.gettimblskipopts(sourcefragment, self.classifiers[sourcefragment].leftcontext,self.classifiers[sourcefragment].rightcontext,leftcontext,rightcontext, os.path.exists(kwfile) and not dokeywords )
 
 
                 print(" \- Loaded configuration " + configid, file=sys.stderr)
