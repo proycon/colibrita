@@ -187,7 +187,7 @@ fi
 if [[ ! -f "exp-l1r1klm" ]]; then
   echo "===== Running configuration l1r1klm =====" >&2
   ln -s exp-l1r1k exp-l1r1klm
-  colibrita --test -f $TESTSET -l 1 -r 1 --lm $LM -o exp-l1r1klm || exit 2
+  colibrita --test -f $TESTSET -l 1 -r 1 -k --lm $LM -o exp-l1r1klm || exit 2
   colibrita-evaluate --matrexdir $MATREXDIR --ref $TESTSET --out exp-l1r1klm.output.xml || exit 2
 fi
 
