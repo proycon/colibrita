@@ -77,7 +77,7 @@ try:
 except ImportError:
     print("(Webserver support not available)",file=sys.stderr)
 
-MAXKEYWORDS = 100
+MAXKEYWORDS = 50
 
 class ClassifierExperts:
     def __init__(self, workdir):
@@ -586,7 +586,7 @@ class ClassifierExperts:
                             features.append(keyword+"="+str(bag[keyword]))
                     elif classifier.keywords: #classifier was trained with keywords, need dummies
                         for i, (keyword, target, freq,p) in enumerate(sorted(self.keywords[str(inputfragment)], key=lambda x: -1 *  x[3])[:MAXKEYWORDS]): #limit to 100 most potent keywords
-                            features.append("<IGNOREDKEYWORD"+str(i)+">")
+                            features.append("<IGNOREDKEYWORD"+str(i+1)+">")
 
                 #pass to classifier
                 if keywordsfound > 0:
