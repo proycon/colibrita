@@ -109,6 +109,8 @@ class ClassifierExperts:
                     p = float(p)
                     self.keywords[sourcefragment].append((keyword, target,c,p))
                 kwf.close()
+                self.keywords[sourcefragment] = sorted(self.keywords[sourcefragment], key=lambda x: -1 * x[3])
+
 
 
             conffile = f.replace('.train','.conf')
@@ -306,8 +308,10 @@ class ClassifierExperts:
                     #extract global context
                     if dokeywords and str(inputfragment) in self.keywords:
                         bag = {}
-                        for keyword, target, freq,p in sorted(self.keywords[str(inputfragment)], key=lambda x: -1 *  x[3])[:MAXKEYWORDS]: #limit to 100 most potent keywords
+                        for keyword, target, freq,p in self.keywords[str(inputfragment)]:
                             bag[keyword] = 0
+                            if len(bag) == MAXKEYWORDS:
+                                break
 
                         for word in itertools.chain(left, right):
                             if word in bag:
@@ -366,7 +370,7 @@ class ClassifierExperts:
 
         if skipkeywords and classifier in self.keywords:
             if skip: o += ","
-            l = min(MAXKEYWORDS, len(self.keywords[classifier]))
+            l = len(self.keywords[classifier])
             if l == 1:
                 o += str(leftcontext+rightcontext+1)
             else:
@@ -576,8 +580,10 @@ class ClassifierExperts:
                 if str(inputfragment) in self.keywords:
                     if dokeywords:
                         bag = {}
-                        for keyword, target, freq,p in sorted(self.keywords[str(inputfragment)], key=lambda x: -1 *  x[3])[:MAXKEYWORDS]: #limit to 100 most potent keywords
+                        for keyword, target, freq,p in self.keywords[str(inputfragment)]:
                             bag[keyword] = 0
+                            if len(bag) == MAXKEYWORDS:
+                                break
 
                         #print("Bag", repr(bag), file=sys.stderr)
                         for word in itertools.chain(left, right):
@@ -591,7 +597,8 @@ class ClassifierExperts:
                         for keyword in sorted(bag.keys()):
                             features.append(keyword+"="+str(bag[keyword]))
                     elif classifier.keywords: #classifier was trained with keywords, need dummies
-                        for i, (keyword, target, freq,p) in enumerate(sorted(self.keywords[str(inputfragment)], key=lambda x: -1 *  x[3])[:MAXKEYWORDS]): #limit to 100 most potent keywords
+                        for i, (keyword, target, freq,p) in enumerate(self.keywords[str(inputfragment)]):
+                            if i == MAXKEYWORDS: break
                             features.append("<IGNOREDKEYWORD"+str(i+1)+">")
 
                 #pass to classifier
