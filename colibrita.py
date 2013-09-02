@@ -370,7 +370,7 @@ class ClassifierExperts:
 
         if skipkeywords and classifier in self.keywords:
             if skip: o += ","
-            l = min(MAXKEYWORDS, len(self.keywords[classifier]))
+            l = min(MAXKEYWORDS, len( set( ( x[0] for x in self.keywords[classifier] ) ) ) )
             if l == 1:
                 o += str(leftcontext+rightcontext+1)
             else:
