@@ -550,7 +550,7 @@ class ClassifierExperts:
 
                 features = []
 
-                if leftcontext:
+                if leftcontext or classifier.leftcontext:
                     f_left = list(left[-leftcontext:])
                     if len(f_left) < leftcontext:
                         f_left = list(["<s>"] * (leftcontext - len(f_left))) + f_left
@@ -563,14 +563,15 @@ class ClassifierExperts:
 
 
 
-                if rightcontext:
+                if rightcontext or classifier.rightcontext:
                     f_right = list(right[:rightcontext])
                     if len(f_right) < rightcontext:
                         f_right = f_right + list(["</s>"] * (rightcontext - len(f_right)))
-                    if classifier.rightcontext < rightcontext:
-                        f_right = f_right[:-classifier.rightcontext]
-                    elif rightcontext < classifier.rightcontext:
-                        f_right = f_right + list(["<DUMMY-IGNORED>"] * (classifier.rightcontext - rightcontext))
+                    if not (classifier.rightcontext is None):
+                        if classifier.rightcontext < rightcontext:
+                            f_right = f_right[:-classifier.rightcontext]
+                        elif rightcontext < classifier.rightcontext:
+                            f_right = f_right + list(["<DUMMY-IGNORED>"] * (classifier.rightcontext - rightcontext))
                     features += f_right
 
 
