@@ -359,8 +359,8 @@ class ClassifierExperts:
             if i <= leftcontext:
                 if i <= leftcontext - newleftcontext:
                     skip.append(i)
-            elif i - leftcontext <= rightcontext:
-                if i - leftcontext > newrightcontext:
+            elif i - rightcontext <= rightcontext:
+                if i - rightcontext > newrightcontext:
                     skip.append(i)
 
         if not skip and not skipkeywords:
