@@ -593,6 +593,8 @@ class ClassifierExperts:
                     print("\tClassifying '" + str(inputfragment) + "' (" + str(keywordsfound) + " keywords found)...", file=sys.stderr)
                 else:
                     print("\tClassifying '" + str(inputfragment) + "' ...", file=sys.stderr)
+                if classifier.leftcontext != leftcontext or classifier.rightcontext != rightcontext:
+                    print("\t\tClassifier configuration: l:",classifier.leftcontext,"r:",classifier.rightcontext," || Desired configuration: l:",leftcontext,"r:",rightcontext, " || Timbloptions: ", classifier.timbloptions, file=sys.stderr)
                 print("\tFeature vector: " + " ||| ".join(features),file=sys.stderr)
                 classlabel, distribution, distance =  classifier.classify(features)
                 classlabel = classlabel.replace(r'\_',' ')
