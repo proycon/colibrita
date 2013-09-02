@@ -133,24 +133,6 @@ class ClassifierExperts:
                 print(" \- Loaded configuration " + configid, file=sys.stderr)
         print("Loaded " + str(len(self.classifiers)) + " classifiers",file=sys.stderr)
 
-    def loadkeywords(self, limit = None): #obsolete now? already loaded in load():
-        for f in glob.glob(self.workdir + '/*.keywords'):
-            sourcefragment = unquote_plus(os.path.basename(f).replace('.keywords',''))
-            if limit and not sourcefragment in limit:
-                print("NOTICE: Keywords for '" + sourcefragment + "' not needed in testset, skipping...", file=sys.stderr)
-                continue
-            if sourcefragment in self.classifiers:
-                self.classifiers[sourcefragment].keywords = True
-            self.keywords[sourcefragment] = []
-            print("Loading keywords for " + sourcefragment, file=sys.stderr)
-            f = open(f, 'r', encoding='utf-8')
-            for line in f:
-                keyword, target, c, p = line.split("\t")
-                c = int(c)
-                p = float(p)
-                self.keywords[sourcefragment].append((keyword, target,c,p))
-            f.close()
-
 
     def counttranslations(self, reader):
         tcount = defaultdict( lambda: defaultdict(int) )
