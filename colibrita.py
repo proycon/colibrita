@@ -360,7 +360,7 @@ class ClassifierExperts:
                 if i <= leftcontext - newleftcontext:
                     skip.append(i)
             elif i - rightcontext <= rightcontext:
-                if i - rightcontext > newrightcontext:
+                if i - leftcontext > newrightcontext:
                     skip.append(i)
 
         if not skip and not skipkeywords:
@@ -567,11 +567,10 @@ class ClassifierExperts:
                     f_right = list(right[:rightcontext])
                     if len(f_right) < rightcontext:
                         f_right = f_right + list(["</s>"] * (rightcontext - len(f_right)))
-                    if not (classifier.rightcontext is None):
-                        if classifier.rightcontext < rightcontext:
-                            f_right = f_right[:-classifier.rightcontext]
-                        elif rightcontext < classifier.rightcontext:
-                            f_right = f_right + list(["<DUMMY-IGNORED>"] * (classifier.rightcontext - rightcontext))
+                    if classifier.rightcontext < rightcontext:
+                        f_right = f_right[:-classifier.rightcontext]
+                    elif rightcontext < classifier.rightcontext:
+                        f_right = f_right + list(["<DUMMY-IGNORED>"] * (classifier.rightcontext - rightcontext))
                     features += f_right
 
 
