@@ -332,6 +332,11 @@ class ClassifierExperts:
                         for target, c in tcount[str(inputfragment)].items():
                             index.write(str(target) + "\t" + str(c))
                         index.write("\n")
+                        configid = 'l' + str(leftcontext) + 'r' + str(rightcontext)
+                        if dokeywords: configid += 'k'
+                        f = open(self.classifiers[str(inputfragment)].fileprefix + '.conf', 'w',encoding='utf-8')
+                        f.write("config=" + configid+"\n")
+                        f.close()
 
                     if not features:
                         print("WARNING: No features extracted for " + str(inputfragment) + ", skipping classifier!", file=sys.stderr)
