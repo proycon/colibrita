@@ -33,11 +33,12 @@ TESTSETSIZE=5000
 
 
 function forkconfig {
-    mkdir $1
+    mkdir -p $1
     cd $1
     find ../exp-l5r5k/ -name "*.train" | xargs -I{} cp -s {} .
     find ../exp-l5r5k/ -name "*.keywords" | xargs -I{} cp -s {} .
     find ../exp-l5r5k/ -name "*.conf" | xargs -I{} cp -s {} .
+    ln -s ../exp-l5r5k/directtranslation.table
     cd ..
 }
 
