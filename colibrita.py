@@ -373,7 +373,7 @@ class ClassifierExperts:
                 skip = []
                 for i in range(leftcontext+rightcontext+1, leftcontext+rightcontext+l + 1):
                     skip.append(i)
-                    o +=  ",".join([ str(i) for i in skip ])
+                o +=  ",".join([ str(i) for i in skip ])
         if o[-2:] == ":I":
             return ""
         return o
