@@ -576,7 +576,7 @@ class ClassifierExperts:
                 if str(inputfragment) in self.keywords:
                     if dokeywords:
                         bag = {}
-                        for keyword, target, freq,p in sorted(self.keywords[str(inputfragment)], key=lambda x: -1 *  x[3])[:MAXKEYWORDS-1]: #limit to 100 most potent keywords
+                        for keyword, target, freq,p in sorted(self.keywords[str(inputfragment)], key=lambda x: -1 *  x[3])[:MAXKEYWORDS]: #limit to 100 most potent keywords
                             bag[keyword] = 0
 
                         #print("Bag", repr(bag), file=sys.stderr)
@@ -591,7 +591,7 @@ class ClassifierExperts:
                         for keyword in sorted(bag.keys()):
                             features.append(keyword+"="+str(bag[keyword]))
                     elif classifier.keywords: #classifier was trained with keywords, need dummies
-                        for i, (keyword, target, freq,p) in enumerate(sorted(self.keywords[str(inputfragment)], key=lambda x: -1 *  x[3])[:MAXKEYWORDS-1]): #limit to 100 most potent keywords
+                        for i, (keyword, target, freq,p) in enumerate(sorted(self.keywords[str(inputfragment)], key=lambda x: -1 *  x[3])[:MAXKEYWORDS]): #limit to 100 most potent keywords
                             features.append("<IGNOREDKEYWORD"+str(i+1)+">")
 
                 #pass to classifier
