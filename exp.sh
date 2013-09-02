@@ -212,6 +212,7 @@ if [[ ! -f "exp-al5r5klm" ]]; then
   colibrita --test -f $TESTSET -l 5 -r 5 -k -a --lm $LM -o exp-al5r5klm || exit 2
   colibrita-evaluate --matrexdir $MATREXDIR --ref $TESTSET --out exp-al5r5klm.output.xml || exit 2
 fi
+echo "====== All done! =======" >&2
 
 
 
