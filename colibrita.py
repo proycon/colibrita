@@ -585,7 +585,7 @@ class ClassifierExperts:
                         for keyword in sorted(bag.keys()):
                             features.append(keyword+"="+str(bag[keyword]))
                     elif classifier.keywords: #classifier was trained with keywords, need dummies
-                        for i, keyword, target, freq,p in enumerate(sorted(self.keywords[str(inputfragment)], key=lambda x: -1 *  x[3])[:MAXKEYWORDS]): #limit to 100 most potent keywords
+                        for i, (keyword, target, freq,p) in enumerate(sorted(self.keywords[str(inputfragment)], key=lambda x: -1 *  x[3])[:MAXKEYWORDS]): #limit to 100 most potent keywords
                             features.append("<IGNOREDKEYWORD"+str(i)+">")
 
                 #pass to classifier
