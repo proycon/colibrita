@@ -367,7 +367,13 @@ class ClassifierExperts:
         if skipkeywords and classifier in self.keywords:
             if skip: o += ","
             l = min(MAXKEYWORDS, len(self.keywords[classifier]))
-            o += str(leftcontext+rightcontext+1) + "-" + str(leftcontext+rightcontext+l)
+            if l == 1:
+                o += str(leftcontext+rightcontext+1)
+            else:
+                skip = []
+                for i in range(leftcontext+rightcontext+1, leftcontext+rightcontext+l + 1):
+                    skip.append(i)
+                    o +=  ",".join([ str(i) for i in skip ])
         if o[-2:] == ":I":
             return ""
         return o
