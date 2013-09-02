@@ -124,13 +124,13 @@ class ClassifierExperts:
 
                 if autoconf and timblopts:
                     self.classifiers[sourcefragment].timbloptions += ' ' + timblopts
-                elif not autoconf:
+                elif not autoconf and (self.classifiers[sourcefragment].leftcontext != leftcontext or self.classifiers[sourcefragment].rightcontext != rightcontext or self.classifiers[sourcefragment].keywords != dokeywords):
                     assert leftcontext <= self.classifiers[sourcefragment].leftcontext
                     assert rightcontext <= self.classifiers[sourcefragment].rightcontext
                     self.classifiers[sourcefragment].timbloptions += ' '  + self.gettimblskipopts(sourcefragment, self.classifiers[sourcefragment].leftcontext,self.classifiers[sourcefragment].rightcontext,leftcontext,rightcontext, ((sourcefragment in self.keywords) and not dokeywords) )
 
 
-                print(" \- Loaded configuration " + configid, file=sys.stderr)
+                print(" \- Loaded configuration " + configid + ", timbloptions: ", self.classifiers[sourcefragment].timbloptions , file=sys.stderr)
         print("Loaded " + str(len(self.classifiers)) + " classifiers",file=sys.stderr)
 
 
