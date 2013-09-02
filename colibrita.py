@@ -96,6 +96,21 @@ class ClassifierExperts:
             self.classifiers[sourcefragment].leftcontext = None
             self.classifiers[sourcefragment].rightcontext = None
             self.classifiers[sourcefragment].keywords = None
+            kwfile = f.replace('.train','.keywords')
+            if os.path.exists(kwfile):
+                if sourcefragment in self.classifiers:
+                    self.classifiers[sourcefragment].keywords = True
+                self.keywords[sourcefragment] = []
+                print("Loading keywords for " + sourcefragment, file=sys.stderr)
+                kwf = open(kwfile, 'r', encoding='utf-8')
+                for line in kwf:
+                    keyword, target, c, p = line.split("\t")
+                    c = int(c)
+                    p = float(p)
+                    self.keywords[sourcefragment].append((keyword, target,c,p))
+                kwf.close()
+
+
             conffile = f.replace('.train','.conf')
             if os.path.exists(conffile):
                 configid, timblopts, accuracy = self.readconf(sourcefragment)
@@ -105,22 +120,20 @@ class ClassifierExperts:
                     r = configid.find('r')
                     self.classifiers[sourcefragment].leftcontext = int(configid[l+1:l+2])
                     self.classifiers[sourcefragment].rightcontext = int(configid[r+1:r+2])
-                    self.classifiers[sourcefragment].keywords = False #will be set to True by loadkeywords
+                    self.classifiers[sourcefragment].keywords = sourcefragment in self.keywords
 
                 if autoconf and timblopts:
                     self.classifiers[sourcefragment].timbloptions += ' ' + timblopts
                 elif not autoconf:
                     assert leftcontext <= self.classifiers[sourcefragment].leftcontext
                     assert rightcontext <= self.classifiers[sourcefragment].rightcontext
-                    kwfile = f.replace('.train','.keywords')
-                    self.classifiers[sourcefragment].timbloptions += ' '  + self.gettimblskipopts(sourcefragment, self.classifiers[sourcefragment].leftcontext,self.classifiers[sourcefragment].rightcontext,leftcontext,rightcontext, os.path.exists(kwfile) and not dokeywords )
+                    self.classifiers[sourcefragment].timbloptions += ' '  + self.gettimblskipopts(sourcefragment, self.classifiers[sourcefragment].leftcontext,self.classifiers[sourcefragment].rightcontext,leftcontext,rightcontext, ((sourcefragment in self.keywords) and not dokeywords) )
 
 
                 print(" \- Loaded configuration " + configid, file=sys.stderr)
         print("Loaded " + str(len(self.classifiers)) + " classifiers",file=sys.stderr)
-        self.loadkeywords()
 
-    def loadkeywords(self, limit = None):
+    def loadkeywords(self, limit = None): #obsolete now? already loaded in load():
         for f in glob.glob(self.workdir + '/*.keywords'):
             sourcefragment = unquote_plus(os.path.basename(f).replace('.keywords',''))
             if limit and not sourcefragment in limit:
@@ -590,8 +603,8 @@ class ClassifierExperts:
                         for keyword in sorted(bag.keys()):
                             features.append(keyword+"="+str(bag[keyword]))
                     elif classifier.keywords: #classifier was trained with keywords, need dummies
-                        for keyword, target, freq,p in sorted(self.keywords[str(inputfragment)], key=lambda x: -1 *  x[3])[:MAXKEYWORDS]: #limit to 100 most potent keywords
-                            features.append("<IGNOREDKEYWORD>")
+                        for i, keyword, target, freq,p in enumerate(sorted(self.keywords[str(inputfragment)], key=lambda x: -1 *  x[3])[:MAXKEYWORDS]): #limit to 100 most potent keywords
+                            features.append("<IGNOREDKEYWORD"+str(i)+">")
 
                 #pass to classifier
                 if keywordsfound > 0:
