@@ -597,7 +597,7 @@ class ClassifierExperts:
                         for keyword in sorted(bag.keys()):
                             features.append(keyword+"="+str(bag[keyword]))
                     elif classifier.keywords: #classifier was trained with keywords, need dummies
-                        for i, (keyword, target, freq,p) in enumerate(self.keywords[str(inputfragment)]):
+                        for i, (keyword, target, freq,p) in enumerate( set( ( x[0] for x in self.keywords[str(inputfragment)]) ) ):
                             if i == MAXKEYWORDS: break
                             features.append("<IGNOREDKEYWORD"+str(i+1)+">")
 
