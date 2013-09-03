@@ -468,7 +468,7 @@ class ClassifierExperts:
             configid = 'l' + str(leftcontext) + 'r' + str(rightcontext)
             if dokeywords: configid += "k"
             bestconfig = (leftcontext,rightcontext,dokeywords,"")
-            print("=================== #" + str(i) + "/" + str(l) + " - Autoconfiguring '" + classifier + "' (" + datetime.datetime.now().strftime("%H:%M:%S") + ") ===================", file=sys.stderr)
+            print("=================== #" + str(i+1) + "/" + str(l) + " - Autoconfiguring '" + classifier + "' (" + datetime.datetime.now().strftime("%H:%M:%S") + ") ===================", file=sys.stderr)
             for c in range(1,max(leftcontext,rightcontext)+1):
                 print("- - - - - - - - - - - - Testing '" + classifier + "' with configuration l" + str(c) + "r" + str(c) + " - - - - - - - - - - -", file=sys.stderr)
                 sys.stderr.flush()
@@ -599,7 +599,7 @@ class ClassifierExperts:
                         f_right = f_right + list(["</s>"] * (rightcontext - len(f_right)))
                     if not (classifier.rightcontext is None):
                         if classifier.rightcontext < rightcontext:
-                            f_right = f_right[:-classifier.rightcontext]
+                            f_right = f_right[:classifier.rightcontext]
                         elif rightcontext < classifier.rightcontext:
                             f_right = f_right + list(["<DUMMY-IGNORED>"] * (classifier.rightcontext - rightcontext))
                     features += f_right
