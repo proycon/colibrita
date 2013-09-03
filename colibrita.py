@@ -96,6 +96,9 @@ class ClassifierExperts:
             self.classifiers[sourcefragment].leftcontext = None
             self.classifiers[sourcefragment].rightcontext = None
             self.classifiers[sourcefragment].keywords = None
+            self.classifiers[sourcefragment].selectedleftcontext = None
+            self.classifiers[sourcefragment].selectedrightcontext = None
+            self.classifiers[sourcefragment].selectedkeywords = None
             kwfile = f.replace('.train','.keywords')
             if os.path.exists(kwfile):
                 if sourcefragment in self.classifiers:
@@ -115,7 +118,7 @@ class ClassifierExperts:
 
             conffile = f.replace('.train','.conf')
             if os.path.exists(conffile):
-                configid, timblopts, accuracy = self.readconf(sourcefragment)
+                configid, bestconfigid, timblopts, accuracy = self.readconf(sourcefragment)
                 if configid:
                     #warning supports only one-digit contexts
                     l = configid.find('l')
@@ -123,6 +126,12 @@ class ClassifierExperts:
                     self.classifiers[sourcefragment].leftcontext = int(configid[l+1:l+2])
                     self.classifiers[sourcefragment].rightcontext = int(configid[r+1:r+2])
                     self.classifiers[sourcefragment].keywords = sourcefragment in self.keywords
+                if bestconfigid:
+                    l = bestconfigid.find('l')
+                    r = bestconfigid.find('r')
+                    self.classifiers[sourcefragment].selectedleftcontext = int(bestconfigid[l+1:l+2])
+                    self.classifiers[sourcefragment].selectedrightcontext = int(bestconfigid[r+1:r+2])
+                    self.classifiers[sourcefragment].selectedkeywords = bestconfigid[-1] == 'k'
 
                 if autoconf and timblopts:
                     self.classifiers[sourcefragment].timbloptions += ' ' + timblopts
@@ -456,6 +465,8 @@ class ClassifierExperts:
                 continue
             self.classifiers[classifier].flush()
             best = 0
+            configid = 'l' + str(leftcontext) + 'r' + str(rightcontext)
+            if dokeywords: configid += "k"
             bestconfig = (leftcontext,rightcontext,dokeywords,"")
             print("=================== #" + str(i) + "/" + str(l) + " - Autoconfiguring '" + classifier + "' (" + datetime.datetime.now().strftime("%H:%M:%S") + ") ===================", file=sys.stderr)
             for c in range(1,max(leftcontext,rightcontext)+1):
@@ -473,13 +484,14 @@ class ClassifierExperts:
                         bestconfig = (c,c,False, timblskipopts)
                         best = accuracy
             if best == 0:
-                configid = 'l1r1'
+                bestconfigid = 'l1r1'
             else:
-                configid = 'l' + str(bestconfig[0]) + 'r' + str(bestconfig[1])
-                if bestconfig[2]: configid += 'k'
+                bestconfigid = 'l' + str(bestconfig[0]) + 'r' + str(bestconfig[1])
+                if bestconfig[2]: bestconfigid += 'k'
 
             f = open(self.classifiers[classifier].fileprefix + '.conf', 'w',encoding='utf-8')
             f.write("config=" + configid+"\n")
+            f.write("bestconfig=" + bestconfigid+"\n")
             f.write("timblopts=" + bestconfig[3] + "\n")
             f.write("accuracy=" + str(best) + "\n")
             f.close()
@@ -488,6 +500,7 @@ class ClassifierExperts:
 
     def readconf(self, classifier):
         configid = ""
+        bestconfigid = ""
         timblopts = ""
         accuracy = 0.0
         f = open(self.classifiers[classifier].fileprefix + '.conf', 'r',encoding='utf-8')
@@ -495,6 +508,8 @@ class ClassifierExperts:
             line = line.strip()
             if line[0:7] == 'config=':
                 configid = line[7:]
+            elif line[0:11] == 'bestconfig=':
+                bestconfigid = line[11:]
             elif line[0:10] == 'timblopts=':
                 timblopts = line[10:]
             elif line[0:9] == 'accuracy=':
@@ -502,7 +517,7 @@ class ClassifierExperts:
             elif line and line[0] != '#':
                 raise ValueError("readconf(): Unable to parse: " + line)
         f.close()
-        return configid, timblopts, accuracy
+        return configid, bestconfigid, timblopts, accuracy
 
     def train(self, leftcontext, rightcontext, dokeywords, limit=None):
         print("Training " + str(len(self.classifiers)) + " classifiers", file=sys.stderr)
@@ -512,9 +527,9 @@ class ClassifierExperts:
                 continue
             self.classifiers[classifier].flush()
             if os.path.exists(self.classifiers[classifier].fileprefix + '.conf'):
-                configid, timblopts, accuracy = self.readconf(classifier)
+                configid, bestconfigid, timblopts, accuracy = self.readconf(classifier)
                 if timblopts: self.classifiers[classifier].timbloptions += ' ' + timblopts
-                print("\tLoaded configuration " + configid + " for '" + classifier + "'", file=sys.stderr)
+                if bestconfigid: print("\tSelected configuration " + bestconfigid + " for '" + classifier + "' (" + configid + ")", file=sys.stderr)
             else:
                 f = open(self.classifiers[classifier].fileprefix + '.conf', 'w',encoding='utf-8')
                 f.write("config=l" + str(leftcontext) + 'r' + str(rightcontext))
@@ -531,10 +546,11 @@ class ClassifierExperts:
 
 
 
-    def processsentence(self, sentencepair, dttable, leftcontext, rightcontext, dokeywords, timbloptions, lm=None,tweight=1,lmweight=1):
+    def processsentence(self, sentencepair, dttable, generalleftcontext, generalrightcontext, generaldokeywords, timbloptions, lm=None,tweight=1,lmweight=1):
         print("Processing sentence " + str(sentencepair.id),file=sys.stderr)
         sentencepair.ref = None
         sentencepair.output = copy(sentencepair.input)
+
         for left, inputfragment, right in sentencepair.inputfragments():
             left = tuple(left.split())
             right = tuple(right.split())
@@ -547,6 +563,20 @@ class ClassifierExperts:
                 classifier = self.classifiers[str(inputfragment)]
 
 
+                if not (classifier.selectedleftcontext is None):
+                    leftcontext = classifier.selectedleftcontext
+                else:
+                    leftcontext = generalleftcontext
+
+                if not (classifier.selectedrightcontext is None):
+                    rightcontext = classifier.selectedrightcontext
+                else:
+                    rightcontext = generalrightcontext
+
+                if not (classifier.selectedkeywords is None):
+                    dokeywords = classifier.selectedkeywords
+                else:
+                    dokeywords = generaldokeywords
 
                 features = []
 
