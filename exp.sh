@@ -42,6 +42,16 @@ function forkconfig {
     cd ..
 }
 
+function forkconfigautoconf {
+    mkdir -p $1
+    cd $1
+    find ../exp-l5r5k/ -name "*.train" | xargs -I{} cp -s {} .
+    find ../exp-l5r5k/ -name "*.keywords" | xargs -I{} cp -s {} .
+    find ../exp-l5r5k/ -name "*.conf" | xargs -I{} cp {} .
+    ln -s ../exp-l5r5k/directtranslation.table
+    cd ..
+}
+
 
 EXPDIR=$EXPNAME-$SOURCELANG-$TARGETLANG
 mkdir $EXPDIR
@@ -89,7 +99,7 @@ fi
 
 if [[ ! -d exp-l5r5k ]]; then
   echo "===== Extracting training instances =====" >&2
-  colibrita --igen -f $TRAINSET -l 5 -r 5 -k -o exp-l5r5k || exit 2
+  colibrita --igen -f $TRAINSET -l 5 -r 5 -k -o exp-l5r5k --trainfortest $TESTSET || exit 2
 fi
 
 
@@ -200,7 +210,7 @@ fi
 
 if [[ ! -d "exp-al5r5k" ]]; then
   echo "===== Running auto configuration =====" >&2
-  forkconfig exp-al5r5k
+  forkconfigautoconf exp-al5r5k
   colibrita --train -f $TRAINSET -l 5 -r 5 -k -a --Tclones $CLONES --folds $FOLDS --trainfortest $TESTSET -o exp-al5r5k || exit 2
   colibrita --test -f $TESTSET -l 5 -r 5 -k -a -o exp-al5r5k || exit 2
   colibrita-evaluate --matrexdir $MATREXDIR --ref $TESTSET --out exp-al5r5k.output.xml || exit 2
