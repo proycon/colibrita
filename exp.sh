@@ -187,21 +187,21 @@ if [[ ! -d "exp-l2r1" ]]; then
   colibrita-evaluate --matrexdir $MATREXDIR --ref $TESTSET --out exp-l2r1.output.xml || exit 2
 fi
 
-if [[ ! -f "exp-l1r1lm" ]]; then
+if [[ ! -e "exp-l1r1lm" ]]; then
   echo "===== Running configuration l1r1lm =====" >&2
   ln -s exp-l1r1 exp-l1r1lm
   colibrita --test -f $TESTSET -l 1 -r 1 --lm $LM -o exp-l1r1lm || exit 2
   colibrita-evaluate --matrexdir $MATREXDIR --ref $TESTSET --out exp-l1r1lm.output.xml || exit 2
 fi
 
-if [[ ! -f "exp-l1r1klm" ]]; then
+if [[ ! -e "exp-l1r1klm" ]]; then
   echo "===== Running configuration l1r1klm =====" >&2
   ln -s exp-l1r1k exp-l1r1klm
   colibrita --test -f $TESTSET -l 1 -r 1 -k --lm $LM -o exp-l1r1klm || exit 2
   colibrita-evaluate --matrexdir $MATREXDIR --ref $TESTSET --out exp-l1r1klm.output.xml || exit 2
 fi
 
-if [[ ! -f "exp-l2r2lm" ]]; then
+if [[ ! -e "exp-l2r2lm" ]]; then
   echo "===== Running configuration l2r2lm =====" >&2
   ln -s exp-l2r2 exp-l2r2lm
   colibrita --test -f $TESTSET -l 2 -r 2 --lm $LM -o exp-l2r2lm || exit 2
@@ -216,7 +216,7 @@ if [[ ! -d "exp-al5r5k" ]]; then
   colibrita-evaluate --matrexdir $MATREXDIR --ref $TESTSET --out exp-al5r5k.output.xml || exit 2
 fi
 
-if [[ ! -f "exp-al5r5klm" ]]; then
+if [[ ! -e "exp-al5r5klm" ]]; then
   echo "===== Running auto configuration with LM =====" >&2
   ln -s exp-al5r5k exp-al5r5klm
   colibrita --test -f $TESTSET -l 5 -r 5 -k -a --lm $LM -o exp-al5r5klm || exit 2
