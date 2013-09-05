@@ -90,11 +90,13 @@ fi
 if [[ ! -f baseline.xml ]]; then
   echo "===== Building baseline =====" >&2
   colibrita-baseline -t $TESTSET -T train-$EXPNAME/model/phrase-table.gz -o baseline || exit 2
+  colibrita-evaluate --matrexdir $MATREXDIR --ref $TESTSET --out baseline.xml || exit 2
 fi
 
 if [[ ! -f lmbaseline.output.xml ]]; then
   echo "===== Building LM-informed baseline =====" >&2
   colibrita --test -f $TESTSET --lm $LM -T train-$EXPNAME/model/phrase-table.gz -o lmbaseline || exit 2
+  colibrita-evaluate --matrexdir $MATREXDIR --ref $TESTSET --out lmbaseline.output.xml || exit 2
 fi
 
 if [[ ! -d exp-l5r5k ]]; then
