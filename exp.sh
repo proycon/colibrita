@@ -73,12 +73,12 @@ fi
 
 if [[ ! -f $TRAINSET ]]; then
   echo "===== Building training set =====" >&2
-  colibrita-setgen --train -p 0.01 -D 0.8 -O 2 --mosesdir=$MOSESDIR --bindir=$BINDIR -S $SOURCELANG -T $TARGETLANG --seed=$SEED -s $EXPNAME-$SOURCELANG.train.txt -t $EXPNAME-$TARGETLANG.train.txt -o $EXPNAME > $TRAINSET || exit 2
+  colibrita-setgen --train -p 0.01 -D 0.8 -O 2 --mosesdir=$MOSESDIR --bindir=$BINDIR -S $SOURCELANG -T $TARGETLANG --seed=$SEED -s $EXPNAME-$SOURCELANG.train.txt -t $EXPNAME-$TARGETLANG.train.txt -o $EXPNAME || exit 2
 fi
 
 if [[ ! -f $TESTSET ]]; then
   echo "===== Building test set =====" >&2
-  colibrita-setgen --test -p 0.01 -D 0.8 -O 2 --mosesdir=$MOSESDIR --bindir=$BINDIR -S $SOURCELANG -T $TARGETLANG --seed=$SEED -s $EXPNAME-$SOURCELANG.test.txt  -t $EXPNAME-$TARGETLANG.test.txt -o $EXPNAME -n $TESTSETSIZE > $TESTSET || exit 2
+  colibrita-setgen --test -p 0.01 -D 0.8 -O 2 --mosesdir=$MOSESDIR --bindir=$BINDIR -S $SOURCELANG -T $TARGETLANG --seed=$SEED -s $EXPNAME-$SOURCELANG.test.txt  -t $EXPNAME-$TARGETLANG.test.txt -o $EXPNAME -n $TESTSETSIZE || exit 2
 fi
 
 if [[ ! -f $LM ]]; then
