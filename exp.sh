@@ -90,8 +90,7 @@ fi
 if [[ ! -f baseline.output.xml ]]; then
   echo "===== Building baseline =====" >&2
   colibrita --test -f $TESTSET --baseline -T train-$EXPNAME/model/phrase-table.gz -o baseline || exit 2
-  colibrita-evaluate --matrexdir $MATREXDIR --ref $TESTSET --out
-  baseline.output.xml || exit 2
+  colibrita-evaluate --matrexdir $MATREXDIR --ref $TESTSET --out baseline.output.xml || exit 2
 fi
 
 if [[ ! -f lmbaseline.output.xml ]]; then
