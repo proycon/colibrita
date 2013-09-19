@@ -45,8 +45,6 @@ def main():
             break
 
 
-    for reader in readers:
-        reader.close()
 
 if __name__ == '__main__':
     main()
