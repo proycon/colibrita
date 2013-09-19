@@ -4,7 +4,7 @@ import sys
 from colibrita.format import Reader
 
 def main():
-    if len(sys.argv) == 0:
+    if len(sys.argv) == 1:
         print("Specify sets as arguments",file=sys.stderr)
         sys.exit(2)
 
