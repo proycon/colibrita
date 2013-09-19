@@ -4,8 +4,8 @@ import sys
 from colibrita.format import Reader
 
 def main():
-    if len(sys.argv) == 1:
-        print("Specify sets as arguments",file=sys.stderr)
+    if len(sys.argv) <= 2:
+        print("Specify multiple sets as arguments",file=sys.stderr)
         sys.exit(2)
 
     readers = []
