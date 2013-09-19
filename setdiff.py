@@ -37,7 +37,7 @@ def main():
                 print("Input: " + sentencepair.inputstr(True))
                 print("Differences: ", differences)
                 for i, sentencepair in enumerate(sentencepairs):
-                    print(reader[i].filename + ": " + sentencepair.outputstr(True))
+                    print(readers[i].filename + ": " + sentencepair.outputstr(True))
                 print("-----------------------------------------------------------")
 
 
