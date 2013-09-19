@@ -648,7 +648,7 @@ class ClassifierExperts:
                     besttscore = -999999999
                     for targetpattern, score in distribution.items():
                         assert score >= 0 and score <= 1
-                        tscore = math.log(score) #convert to base-e log (LM is converted to base-e upon load)
+                        tscore = math.log(score) #base-e log (LM is converted to base-e upon load)
                         translation = tuple(targetpattern.split())
                         outputfragment = Fragment(translation, inputfragment.id, score)
                         candidatesentence = sentencepair.replacefragment(inputfragment, outputfragment, sentencepair.output)

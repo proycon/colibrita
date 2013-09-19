@@ -151,14 +151,14 @@ class SentencePair:
     def reffragmentsdict(self):
         return self.fragments(self.ref,True)
 
-    def inputstr(self):
-        return " ".join(SentencePair._str(self.input))
+    def inputstr(self, mark=False):
+        return " ".join(SentencePair._str(self.input,mark))
 
-    def outputstr(self):
-        return " ".join(SentencePair._str(self.output))
+    def outputstr(self, mark=False):
+        return " ".join(SentencePair._str(self.output,mark))
 
-    def refstr(self):
-        return " ".join(SentencePair._str(self.ref))
+    def refstr(self, mark=False):
+        return " ".join(SentencePair._str(self.ref,mark))
 
     def isref(self):
         return bool(self.ref)
@@ -167,15 +167,22 @@ class SentencePair:
         return bool(self.output)
 
     @staticmethod
-    def _str(t):
+    def _str(t, mark=False):
         s = ""
         for x in t:
             if isinstance(x, Fragment):
                 if x.value:
                     for y in x.value:
-                        yield y
+                        if mark:
+                            yield "*" + y + "*"
+                        else:
+                            yield y
                 else:
-                    yield '{?}'
+                    if mark:
+                        yield '*{?}*'
+                    else:
+                        yield '{?}'
+
             elif isinstance(x, str):
                 yield x
             else:
@@ -213,11 +220,14 @@ class Fragment:
         self.confidence = confidence
         self.alternatives = []
 
-    def __str__(self):
-        if self.value:
-            return " ".join(self.value)
+    def __str__(self, mark=False):
+        if mark:
+            return "*" + self._str() + "*"
         else:
-            return "{?}"
+            if self.value:
+                return " ".join(self.value)
+            else:
+                return "{?}"
 
     def __len__(self):
         if self.value:
