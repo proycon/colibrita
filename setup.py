@@ -36,6 +36,7 @@ setup(
             'colibrita-baseline = colibrita.baseline:main',
             'colibrita-datastats = colibrita.datastats:main',
             'colibrita-moses = colibrita.moses:main',
+            'colibrita-setdiff = colibrita.setdiff:main',
             'colibrita = colibrita.colibrita:main',
         ]
     },
