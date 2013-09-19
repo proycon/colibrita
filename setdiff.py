@@ -34,11 +34,11 @@ def main():
                             differences += 1
 
             if differences:
+                print("--#"+ str(sentencepair.id) + "--------------------------------------------------------")
                 print("Input: " + sentencepair.inputstr(True))
                 print("Differences: ", differences)
                 for i, sentencepair in enumerate(sentencepairs):
                     print(readers[i][0].filename + ": " + sentencepair.outputstr(True))
-                print("-----------------------------------------------------------")
 
 
         except StopIteration:
