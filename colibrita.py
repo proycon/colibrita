@@ -77,6 +77,10 @@ try:
 except ImportError:
     print("(Webserver support not available)",file=sys.stderr)
 
+
+class NoTranslationException(Exception):
+    pass
+
 MAXKEYWORDS = 50
 
 class ClassifierExperts:
@@ -545,8 +549,136 @@ class ClassifierExperts:
 
 
 
+    def classify(self, inputfragment, left, right, sentencepair, dttable, generalleftcontext, generalrightcontext, generaldokeywords, timbloptions, lm=None,tweight=1,lmweight=1):
+        #translation by classifier
+        classifier = self.classifiers[str(inputfragment)]
 
-    def processsentence(self, sentencepair, dttable, generalleftcontext, generalrightcontext, generaldokeywords, timbloptions, lm=None,tweight=1,lmweight=1):
+
+        if not (classifier.selectedleftcontext is None):
+            leftcontext = classifier.selectedleftcontext
+        else:
+            leftcontext = generalleftcontext
+
+        if not (classifier.selectedrightcontext is None):
+            rightcontext = classifier.selectedrightcontext
+        else:
+            rightcontext = generalrightcontext
+
+        if not (classifier.selectedkeywords is None):
+            dokeywords = classifier.selectedkeywords
+        else:
+            dokeywords = generaldokeywords
+
+        features = []
+
+        if leftcontext or classifier.leftcontext:
+            f_left = list(left[-leftcontext:])
+            if len(f_left) < leftcontext:
+                f_left = list(["<s>"] * (leftcontext - len(f_left))) + f_left
+            if not (classifier.leftcontext is None):
+                if classifier.leftcontext < leftcontext:
+                    f_left = f_left[-classifier.leftcontext:]
+                elif leftcontext < classifier.leftcontext:
+                    f_left = list(["<DUMMY-IGNORED>"] * (classifier.leftcontext - leftcontext)) + f_left
+            features += f_left
+
+
+
+        if rightcontext or classifier.rightcontext:
+            f_right = list(right[:rightcontext])
+            if len(f_right) < rightcontext:
+                f_right = f_right + list(["</s>"] * (rightcontext - len(f_right)))
+            if not (classifier.rightcontext is None):
+                if classifier.rightcontext < rightcontext:
+                    f_right = f_right[:classifier.rightcontext]
+                elif rightcontext < classifier.rightcontext:
+                    f_right = f_right + list(["<DUMMY-IGNORED>"] * (classifier.rightcontext - rightcontext))
+            features += f_right
+
+
+        #extract global context
+        keywordsfound = 0
+        if str(inputfragment) in self.keywords:
+            if dokeywords:
+                bag = {}
+                for keyword, target, freq,p in self.keywords[str(inputfragment)]:
+                    bag[keyword] = 0
+                    if len(bag) == MAXKEYWORDS:
+                        break
+
+                #print("Bag", repr(bag), file=sys.stderr)
+                for word in itertools.chain(left, right):
+                    #print(repr(word),file=sys.stderr)
+                    if word in bag:
+                        if bag[word] == 0:
+                            keywordsfound += 1
+                        bag[word] = 1
+
+                #add to features
+                for keyword in sorted(bag.keys()):
+                    features.append(keyword+"="+str(bag[keyword]))
+            elif classifier.keywords: #classifier was trained with keywords, need dummies
+                for i, keyword in enumerate( set( ( x[0] for x in self.keywords[str(inputfragment)]) ) ):
+                    if i == MAXKEYWORDS: break
+                    features.append("<IGNOREDKEYWORD"+str(i+1)+">")
+
+        #pass to classifier
+        if keywordsfound > 0:
+            print("\tClassifying '" + str(inputfragment) + "' (" + str(keywordsfound) + " keywords found)...", file=sys.stderr)
+        else:
+            print("\tClassifying '" + str(inputfragment) + "' ...", file=sys.stderr)
+        if classifier.leftcontext != leftcontext or classifier.rightcontext != rightcontext:
+            print("\t\tClassifier configuration: l:",classifier.leftcontext,"r:",classifier.rightcontext," || Desired configuration: l:",leftcontext,"r:",rightcontext, " || Timbloptions: ", classifier.timbloptions, file=sys.stderr)
+        print("\tFeature vector: " + " ||| ".join(features),file=sys.stderr)
+        classlabel, distribution, distance =  classifier.classify(features)
+        classlabel = classlabel.replace(r'\_',' ')
+        if lm and len(distribution) > 1:
+            print("\tClassifier translation prior to LM: " + str(inputfragment) + " -> [ DISTRIBUTION:" + str(repr(distribution))+" ]", file=sys.stderr)
+            candidatesentences = []
+            bestlmscore = -999999999
+            besttscore = -999999999
+            for targetpattern, score in distribution.items():
+                assert score >= 0 and score <= 1
+                tscore = math.log(score) #base-e log (LM is converted to base-e upon load)
+                translation = tuple(targetpattern.split())
+                outputfragment = Fragment(translation, inputfragment.id, score)
+                candidatesentence = sentencepair.replacefragment(inputfragment, outputfragment, sentencepair.output)
+                lminput = " ".join(sentencepair._str(candidatesentence)).split(" ") #joining and splitting deliberately to ensure each word is one item
+                lmscore = lm.score(lminput)
+                assert lmscore <= 0
+                if lmscore > bestlmscore:
+                    bestlmscore = lmscore
+                if tscore > besttscore:
+                    besttscore = tscore
+                candidatesentences.append( ( candidatesentence, outputfragment, tscore, lmscore ) )
+
+            #get the strongest sentence
+            maxscore = -9999999999
+            for candidatesentence, targetpattern, tscore, lmscore in candidatesentences:
+                tscore = tweight * (tscore-besttscore)
+                lmscore = lmweight * (lmscore-bestlmscore)
+                score = tscore + lmscore
+                print("\t LM candidate " + str(inputfragment) + " -> " + str(targetpattern) + "   score=tscore+lmscore=" + str(tscore) + "+" + str(lmscore) + "=" + str(score), file=sys.stderr)
+                if score > maxscore:
+                    maxscore = score
+                    outputfragment = targetpattern  #Fragment(targetpattern, inputfragment.id)
+                    outputfragment.confidence = score
+            for candidatesentence, targetpattern, tscore, lmscore in candidatesentences:
+                if targetpattern != outputfragment:
+                    outputfragment.alternatives.append( Alternative( tuple(str(targetpattern).split()), tweight* (tscore-besttscore) + lmweight * (lmscore-bestlmscore) )  )
+            print("\tClassifier translation after LM: " + str(inputfragment) + " -> " + str(outputfragment) + " score= " + str(score), file=sys.stderr)
+
+        else:
+            outputfragment = Fragment(tuple(classlabel.split()), inputfragment.id, max(distribution.values()))
+            for targetpattern, score in distribution.items():
+                tscore = math.log(score) #convert to base-e log (LM is converted to base-e upon load)
+                if targetpattern != classlabel:
+                    outputfragment.alternatives.append( Alternative( tuple(targetpattern.split()), score) )
+            print("\tClassifier translation " + str(inputfragment) + " -> " + str(outputfragment) + "\t[ DISTRIBUTION:" + str(repr(distribution))+" ]", file=sys.stderr)
+
+        return outputfragment
+
+    def processsentence(self, sentencepair, dttable, generalleftcontext, generalrightcontext, generaldokeywords, timbloptions, lm=None,tweight=1,lmweight=1, dofragmentdecode=True):
         print("Processing sentence " + str(sentencepair.id),file=sys.stderr)
         sentencepair.ref = None
         sentencepair.output = copy(sentencepair.input)
@@ -559,131 +691,20 @@ class ClassifierExperts:
                 outputfragment = Fragment(tuple(dttable[str(inputfragment)].split()), inputfragment.id)
                 print("\tDirect translation " + str(inputfragment) + " -> " + str(outputfragment), file=sys.stderr)
             elif str(inputfragment) in self.classifiers:
-                #translation by classifier
-                classifier = self.classifiers[str(inputfragment)]
+                outputfragment =  self.classify(inputfragment, left, right, sentencepair, dttable, generalleftcontext, generalrightcontext, generaldokeywords, timbloptions, lm,tweight,lmweight)
+            elif dofragmentdecode and len(inputfragment) > 1:
+                print("\tFragment not directly translatable: " + str(inputfragment), file=sys.stderr)
+                solutions = []
+                for fragmentation in self.decodefragments(inputfragment, dttable):
+                    translatedfragmentation = []
+                    for fragment in fragmentation:
+                        if fragment in dttable:
+                            translatedfragmentation.append(dttable[fragment])
+                        elif fragment in self.classifiers:
+                            translatedfragmentation.append( self.classify( left + tuple(translatedfragmentation), tuple(['{UNKNOWN}'] * 10), sentencepair, dttable, generalleftcontext, generalrightcontext, generaldokeywords, timbloptions, lm,tweight,lmweight) )
+                    solutions.append(translatedfragmentation)
 
 
-                if not (classifier.selectedleftcontext is None):
-                    leftcontext = classifier.selectedleftcontext
-                else:
-                    leftcontext = generalleftcontext
-
-                if not (classifier.selectedrightcontext is None):
-                    rightcontext = classifier.selectedrightcontext
-                else:
-                    rightcontext = generalrightcontext
-
-                if not (classifier.selectedkeywords is None):
-                    dokeywords = classifier.selectedkeywords
-                else:
-                    dokeywords = generaldokeywords
-
-                features = []
-
-                if leftcontext or classifier.leftcontext:
-                    f_left = list(left[-leftcontext:])
-                    if len(f_left) < leftcontext:
-                        f_left = list(["<s>"] * (leftcontext - len(f_left))) + f_left
-                    if not (classifier.leftcontext is None):
-                        if classifier.leftcontext < leftcontext:
-                            f_left = f_left[-classifier.leftcontext:]
-                        elif leftcontext < classifier.leftcontext:
-                            f_left = list(["<DUMMY-IGNORED>"] * (classifier.leftcontext - leftcontext)) + f_left
-                    features += f_left
-
-
-
-                if rightcontext or classifier.rightcontext:
-                    f_right = list(right[:rightcontext])
-                    if len(f_right) < rightcontext:
-                        f_right = f_right + list(["</s>"] * (rightcontext - len(f_right)))
-                    if not (classifier.rightcontext is None):
-                        if classifier.rightcontext < rightcontext:
-                            f_right = f_right[:classifier.rightcontext]
-                        elif rightcontext < classifier.rightcontext:
-                            f_right = f_right + list(["<DUMMY-IGNORED>"] * (classifier.rightcontext - rightcontext))
-                    features += f_right
-
-
-                #extract global context
-                keywordsfound = 0
-                if str(inputfragment) in self.keywords:
-                    if dokeywords:
-                        bag = {}
-                        for keyword, target, freq,p in self.keywords[str(inputfragment)]:
-                            bag[keyword] = 0
-                            if len(bag) == MAXKEYWORDS:
-                                break
-
-                        #print("Bag", repr(bag), file=sys.stderr)
-                        for word in itertools.chain(left, right):
-                            #print(repr(word),file=sys.stderr)
-                            if word in bag:
-                                if bag[word] == 0:
-                                    keywordsfound += 1
-                                bag[word] = 1
-
-                        #add to features
-                        for keyword in sorted(bag.keys()):
-                            features.append(keyword+"="+str(bag[keyword]))
-                    elif classifier.keywords: #classifier was trained with keywords, need dummies
-                        for i, keyword in enumerate( set( ( x[0] for x in self.keywords[str(inputfragment)]) ) ):
-                            if i == MAXKEYWORDS: break
-                            features.append("<IGNOREDKEYWORD"+str(i+1)+">")
-
-                #pass to classifier
-                if keywordsfound > 0:
-                    print("\tClassifying '" + str(inputfragment) + "' (" + str(keywordsfound) + " keywords found)...", file=sys.stderr)
-                else:
-                    print("\tClassifying '" + str(inputfragment) + "' ...", file=sys.stderr)
-                if classifier.leftcontext != leftcontext or classifier.rightcontext != rightcontext:
-                    print("\t\tClassifier configuration: l:",classifier.leftcontext,"r:",classifier.rightcontext," || Desired configuration: l:",leftcontext,"r:",rightcontext, " || Timbloptions: ", classifier.timbloptions, file=sys.stderr)
-                print("\tFeature vector: " + " ||| ".join(features),file=sys.stderr)
-                classlabel, distribution, distance =  classifier.classify(features)
-                classlabel = classlabel.replace(r'\_',' ')
-                if lm and len(distribution) > 1:
-                    print("\tClassifier translation prior to LM: " + str(inputfragment) + " -> [ DISTRIBUTION:" + str(repr(distribution))+" ]", file=sys.stderr)
-                    candidatesentences = []
-                    bestlmscore = -999999999
-                    besttscore = -999999999
-                    for targetpattern, score in distribution.items():
-                        assert score >= 0 and score <= 1
-                        tscore = math.log(score) #base-e log (LM is converted to base-e upon load)
-                        translation = tuple(targetpattern.split())
-                        outputfragment = Fragment(translation, inputfragment.id, score)
-                        candidatesentence = sentencepair.replacefragment(inputfragment, outputfragment, sentencepair.output)
-                        lminput = " ".join(sentencepair._str(candidatesentence)).split(" ") #joining and splitting deliberately to ensure each word is one item
-                        lmscore = lm.score(lminput)
-                        assert lmscore <= 0
-                        if lmscore > bestlmscore:
-                            bestlmscore = lmscore
-                        if tscore > besttscore:
-                            besttscore = tscore
-                        candidatesentences.append( ( candidatesentence, outputfragment, tscore, lmscore ) )
-
-                    #get the strongest sentence
-                    maxscore = -9999999999
-                    for candidatesentence, targetpattern, tscore, lmscore in candidatesentences:
-                        tscore = tweight * (tscore-besttscore)
-                        lmscore = lmweight * (lmscore-bestlmscore)
-                        score = tscore + lmscore
-                        print("\t LM candidate " + str(inputfragment) + " -> " + str(targetpattern) + "   score=tscore+lmscore=" + str(tscore) + "+" + str(lmscore) + "=" + str(score), file=sys.stderr)
-                        if score > maxscore:
-                            maxscore = score
-                            outputfragment = targetpattern  #Fragment(targetpattern, inputfragment.id)
-                            outputfragment.confidence = score
-                    for candidatesentence, targetpattern, tscore, lmscore in candidatesentences:
-                        if targetpattern != outputfragment:
-                            outputfragment.alternatives.append( Alternative( tuple(str(targetpattern).split()), tweight* (tscore-besttscore) + lmweight * (lmscore-bestlmscore) )  )
-                    print("\tClassifier translation after LM: " + str(inputfragment) + " -> " + str(outputfragment) + " score= " + str(score), file=sys.stderr)
-
-                else:
-                    outputfragment = Fragment(tuple(classlabel.split()), inputfragment.id, max(distribution.values()))
-                    for targetpattern, score in distribution.items():
-                        tscore = math.log(score) #convert to base-e log (LM is converted to base-e upon load)
-                        if targetpattern != classlabel:
-                            outputfragment.alternatives.append( Alternative( tuple(targetpattern.split()), score) )
-                    print("\tClassifier translation " + str(inputfragment) + " -> " + str(outputfragment) + "\t[ DISTRIBUTION:" + str(repr(distribution))+" ]", file=sys.stderr)
 
             else:
                 #no translation found
@@ -695,13 +716,29 @@ class ClassifierExperts:
     def loaddttable(self):
         return loaddttable(self.workdir + '/directtranslation.table')
 
-    def test(self, data, outputfile, leftcontext, rightcontext, dokeywords, timbloptions, lm=None,tweight=1,lmweight=1):
+    def test(self, data, outputfile, leftcontext, rightcontext, dokeywords, timbloptions, lm=None,tweight=1,lmweight=1, dofragmentdecode=True):
         dttable = self.loaddttable()
         writer = Writer(outputfile)
         for sentencepair in data:
-            sentencepair = self.processsentence(sentencepair, dttable, leftcontext, rightcontext, dokeywords, timbloptions, lm, tweight, lmweight)
+            sentencepair = self.processsentence(sentencepair, dttable, leftcontext, rightcontext, dokeywords, timbloptions, lm, tweight, lmweight, dofragmentdecode)
             writer.write(sentencepair)
         writer.close()
+
+
+    def decodefragments(self, inputfragment, dttable):
+        assert isinstance(inputfragment, tuple)
+        results = 0
+        for i in reverse(range(1,len(inputfragment))):
+            subfragment = " ".join(inputfragment[0:i])
+            if subfragment in self.classifiers or subfragment in dttable:
+                fragmentation = [subfragment]
+                if i == len(inputfragment) - 1:
+                    yield fragmentation
+                    results += 1
+                else:
+                    #recursion
+                    for fragmentation in self.decodefragments(inputfragment[i+1:],dttable):
+                        yield subfragment + fragmentation
 
 
 def loaddttable(filename):
@@ -736,6 +773,7 @@ def main():
     parser.add_argument('-l','--leftcontext',type=int, help="Left local context size", action='store',default=0)
     parser.add_argument('-r','--rightcontext',type=int,help="Right local context size", action='store',default=0)
     parser.add_argument('-k','--keywords',help="Add global keywords in context", action='store_true',default=False)
+    parser.add_argument('-F','--decodefragments',help="Attempt to decode long unknown fragments by breaking it up into smaller parts", action='store_true',default=False)
     parser.add_argument("--kt",dest="bow_absolute_threshold", help="Keyword needs to occur at least this many times in the context (absolute number)", type=int, action='store',default=3)
     parser.add_argument("--kp",dest="bow_prob_threshold", help="minimal P(translation|keyword)", type=int, action='store',default=0.001)
     parser.add_argument("--kg",dest="bow_filter_threshold", help="Keyword needs to occur at least this many times globally in the entire corpus (absolute number)", type=int, action='store',default=20)
@@ -827,7 +865,7 @@ def main():
             experts.load(timbloptions, args.leftcontext, args.rightcontext, args.keywords, None, args.autoconf)
             print("Running...",file=sys.stderr)
             data = Reader(args.dataset)
-            experts.test(data, args.output + '.output.xml', args.leftcontext, args.rightcontext, args.keywords, timbloptions , lm, args.tmweight, args.lmweight)
+            experts.test(data, args.output + '.output.xml', args.leftcontext, args.rightcontext, args.keywords, timbloptions , lm, args.tmweight, args.lmweight, args.decodefragments)
         elif args.ttable:
             print("Loading translation table",file=sys.stderr)
             ttable = PhraseTable(args.ttable,False, False, "|||", 3, 0,None, None)
@@ -885,7 +923,7 @@ def main():
                 else:
                     sentencepair = plaintext2sentencepair(line)
                     if experts:
-                        sentencepair = experts.processsentence(sentencepair, dttable, args.leftcontext, args.rightcontext, args.keywords, timbloptions, lm, args.tmweight, args.lmweight)
+                        sentencepair = experts.processsentence(sentencepair, dttable, args.leftcontext, args.rightcontext, args.keywords, timbloptions, lm, args.tmweight, args.lmweight, args.decodefragments)
                     elif args.ttable:
                         pass #TODO
                     print(str(lxml.etree.tostring(sentencepair.xml(), encoding='utf-8',xml_declaration=False, pretty_print=True),'utf-8'), file=sys.stderr)
