@@ -37,6 +37,7 @@ setup(
             'colibrita-datastats = colibrita.datastats:main',
             'colibrita-moses = colibrita.moses:main',
             'colibrita-setdiff = colibrita.setdiff:main',
+            'colibrita-setselect = colibrita.setselect:main',
             'colibrita = colibrita.colibrita:main',
         ]
     },
