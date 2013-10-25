@@ -49,7 +49,7 @@ def main():
     buffer = []
     BUFFERSIZE = 10
     tmpfile=False
-    inputs = {}
+    inputs = set()
     if os.path.exists(outputset):
         writer = Writer(outputset + '.tmp')
         reader = Reader(outputset)
