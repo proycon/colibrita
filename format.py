@@ -6,7 +6,7 @@ import sys
 
 ansicolors = {"red":31,"green":32,"yellow":33,"blue":34,"magenta":35, "bold":1 }
 def colorf(color):
-    return lambda x: "\x1B[" + ansicolors[color] + "m" + x + "\x1B[0m"
+    return lambda x: "\x1B[" + str(ansicolors[color]) + "m" + x + "\x1B[0m"
 
 
 class Reader:
