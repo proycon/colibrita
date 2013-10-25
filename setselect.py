@@ -6,12 +6,13 @@ import os
 from colibrita.format import Reader, Writer
 
 
-def processbuffer(buffer, reader, writer, inputs):
+def processbuffer(buffer, reader, writer, inputs, num):
     repeat = True
     while repeat:
         for i in range(0,10):
             print()
 
+        print("===================== OFFSET " + str(num) + " ======================")
         for i, sentencepair in enumerate(buffer):
             print("----------------- #" + str(i+1) + " ------------------------")
             print(sentencepair.inputstr(True,"blue"))
@@ -42,9 +43,14 @@ def processbuffer(buffer, reader, writer, inputs):
 
 def main():
     if len(sys.argv) != 3:
-        print("Syntax: inputset outputset",file=sys.stderr)
+        print("Syntax: inputset outputset offset",file=sys.stderr)
         sys.exit(2)
-    inputset, outputset = sys.argv[1:]
+    try:
+        inputset, outputset, offset = sys.argv[1:]
+        offset = int(offset)
+    except:
+        inputset, outputset = sys.argv[1:]
+        offset = 1
 
     buffer = []
     BUFFERSIZE = 10
@@ -60,16 +66,19 @@ def main():
     else:
         writer = Writer(outputset)
 
+    num = 0
     reader = Reader(inputset)
     quit = False
     for sentencepair in reader:
+        num += 1
         if not hash(sentencepair.input) in inputs:
-            buffer.append(sentencepair)
-            if len(buffer) == BUFFERSIZE:
-                buffer, quit = processbuffer(buffer, reader,writer, inputs)
-                if quit: break
+            if num >= offset:
+                buffer.append(sentencepair)
+                if len(buffer) == BUFFERSIZE:
+                    buffer, quit = processbuffer(buffer, reader,writer, inputs,num)
+                    if quit: break
 
-    if buffer and not quit: processbuffer(buffer, reader,writer, inputs)
+    if buffer and not quit: processbuffer(buffer, reader,writer, inputs,num)
 
 
     writer.close()
