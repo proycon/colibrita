@@ -43,7 +43,7 @@ def processbuffer(buffer, reader, writer, inputs, num):
     return buffer, False
 
 def main():
-    if len(sys.argv) != 3:
+    if len(sys.argv) != 3 or len(sys.argv) != 4:
         print("Syntax: inputset outputset offset",file=sys.stderr)
         sys.exit(2)
     try:
