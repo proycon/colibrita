@@ -12,7 +12,7 @@ def processbuffer(buffer, reader, writer, inputs, num):
         for i in range(0,10):
             print()
 
-        print("===================== OFFSET " + str(num) + " ======================")
+        print("===================== OFFSET " + str(num) + " ======================\n")
         for i, sentencepair in enumerate(buffer):
             print("----------------- #" + str(i+1) + " ------------------------")
             print(sentencepair.inputstr(True,"blue"))
@@ -76,7 +76,7 @@ def main():
             if num >= offset:
                 buffer.append(sentencepair)
                 if len(buffer) == BUFFERSIZE:
-                    buffer, quit = processbuffer(buffer, reader,writer, inputs,num)
+                    buffer, quit = processbuffer(buffer, reader,writer, inputs,num-BUFFERSIZE)
                     if quit: break
 
     if buffer and not quit: processbuffer(buffer, reader,writer, inputs,num)
