@@ -4,6 +4,11 @@ import lxml.etree
 from lxml.builder import E
 import sys
 
+ansicolors = {"red":31,"green":32,"yellow":33,"blue":34,"magenta":35, "bold":1 }
+def colorf(color):
+    return lambda x: "\x1B[" + ansicolors[color] + "m" + x + "\x1B[0m"
+
+
 class Reader:
     def __init__(self, filename):
         self.filename = filename
@@ -151,14 +156,14 @@ class SentencePair:
     def reffragmentsdict(self):
         return self.fragments(self.ref,True)
 
-    def inputstr(self, mark=False):
-        return " ".join(SentencePair._str(self.input,mark))
+    def inputstr(self, mark=False,color=None):
+        return " ".join(SentencePair._str(self.input,mark,color))
 
-    def outputstr(self, mark=False):
-        return " ".join(SentencePair._str(self.output,mark))
+    def outputstr(self, mark=False,color=None):
+        return " ".join(SentencePair._str(self.output,mark,color))
 
-    def refstr(self, mark=False):
-        return " ".join(SentencePair._str(self.ref,mark))
+    def refstr(self, mark=False, color=None):
+        return " ".join(SentencePair._str(self.ref,mark,color))
 
     def isref(self):
         return bool(self.ref)
@@ -167,18 +172,22 @@ class SentencePair:
         return bool(self.output)
 
     @staticmethod
-    def _str(t, mark=False):
+    def _str(t, mark=False, color=None):
         s = ""
         for x in t:
             if isinstance(x, Fragment):
                 if x.value:
                     for y in x.value:
-                        if mark:
+                        if color:
+                            yield colorf(color)(y)
+                        elif mark:
                             yield "*" + y + "*"
                         else:
                             yield y
                 else:
-                    if mark:
+                    if color:
+                        yield colorf(color)("{?)")
+                    elif mark:
                         yield '*{?}*'
                     else:
                         yield '{?}'
