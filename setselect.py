@@ -29,7 +29,6 @@ def processbuffer(buffer, reader, writer, inputs):
             continue
 
         repeat = False
-        buffer = []
         for s in selection:
             try:
                 sentencepair = buffer[s-1]
@@ -37,6 +36,7 @@ def processbuffer(buffer, reader, writer, inputs):
                 print("Invalid index: " + str(s) + ", IGNORING!" ,file=sys.stderr)
                 writer.write(sentencepair)
                 inputs.add( hash(sentencepair.input) )
+        buffer = []
 
     return False
 
