@@ -14,8 +14,8 @@ def processbuffer(buffer, reader, writer, inputs):
 
         for i, sentencepair in enumerate(buffer):
             print("----------------- #" + str(i+1) + " ------------------------")
-            print(sentencepair.inputstr(True))
-            print(sentencepair.refstr(True))
+            print(sentencepair.inputstr(True,"green"))
+            print(sentencepair.refstr(True,"blue"))
 
         print("\n---------------------------------------------------------")
         print("Select any sentence pairs? Type space-separated list of numbers, q to quit:")
