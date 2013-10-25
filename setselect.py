@@ -32,10 +32,10 @@ def processbuffer(buffer, reader, writer, inputs):
         for s in selection:
             try:
                 sentencepair = buffer[s-1]
-            except IndexError:
-                print("Invalid index: " + str(s) + ", IGNORING!" ,file=sys.stderr)
                 writer.write(sentencepair)
                 inputs.add( hash(sentencepair.input) )
+            except IndexError:
+                print("Invalid index: " + str(s) + ", IGNORING!" ,file=sys.stderr)
         buffer = []
 
     return buffer, False
