@@ -21,7 +21,7 @@ def processbuffer(buffer, reader, writer, inputs):
         print("Select any sentence pairs? Type space-separated list of numbers, q to quit:")
         selection = sys.stdin.readline().strip()
         if selection.lower() == 'q':
-            return True
+            return buffer, True
         try:
             selection = [ int(x) for x in selection.split() ]
         except ValueError:
@@ -38,7 +38,7 @@ def processbuffer(buffer, reader, writer, inputs):
                 inputs.add( hash(sentencepair.input) )
         buffer = []
 
-    return False
+    return buffer, False
 
 def main():
     if len(sys.argv) != 3:
@@ -66,7 +66,7 @@ def main():
         if not hash(sentencepair.input) in inputs:
             buffer.append(sentencepair)
             if len(buffer) == BUFFERSIZE:
-                quit = processbuffer(buffer, reader,writer, inputs)
+                buffer, quit = processbuffer(buffer, reader,writer, inputs)
                 if quit: break
 
     if buffer and not quit: processbuffer(buffer, reader,writer, inputs)
