@@ -45,6 +45,7 @@ def main():
         sys.exit(2)
     inputset, outputset = sys.argv[1:]
 
+    buffer = []
     BUFFERSIZE = 10
     tmpfile=False
     inputs = {}
