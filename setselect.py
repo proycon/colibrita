@@ -14,9 +14,10 @@ def processbuffer(buffer, reader, writer, inputs):
 
         for i, sentencepair in enumerate(buffer):
             print("----------------- #" + str(i+1) + " ------------------------")
-            print(sentencepair.inputstr())
-            print(sentencepair.refstr())
+            print(sentencepair.inputstr(True))
+            print(sentencepair.refstr(True))
 
+        print("\n---------------------------------------------------------")
         print("Select any sentence pairs? Type space-separated list of numbers, q to quit:")
         selection = sys.stdin.readline().strip()
         if selection.lower() == 'q':
@@ -66,6 +67,7 @@ def main():
             buffer.append(sentencepair)
             if len(buffer) == BUFFERSIZE:
                 quit = processbuffer(buffer, reader,writer, inputs)
+                if quit: break
 
     if buffer and not quit: processbuffer(buffer, reader,writer, inputs)
 
