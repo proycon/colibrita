@@ -13,6 +13,7 @@ def processbuffer(buffer, reader, writer, inputs, num):
             print()
 
         print("===================== OFFSET " + str(num) + " ======================\n")
+        print("     Total sentence pairs written: " + str(len(inputs)))
         for i, sentencepair in enumerate(buffer):
             print("----------------- #" + str(i+1) + " ------------------------")
             print(sentencepair.inputstr(True,"blue"))
@@ -35,7 +36,6 @@ def processbuffer(buffer, reader, writer, inputs, num):
                 sentencepair = buffer[s-1]
                 writer.write(sentencepair)
                 inputs.add( hash(sentencepair.input) )
-                print("Total sentence pairs: " + str(len(inputs)))
             except IndexError:
                 print("Invalid index: " + str(s) + ", IGNORING!" ,file=sys.stderr)
         buffer = []
