@@ -35,6 +35,7 @@ def processbuffer(buffer, reader, writer, inputs, num):
                 sentencepair = buffer[s-1]
                 writer.write(sentencepair)
                 inputs.add( hash(sentencepair.input) )
+                print("Total sentence pairs: " + str(len(inputs)))
             except IndexError:
                 print("Invalid index: " + str(s) + ", IGNORING!" ,file=sys.stderr)
         buffer = []
