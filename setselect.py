@@ -48,6 +48,7 @@ def main():
         sys.exit(2)
     try:
         inputset, outputset, offset,maxwords = sys.argv[1:]
+        maxwords = int(maxwords)
     except:
         maxwords = 99
         try:
