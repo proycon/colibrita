@@ -43,15 +43,19 @@ def processbuffer(buffer, reader, writer, inputs, num):
     return buffer, False
 
 def main():
-    if len(sys.argv) != 3 and len(sys.argv) != 4:
-        print("Syntax: inputset outputset offset",file=sys.stderr)
+    if len(sys.argv) < 3 or len(sys.argv) > 5:
+        print("Syntax: inputset outputset offset maxwords",file=sys.stderr)
         sys.exit(2)
     try:
-        inputset, outputset, offset = sys.argv[1:]
-        offset = int(offset)
+        inputset, outputset, offset,maxwords = sys.argv[1:]
     except:
-        inputset, outputset = sys.argv[1:]
-        offset = 1
+        maxwords = 99
+        try:
+            inputset, outputset, offset = sys.argv[1:]
+            offset = int(offset)
+        except:
+            inputset, outputset = sys.argv[1:]
+            offset = 1
 
     buffer = []
     BUFFERSIZE = 10
@@ -71,13 +75,14 @@ def main():
     reader = Reader(inputset)
     quit = False
     for sentencepair in reader:
-        num += 1
-        if not hash(sentencepair.input) in inputs:
-            if num >= offset:
-                buffer.append(sentencepair)
-                if len(buffer) == BUFFERSIZE:
-                    buffer, quit = processbuffer(buffer, reader,writer, inputs,num-BUFFERSIZE)
-                    if quit: break
+        if len(sentencepair.input) <= maxwords:
+            num += 1
+            if not hash(sentencepair.input) in inputs:
+                if num >= offset:
+                    buffer.append(sentencepair)
+                    if len(buffer) == BUFFERSIZE:
+                        buffer, quit = processbuffer(buffer, reader,writer, inputs,num-BUFFERSIZE)
+                        if quit: break
 
     if buffer and not quit: processbuffer(buffer, reader,writer, inputs,num)
 
