@@ -4,7 +4,7 @@ from colibrita.format import SentencePair, Fragment, Writer, Reader
 from pynlpl.formats.moses import PhraseTable
 from pynlpl.formats.giza import GizaModel
 from pynlpl.textprocessors import Tokenizer
-from pycolibri import ClassDecoder, ClassEncoder, IndexedPatternModel
+from colibricore import ClassDecoder, ClassEncoder, IndexedPatternModel
 
 import sys
 import os
@@ -75,9 +75,9 @@ def extractpairs(ttablefile, gizamodelfile_s2t, gizamodelfile_t2s, patternmodelf
     classencoder_target = ClassEncoder(classfile_target)
 
     if DEBUG: print("Loading source pattern model " + patternmodelfile_source, file=sys.stderr)
-    patternmodel_source = IndexedPatternModel(patternmodelfile_source, classencoder_source, classdecoder_source)
+    patternmodel_source = IndexedPatternModel(patternmodelfile_source)
     if DEBUG: print("Loading target pattern model " + patternmodelfile_target, file=sys.stderr)
-    patternmodel_target = IndexedPatternModel(patternmodelfile_target, classencoder_target, classdecoder_target)
+    patternmodel_target = IndexedPatternModel(patternmodelfile_target)
 
 
     #with open(sourcecorpusfile, 'r', encoding='utf-8') as f:
@@ -114,8 +114,8 @@ def extractpairs(ttablefile, gizamodelfile_s2t, gizamodelfile_t2s, patternmodelf
             continue
 
         #gather all target patterns found  in this sentence
-        sourcepatterns = list(patternmodel_source.reverseindex(sentence))
-        targetpatterns = [ targetpattern.decode(classdecoder_target) for targetpattern in patternmodel_target.reverseindex(sentence) ]
+        sourcepatterns = list(patternmodel_source.reverseindex_bysentence(sentence))
+        targetpatterns = [ targetpattern.decode(classdecoder_target) for targetpattern in patternmodel_target.reverseindex_bysentence(sentence) ]
 
         if DEBUG: print("(extractpatterns) processing sentence " + str(sentence) + ", collected " + str(len(sourcepatterns)) + " source patterns and " + str(len(targetpatterns)) + " target patterns", file=sys.stderr)
 
@@ -267,11 +267,11 @@ def buildphrasetable(corpusname, mosesdir, bindir, sourcelang, targetlang):
 
 def buildpatternmodel(corpusname, sourcelang, targetlang, occurrencethreshold=2):
     options = " -t " + str(occurrencethreshold)
-    if not runcmd('classencode -o ' + sourcelang + ' ' + corpusname + '.' + sourcelang, "Encoding source corpus", sourcelang + ".cls", corpusname + '.' +  sourcelang + ".clsenc"): return False
-    if not runcmd('classencode -o ' + targetlang + ' ' + corpusname + '.' + targetlang, "Encoding target corpus", targetlang + ".cls", corpusname + '.' +  targetlang + ".clsenc"): return False
+    if not runcmd('colibri-classencode -o ' + sourcelang + ' ' + corpusname + '.' + sourcelang, "Encoding source corpus", sourcelang + ".colibri.cls", corpusname + '.' +  sourcelang + ".colibri.dat"): return False
+    if not runcmd('colibri-classencode -o ' + targetlang + ' ' + corpusname + '.' + targetlang, "Encoding target corpus", targetlang + ".colibri.cls", corpusname + '.' +  targetlang + ".colibri.dat"): return False
 
-    if not runcmd('patternfinder -c ' + sourcelang + '.cls -f ' + corpusname + '.' + sourcelang + '.clsenc ' + options + ' > /dev/null', "Generating pattern model for source",   corpusname + '.' +  sourcelang + ".indexedpatternmodel.colibri"): return False
-    if not runcmd('patternfinder -c ' + targetlang + '.cls -f ' + corpusname + '.' + targetlang + '.clsenc ' + options + ' > /dev/null', "Generating pattern model for target",   corpusname + '.' +  targetlang + ".indexedpatternmodel.colibri"): return False
+    if not runcmd('colibri-patternmodeller -c ' + sourcelang + '.colibri.cls -f ' + corpusname + '.' + sourcelang + '.colibri.dat ' + options + ' -o ' + corpusname + '.' +  sourcelang + '.colibri.indexedpatternmodel > /dev/null', "Generating pattern model for source",   corpusname + '.' +  sourcelang + ".colibri.indexedpatternmodel"): return False
+    if not runcmd('colibri-patternmodeller -c ' + targetlang + '.colibri.cls -f ' + corpusname + '.' + targetlang + '.colibri.dat ' + options + ' -o ' + corpusname + '.' +  sourcelang + '.colibri.indexedpatternmodel > /dev/null', "Generating pattern model for target",   corpusname + '.' +  targetlang + ".colibri.indexedpatternmodel"): return False
 
     return True
 

@@ -11,7 +11,7 @@ def read(fname):
 
 setup(
     name = "colibrita",
-    version = "0.1.5",
+    version = "0.2.0",
     author = "Maarten van Gompel",
     author_email = "proycon@anaproy.nl",
     description = (""),
@@ -43,5 +43,5 @@ setup(
     },
     #include_package_data=True,
     #package_data = {'foliatools': ['*.xsl'] },
-    install_requires=['pynlpl >= 0.6.5', 'lxml >= 2.2']
+    install_requires=['colibricore >= 0.4', 'pynlpl >= 0.6.5', 'lxml >= 2.2']
 )
