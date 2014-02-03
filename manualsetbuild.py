@@ -91,8 +91,13 @@ def showsentencepair(sentencepairs, cursor):
     print("------------------ #" + str(cursor+1) + " of " + str(len(sentencepairs)) + "----------------",file=sys.stderr)
     print("Input:     " + sentencepair.inputstr(True,"blue"))
     print("Reference: " + sentencepair.refstr(True,"green"))
-    if sentencepair.alternatives:
-        for alt in sentencepair.alternatives:
+    fragment = None
+    for f in sentencepair.ref:
+        if isinstance(f, Fragment):
+            fragment = f
+            break
+    if fragment.alternatives:
+        for alt in fragment.alternatives:
             print("Alternative: " + str(alt))
     if sentencepair.source:
         print("Source: " + sentencepair.source)
