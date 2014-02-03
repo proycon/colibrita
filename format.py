@@ -102,7 +102,8 @@ class SentencePair:
                 output = SentencePair._parsevalue(subnode)
         return SentencePair(node.attrib.get('id',1), input,output,ref)
 
-    def replacefragment(self, old,new,s):
+    @staticmethod
+    def replacefragment(old,new,s):
         s2 = []
         if s:
             for x in s:

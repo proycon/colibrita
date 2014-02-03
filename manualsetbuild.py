@@ -29,7 +29,7 @@ def main():
                 sources[sentencepair.source] += 1
             if sentencepair.category:
                 categories[sentencepair.category] += 1
-        print(len(sentencepairs) + " sentences loaded")
+        print(str(len(sentencepairs)) + " sentences loaded")
     else:
         print("New file: ", setfile,file=sys.stderr)
 
@@ -114,7 +114,7 @@ def makesentence(s):
                 end = i
                 break
     left = s[:begin-1]
-    fragment = s[begin+1:i]
+    fragment = (s[begin+1:i],)
     right = s[end+1:]
     sentence = (left, Fragment(fragment), right)
     return sentence
@@ -136,8 +136,13 @@ def newsentencepair(sentencepairs):
         return False
     sys.stdout.write("L1 Fragment: ")
     sys.stdout.flush()
-    fragment = sys.stdin.readline().strip()
-    input = ref.replacefragment(ref.fragment(),fragment, ref)
+    fragment = Fragment(sys.stdin.readline().strip())
+    f = None
+    for x in ref:
+        if isinstance(x,Fragment):
+            f = x
+    assert f
+    input = SentencePair.replacefragment(f, fragment, ref)
     choices = listsources()
     sys.stdout.write("Source: ")
     sys.stdout.flush()
