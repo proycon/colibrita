@@ -4,9 +4,14 @@ from __future__ import print_function, unicode_literals, division, absolute_impo
 
 import sys
 import os
+from collections import defaultdict
 from colibrita.format import Reader, Writer
 
+sources = defaultdict(int)
+categories = defaultdict(int)
+
 def main():
+    global sources, categories
     if len(sys.argv) < 4:
         print("Syntax: set L1 L2",file=sys.stderr)
         sys.exit(2)
@@ -20,6 +25,10 @@ def main():
         reader = Reader(setfile)
         for sentencepair in reader:
             sentencepairs.append(sentencepair)
+            if sentencepair.source:
+                sources[sentencepair.source] += 1
+            if sentencepair.category:
+                categories[sentencepair.category] += 1
         print(len(sentencepairs) + " sentences loaded",file=sys.stderr)
     else:
         print("New file: ", setfile,file=sys.stderr)
@@ -44,6 +53,7 @@ def main():
             print(">\tNext sentence pair",file=sys.stderr)
             print("<\tPrevious sentence pair",file=sys.stderr)
             print("12\tGo to sentence pair #12", file=sys.stderr)
+            print("w\tWrite changes to disk", file=sys.stderr)
         elif cmd.lower() == "<":
             if not cursor:
                 cursor = len(sentencepairs) - 1
@@ -68,6 +78,12 @@ def main():
                 cursor = len(sentencepairs) - 1
         elif cmd.lower() == 'n':
             cursor = newsentencepair(sentencepairs)
+        elif cmd.lower() == 'w':
+            writer = Writer(setfile)
+            for sentencepair in sentencepairs:
+                writer.write(sentencepair)
+            writer.close()
+
 
 def showsentencepair(sentencepairs, cursor):
     sentencepair = sentencepairs[cursor]
@@ -77,8 +93,14 @@ def showsentencepair(sentencepairs, cursor):
     if sentencepair.alternatives:
         for alt in sentencepair.alternatives:
             print("Alternative: " + str(alt))
+    if sentencepair.source:
+        print("Source: " + sentencepair.source)
+    if sentencepair.category:
+        print("Category: " + sentencepair.category)
+
 
 def newsentencepair():
+    global sources, categories
     cursor = len(sentencepairs)
     print("------------------ #" + str(cursor+1) + ": New sentence pair ----------------",file=sys.stderr)
     print("Enter untokenised text, mark L1 fragment in *asterisks*",file=sys.stderr)
@@ -86,7 +108,43 @@ def newsentencepair():
     input = sys.stdin.readline().strip()
     print("Reference: " , end="" ,file=sys.stderr)
     ref = sys.stdin.readline().strip()
+    choices = listsources()
+    print("Source: " , end="" ,file=sys.stderr)
+    src = sys.stdin.readline().strip()
+    if src.isdigit():
+        if int(src) in choices:
+            src = choices[int(src)]
+        else:
+            print("Invalid source, leaving empty",file=sys.stderr)
+            src = None
+    if src:
+        sources[src] += 1
+    choices = listcats()
+    print("Category: " , end="" ,file=sys.stderr)
+    cat = sys.stdin.readline().strip()
+    if cat.isdigit():
+        if int(cat) in choices:
+            cat = choices[int(cat)]
+        else:
+            print("Invalid category, leaving empty",file=sys.stderr)
+            cat = None
     return cursor
+
+def listsources():
+    choices = {}
+    for i, (source,_) in enumerate(sorted(sources.items(), key=lambda x: -1 * x[1])):
+        choices[i+1] = source
+        print(" " + str(i+1) + ") " + source)
+    return choices
+
+def listcats():
+    choices = {}
+    for i, (cat,_) in enumerate(sorted(categories.items(), key=lambda x: -1 * x[1])):
+        choices[i+1] = cat
+        print(" " + str(i+1) + ") " + cat)
+    return choices
+
+
 
 
 if __name__ == '__main__':
