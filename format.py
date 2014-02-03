@@ -2,7 +2,7 @@ from __future__ import print_function, unicode_literals, division, absolute_impo
 
 import lxml.etree
 from lxml.builder import E
-import sys
+import io
 
 ansicolors = {"red":31,"green":32,"yellow":33,"blue":34,"magenta":35, "bold":1 }
 def colorf(color):
@@ -12,12 +12,31 @@ def colorf(color):
 class Reader:
     def __init__(self, filename):
         self.filename = filename
-        self.stream = open(filename,'rb')
+        self.stream = io.open(filename,'rb')
+
+        self.L1 = "unknown"
+        self.L2 = "unknown"
+
+        parser = lxml.etree.iterparse(self.stream, events=("start","end"))
+        for action, node in parser:
+            if action == "end" and node.tag == "sentencepairs":
+                if 'L1' in node.attrib:
+                    self.L1 = node.attrib['L1']
+                if 'L2' in node.attrib:
+                    self.L2 = node.attrib['L2']
+                break
+
+        self.stream.seek(0)
 
     def __iter__(self):
         parser = lxml.etree.iterparse(self.stream, events=("start","end"))
         for action, node in parser:
-            if action == "end" and node.tag == "s":
+            if action == "end" and node.tag == "sentencepairs":
+                if 'L1' in node.attrib:
+                    self.L1 = node.attrib['L1']
+                if 'L2' in node.attrib:
+                    self.L2 = node.attrib['L2']
+            elif action == "end" and node.tag == "s":
                 yield SentencePair.fromxml(node)
 
     def close(self):
@@ -32,10 +51,10 @@ class Reader:
         if self.stream: self.stream.close()
 
 class Writer:
-    def __init__(self, filename):
+    def __init__(self, filename, L1="unknown", L2="unknown"):
         self.filename = filename
         self.stream = open(filename, 'w')
-        self.stream.write('<sentencepairs>\n')
+        self.stream.write('<sentencepairs L1="' + L1 + '" L2="'+L2+'">\n')
 
     def write(self, sentencepair):
         assert isinstance(sentencepair, SentencePair)

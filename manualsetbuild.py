@@ -5,7 +5,7 @@ from __future__ import print_function, unicode_literals, division, absolute_impo
 import sys
 import os
 from collections import defaultdict
-from colibrita.format import Reader, Writer, SentencePair, Fragment
+from colibrita.format import Reader, Writer, SentencePair, Fragment, Alternative
 
 sources = defaultdict(int)
 categories = defaultdict(int)
@@ -45,6 +45,10 @@ def main():
 
         cmd = sys.stdin.readline().strip()
         if cmd.lower() == 'q':
+            writer = Writer(setfile)
+            for sentencepair in sentencepairs:
+                writer.write(sentencepair)
+            writer.close()
             quit = True
         elif cmd.lower() == 'h':
             print("q\tSave and quit",file=sys.stderr)
@@ -84,6 +88,8 @@ def main():
             for sentencepair in sentencepairs:
                 writer.write(sentencepair)
             writer.close()
+        elif cmd.lower() == 'a':
+            addalternative(sentencepairs)
 
 
 def showsentencepair(sentencepairs, cursor):
@@ -125,6 +131,19 @@ def makesentence(s):
     return sentence
 
 
+def addalternative(sentencepair):
+    sys.stdout.write("Alternative: ")
+    sys.stdout.flush()
+    alt = sys.stdin.readline().strip()
+    fragment = None
+    for f in sentencepair.ref:
+        if isinstance(f, Fragment):
+            fragment = f
+            break
+    if fragment:
+        fragment.alternatives.append(Alternative(tuple(alt.split(' '))))
+
+
 
 
 
@@ -141,7 +160,7 @@ def newsentencepair(sentencepairs):
         return False
     sys.stdout.write("L1 Fragment: ")
     sys.stdout.flush()
-    fragment = Fragment(sys.stdin.readline().strip())
+    fragment = Fragment(tuple(sys.stdin.readline().strip().split(" ")))
     f = None
     for x in ref:
         if isinstance(x,Fragment):
