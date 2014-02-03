@@ -103,14 +103,17 @@ def showsentencepair(sentencepairs, cursor):
 def newsentencepair(sentencepairs):
     global sources, categories
     cursor = len(sentencepairs)
-    print("------------------ #" + str(cursor+1) + ": New sentence pair ----------------",file=sys.stderr)
-    print("Enter untokenised text, mark L1 fragment in *asterisks*",file=sys.stderr)
-    print("Input: " , end="" ,file=sys.stderr)
+    print("------------------ #" + str(cursor+1) + ": New sentence pair ----------------")
+    print("Enter untokenised text, mark L1 fragment in *asterisks*")
+    sys.stdout.write("Input: ")
+    sys.stdout.flush()
     input = sys.stdin.readline().strip()
-    print("Reference: " , end="" ,file=sys.stderr)
+    sys.stdout.write("Reference: ")
+    sys.stdout.flush()
     ref = sys.stdin.readline().strip()
     choices = listsources()
-    print("Source: " , end="" ,file=sys.stderr)
+    sys.stdout.write("Source: ")
+    sys.stdout.flush()
     src = sys.stdin.readline().strip()
     if src.isdigit():
         if int(src) in choices:
@@ -121,7 +124,8 @@ def newsentencepair(sentencepairs):
     if src:
         sources[src] += 1
     choices = listcats()
-    print("Category: " , end="" ,file=sys.stderr)
+    sys.stdout.write("Category: ")
+    sys.stdout.flush()
     cat = sys.stdin.readline().strip()
     if cat.isdigit():
         if int(cat) in choices:
