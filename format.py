@@ -51,7 +51,7 @@ class Writer:
         if self.stream: self.close()
 
 class SentencePair:
-    def __init__(self, id,input, output, ref=None):
+    def __init__(self, id,input, output, ref=None, source=None,category=None):
         if not isinstance(input, tuple):
             raise ValueError("Input - Expected tuple, got " + str(type(input)), input)
         if not isinstance(output, tuple) and not (output is None):
@@ -62,6 +62,8 @@ class SentencePair:
         self.input = input
         self.output = output
         self.ref = ref
+        self.source = source
+        self.category = category
 
 
     @staticmethod
@@ -173,7 +175,6 @@ class SentencePair:
 
     @staticmethod
     def _str(t, mark=False, color=None):
-        s = ""
         for x in t:
             if isinstance(x, Fragment):
                 if x.value:
@@ -219,7 +220,12 @@ class SentencePair:
         if self.input: children.append( E.input(*SentencePair._serialisevalue(self.input)))
         if self.output: children.append( E.output(*SentencePair._serialisevalue(self.output)))
         if self.ref: children.append( E.ref(*SentencePair._serialisevalue(self.ref)))
-        return E.s(*children, id = str(self.id))
+        kwargs = {'id': str(self.id)}
+        if self.source:
+            kwargs['source'] = self.source
+        if self.category:
+            kwargs['category'] = self.category
+        return E.s(*children, **kwargs)
 
 class Fragment:
     def __init__(self, value,id=1, confidence=None):
