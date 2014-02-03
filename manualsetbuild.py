@@ -176,6 +176,7 @@ def newsentencepair(sentencepairs):
     if src.isdigit():
         if int(src) in choices:
             src = choices[int(src)]
+            print("Selected " + src,file=sys.stderr)
         else:
             print("Invalid source, leaving empty",file=sys.stderr)
             src = None
@@ -188,10 +189,11 @@ def newsentencepair(sentencepairs):
     if cat.isdigit():
         if int(cat) in choices:
             cat = choices[int(cat)]
+            print("Selected " + cat,file=sys.stderr)
         else:
             print("Invalid category, leaving empty",file=sys.stderr)
             cat = None
-    sentencepairs.append( SentencePair(cursor, input,None,ref) )
+    sentencepairs.append( SentencePair(cursor, input,None,ref, src, cat) )
     return cursor
 
 def listsources():
