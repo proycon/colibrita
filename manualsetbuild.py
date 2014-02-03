@@ -99,7 +99,7 @@ def showsentencepair(sentencepairs, cursor):
         print("Category: " + sentencepair.category)
 
 
-def newsentencepair():
+def newsentencepair(sentencepairs):
     global sources, categories
     cursor = len(sentencepairs)
     print("------------------ #" + str(cursor+1) + ": New sentence pair ----------------",file=sys.stderr)
