@@ -45,7 +45,7 @@ def main():
 
         cmd = sys.stdin.readline().strip()
         if cmd.lower() == 'q':
-            writer = Writer(setfile)
+            writer = Writer(setfile,l1,l2)
             for sentencepair in sentencepairs:
                 writer.write(sentencepair)
             writer.close()
@@ -84,12 +84,14 @@ def main():
         elif cmd.lower() == 'n':
             cursor = newsentencepair(sentencepairs)
         elif cmd.lower() == 'w':
-            writer = Writer(setfile)
+            writer = Writer(setfile,l1,l2)
             for sentencepair in sentencepairs:
                 writer.write(sentencepair)
             writer.close()
         elif cmd.lower() == 'a':
             addalternative(sentencepairs)
+        else:
+            print("No such command, type h for help", file=sys.stderr)
 
 
 def showsentencepair(sentencepairs, cursor):
