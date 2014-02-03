@@ -21,7 +21,7 @@ def main():
 
     sentencepairs = []
     if os.path.exists(setfile):
-        print("Loading existing file: ", setfile,file=sys.stderr)
+        print("Loading existing file: ", setfile)
         reader = Reader(setfile)
         for sentencepair in reader:
             sentencepairs.append(sentencepair)
@@ -29,18 +29,19 @@ def main():
                 sources[sentencepair.source] += 1
             if sentencepair.category:
                 categories[sentencepair.category] += 1
-        print(len(sentencepairs) + " sentences loaded",file=sys.stderr)
+        print(len(sentencepairs) + " sentences loaded")
     else:
         print("New file: ", setfile,file=sys.stderr)
 
-    print("Type h for help",file=sys.stderr)
+    print("Type h for help")
 
 
     cursor = None
 
     quit = False
     while not quit:
-        print(">" , end="" ,file=sys.stderr)
+        sys.stdout.write("> ")
+        sys.stdout.flush()
 
         cmd = sys.stdin.readline().strip()
         if cmd.lower() == 'q':
