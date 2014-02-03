@@ -5,7 +5,7 @@ from __future__ import print_function, unicode_literals, division, absolute_impo
 import sys
 import os
 from collections import defaultdict
-from colibrita.format import Reader, Writer
+from colibrita.format import Reader, Writer, SentencePair, Fragment
 
 sources = defaultdict(int)
 categories = defaultdict(int)
@@ -99,18 +99,45 @@ def showsentencepair(sentencepairs, cursor):
     if sentencepair.category:
         print("Category: " + sentencepair.category)
 
+def makesentence(s):
+    if not s:
+        return False
+    if s.count('*') != 2:
+        print("Expected marked fragment, not found!",file=sys.stderr)
+        return False
+    begin = None
+    for i,c in enumerate(s):
+        if c == '*':
+            if begin is None:
+                begin = i
+            else:
+                end = i
+                break
+    left = s[:begin-1]
+    fragment = s[begin+1:i]
+    right = s[end+1:]
+    sentence = (left, Fragment(fragment), right)
+    return sentence
+
+
+
+
 
 def newsentencepair(sentencepairs):
     global sources, categories
     cursor = len(sentencepairs)
     print("------------------ #" + str(cursor+1) + ": New sentence pair ----------------")
-    print("Enter untokenised text, mark L1 fragment in *asterisks*")
-    sys.stdout.write("Input: ")
-    sys.stdout.flush()
-    input = sys.stdin.readline().strip()
+    print("Enter untokenised text (L2), mark fragment in *asterisks*")
     sys.stdout.write("Reference: ")
     sys.stdout.flush()
-    ref = sys.stdin.readline().strip()
+    ref = makesentence(sys.stdin.readline().strip())
+    if not ref:
+        print("No sentence provided",file=sys.stderr)
+        return False
+    sys.stdout.write("L1 Fragment: ")
+    sys.stdout.flush()
+    fragment = sys.stdin.readline().strip()
+    input = ref.replacefragment(ref.fragment(),fragment, ref)
     choices = listsources()
     sys.stdout.write("Source: ")
     sys.stdout.flush()
@@ -133,6 +160,7 @@ def newsentencepair(sentencepairs):
         else:
             print("Invalid category, leaving empty",file=sys.stderr)
             cat = None
+    sentencepairs.append( SentencePair(cursor, input,None,ref) )
     return cursor
 
 def listsources():
