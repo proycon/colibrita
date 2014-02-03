@@ -35,15 +35,11 @@ def main():
 
     print("Type h for help")
 
-
     cursor = None
 
     quit = False
     while not quit:
-        sys.stdout.write("> ")
-        sys.stdout.flush()
-
-        cmd = sys.stdin.readline().strip()
+        cmd = input("> ")
         if cmd.lower() == 'q':
             writer = Writer(setfile,l1,l2)
             for sentencepair in sentencepairs:
@@ -134,9 +130,7 @@ def makesentence(s):
 
 
 def addalternative(sentencepair):
-    sys.stdout.write("Alternative: ")
-    sys.stdout.flush()
-    alt = sys.stdin.readline().strip()
+    alt = input("Alternative: ")
     fragment = None
     for f in sentencepair.ref:
         if isinstance(f, Fragment):
@@ -154,15 +148,13 @@ def newsentencepair(sentencepairs):
     cursor = len(sentencepairs)
     print("------------------ #" + str(cursor+1) + ": New sentence pair ----------------")
     print("Enter untokenised text (L2), mark fragment in *asterisks*")
-    sys.stdout.write("Reference: ")
-    sys.stdout.flush()
-    ref = makesentence(sys.stdin.readline().strip())
+    ref = input("Reference: ")
+    ref = makesentence(ref.strip())
     if not ref:
         print("No sentence provided",file=sys.stderr)
         return False
-    sys.stdout.write("L1 Fragment: ")
-    sys.stdout.flush()
-    fragment = Fragment(tuple(sys.stdin.readline().strip().split(" ")))
+    fragment = input("Reference: ")
+    fragment = Fragment(tuple(fragment.strip().split(" ")))
     f = None
     for x in ref:
         if isinstance(x,Fragment):
@@ -170,9 +162,7 @@ def newsentencepair(sentencepairs):
     assert f
     input = SentencePair.replacefragment(f, fragment, ref)
     choices = listsources()
-    sys.stdout.write("Source: ")
-    sys.stdout.flush()
-    src = sys.stdin.readline().strip()
+    src = input("Source: ")
     if src.isdigit():
         if int(src) in choices:
             src = choices[int(src)]
@@ -183,9 +173,7 @@ def newsentencepair(sentencepairs):
     if src:
         sources[src] += 1
     choices = listcats()
-    sys.stdout.write("Category: ")
-    sys.stdout.flush()
-    cat = sys.stdin.readline().strip()
+    cat = input("Category: ")
     if cat.isdigit():
         if int(cat) in choices:
             cat = choices[int(cat)]
