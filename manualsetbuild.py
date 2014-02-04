@@ -148,12 +148,12 @@ def newsentencepair(sentencepairs):
     cursor = len(sentencepairs)
     print("------------------ #" + str(cursor+1) + ": New sentence pair ----------------")
     print("Enter untokenised text (L2), mark fragment in *asterisks*")
-    ref = input("Reference: ")
+    ref = input("Reference sentence: ")
     ref = makesentence(ref.strip())
     if not ref:
         print("No sentence provided",file=sys.stderr)
         return False
-    fragment = input("Reference: ")
+    fragment = input("L1 fragment: ")
     fragment = Fragment(tuple(fragment.strip().split(" ")))
     f = None
     for x in ref:
