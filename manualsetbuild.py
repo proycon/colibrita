@@ -160,7 +160,7 @@ def newsentencepair(sentencepairs):
         if isinstance(x,Fragment):
             f = x
     assert f
-    input = SentencePair.replacefragment(f, fragment, ref)
+    inputsentence = SentencePair.replacefragment(f, fragment, ref)
     choices = listsources()
     src = input("Source: ")
     if src.isdigit():
@@ -181,7 +181,7 @@ def newsentencepair(sentencepairs):
         else:
             print("Invalid category, leaving empty",file=sys.stderr)
             cat = None
-    sentencepairs.append( SentencePair(cursor, input,None,ref, src, cat) )
+    sentencepairs.append( SentencePair(cursor, inputsentence,None,ref, src, cat) )
     return cursor
 
 def listsources():
