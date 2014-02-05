@@ -4,6 +4,7 @@ from __future__ import print_function, unicode_literals, division, absolute_impo
 
 import sys
 import os
+import readline
 from collections import defaultdict
 from colibrita.format import Reader, Writer, SentencePair, Fragment, Alternative
 
@@ -122,7 +123,7 @@ def makesentence(s):
             else:
                 end = i
                 break
-    left = s[:begin-1]
+    left = s[:begin]
     fragment = (s[begin+1:i],)
     right = s[end+1:]
     sentence = (left, Fragment(fragment), right)
