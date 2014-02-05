@@ -57,7 +57,7 @@ def main():
             print("12\tGo to sentence pair #12", file=sys.stderr)
             print("w\tWrite changes to disk", file=sys.stderr)
         elif cmd.lower() == "<":
-            if not cursor:
+            if cursor is None:
                 cursor = len(sentencepairs) - 1
             else:
                 cursor = cursor - 1
@@ -65,7 +65,7 @@ def main():
                     cursor = len(sentencepairs) - 1
             showsentencepair(sentencepairs, cursor)
         elif cmd.lower() == ">":
-            if not cursor:
+            if cursor is None:
                 cursor = 0
             else:
                 cursor = cursor + 1
@@ -85,8 +85,10 @@ def main():
             for sentencepair in sentencepairs:
                 writer.write(sentencepair)
             writer.close()
+        elif cmd.lower() == 'p':
+            showsentencepair(sentencepairs, cursor)
         elif cmd.lower() == 'a':
-            addalternative(sentencepairs)
+            addalternative(sentencepairs[cursor])
         else:
             print("No such command, type h for help", file=sys.stderr)
 
