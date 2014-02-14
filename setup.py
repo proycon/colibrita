@@ -40,6 +40,7 @@ setup(
             'colibrita-setselect = colibrita.setselect:main',
             'colibrita-setmerge = colibrita.setmerge:main',
             'colibrita-setshuffle = colibrita.setshuffle:main',
+            'colibrita-setview = colibrita.setview:main',
             'colibrita-manualsetbuild = colibrita.manualsetbuild:main',
             'colibrita = colibrita.colibrita:main',
         ]
