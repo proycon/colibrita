@@ -50,7 +50,7 @@ def main():
         elif cmd.lower() == 'h':
             print("q\tSave and quit",file=sys.stderr)
             print("n\tNew sentence pair",file=sys.stderr)
-            print("d\tDelete sentence pair",file=sys.stderr)
+            #print("d\tDelete sentence pair",file=sys.stderr)
             print("a\tAdd alternative",file=sys.stderr)
             print(">\tNext sentence pair",file=sys.stderr)
             print("<\tPrevious sentence pair",file=sys.stderr)
@@ -86,8 +86,12 @@ def main():
                 writer.write(sentencepair)
             writer.close()
         elif cmd.lower() == 'p':
+            if cursor is None:
+                cursor = 0
             showsentencepair(sentencepairs, cursor)
         elif cmd.lower() == 'a':
+            if cursor is None:
+                cursor = 0
             addalternative(sentencepairs[cursor])
         else:
             print("No such command, type h for help", file=sys.stderr)

@@ -38,6 +38,7 @@ setup(
             'colibrita-moses = colibrita.moses:main',
             'colibrita-setdiff = colibrita.setdiff:main',
             'colibrita-setselect = colibrita.setselect:main',
+            'colibrita-setmerge = colibrita.setmerge:main',
             'colibrita-manualsetbuild = colibrita.manualsetbuild:main',
             'colibrita = colibrita.colibrita:main',
         ]
