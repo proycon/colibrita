@@ -37,12 +37,13 @@ def main():
             print("Category: ", end="")
             print(sentencepair.category)
         fragment = None
-        for x in sentencepair.reffragments():
+        for x in sentencepair.ref:
             if isinstance(x, Fragment):
                 fragment = x
-        if fragment:
+        if fragment and fragment.alternatives:
             print("Alternatives: ", end="")
-            print("; ".join(fragment.alternatives))
+            print("; ".join([str(x) for x in fragment.alternatives]))
+        print()
     reader.close()
 
 if __name__ == '__main__':
