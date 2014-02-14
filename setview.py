@@ -8,7 +8,7 @@
 from __future__ import print_function, unicode_literals, division, absolute_import
 
 
-from colibrita.format import Reader
+from colibrita.format import Reader, Fragment
 import sys
 
 def main():
@@ -37,7 +37,7 @@ def main():
             print("Category: ", end="")
             print(sentencepair.category)
         fragment = None
-        for x in sentencepair:
+        for x in sentencepair.reffragments():
             if isinstance(x, Fragment):
                 fragment = x
         if fragment:
