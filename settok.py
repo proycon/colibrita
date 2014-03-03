@@ -35,6 +35,9 @@ def main():
     for sentencepair in reader:
         if sentencepair.ref:
             for left, fragment, right in sentencepair.fragments(sentencepair.ref):
+                print("Tokenising reference: L=", left,file=sys.stderr)
+                print("                      F=", fragment.value,file=sys.stderr)
+                print("                      R=", right,file=sys.stderr)
                 if left.strip():
                     left = tok(left, l2)
                 else:
@@ -57,6 +60,9 @@ def main():
 
         if sentencepair.output:
             for left, fragment, right in sentencepair.fragments(sentencepair.output):
+                print("Tokenising output:    L=", left,file=sys.stderr)
+                print("                      F=", fragment.value,file=sys.stderr)
+                print("                      R=", right,file=sys.stderr)
                 if left.strip():
                     left = tok(left, l2)
                 else:
@@ -79,6 +85,9 @@ def main():
 
         if sentencepair.input:
             for left, fragment, right in sentencepair.fragments(sentencepair.input):
+                print("Tokenising input:     L=", left,file=sys.stderr)
+                print("                      F=", fragment.value,file=sys.stderr)
+                print("                      R=", right,file=sys.stderr)
                 if left.strip():
                     left = tok(left, l2)
                 else:
