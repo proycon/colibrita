@@ -40,7 +40,7 @@ def main():
                 else:
                     left = ""
                 alts = fragment.alternatives
-                fragment = Fragment(tok(fragment.value),l2)
+                fragment = Fragment(tok(fragment.value,l2),id=fragment.id)
                 for alt in alts:
                     fragment.alternatives.append(Alternative(tok(alt)))
                 if right.strip():
@@ -62,7 +62,7 @@ def main():
                 else:
                     left = ""
                 alts = fragment.alternatives
-                fragment = Fragment(tok(fragment.value),l2)
+                fragment = Fragment(tok(fragment.value,l2))
                 for alt in alts:
                     fragment.alternatives.append(Alternative(tok(alt)))
                 if right.strip():
@@ -84,7 +84,7 @@ def main():
                 else:
                     left = ""
                 alts = fragment.alternatives
-                fragment = Fragment(tok(fragment.value),l1, id=1)
+                fragment = Fragment(tok(fragment.value,l1), id=fragment.id)
                 if right.strip():
                     right = tok(right, l2)
                 else:
