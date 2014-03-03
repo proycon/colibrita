@@ -153,7 +153,7 @@ class SentencePair:
                     if returndict:
                         d[x.id] = x #no context
                     else:
-                        d[x.id] = left.strip(), x, right.strip()
+                        d[x.id] = (left.strip(), x, right.strip())
         if returndict:
             return d
         else:
