@@ -45,17 +45,17 @@ def main():
                 alts = fragment.alternatives
                 fragment = Fragment(tok(fragment.value,l2),id=fragment.id)
                 for alt in alts:
-                    fragment.alternatives.append(Alternative(tok(alt)))
+                    fragment.alternatives.append(Alternative(tok(alt.value,l2)))
                 if right.strip():
                     right = tok(right, l2)
                 else:
                     right = ""
                 if left and right:
-                    ref = (left, fragment, right)
+                    ref = left + (fragment,) + right
                 elif left:
-                    ref = (left, fragment)
+                    ref = left + (fragment,)
                 elif right:
-                    ref = (fragment, right)
+                    ref = (fragment,) + right
                 sentencepair.ref = ref
 
         if sentencepair.output:
@@ -76,11 +76,11 @@ def main():
                 else:
                     right = ""
                 if left and right:
-                    out = (left, fragment, right)
+                    out = left + (fragment,) + right
                 elif left:
-                    out = (left, fragment)
+                    out = left + (fragment,)
                 elif right:
-                    out = (fragment, right)
+                    out = (fragment,) + right
                 sentencepair.output = out
 
         if sentencepair.input:
@@ -93,19 +93,17 @@ def main():
                 else:
                     left = ""
                 alts = fragment.alternatives
-                v = tok(fragment.value,l1)
-                print("DEBUG: ", v)
-                fragment = Fragment(v, id=fragment.id)
+                fragment = Fragment(tok(fragment.value,l1), id=fragment.id)
                 if right.strip():
                     right = tok(right, l2)
                 else:
                     right = ""
                 if left and right:
-                    inp = (left, fragment, right)
+                    inp = left + (fragment,) + right
                 elif left:
-                    inp = (left, fragment)
+                    inp = left + (fragment,)
                 elif right:
-                    inp = (fragment, right)
+                    inp = (fragment,) + right
                 sentencepair.input = inp
 
         writer.write(sentencepair)

@@ -3,6 +3,7 @@ from __future__ import print_function, unicode_literals, division, absolute_impo
 import lxml.etree
 from lxml.builder import E
 import io
+import sys
 
 ansicolors = {"red":31,"green":32,"yellow":33,"blue":34,"magenta":35, "bold":1 }
 def colorf(color):
@@ -228,6 +229,7 @@ class SentencePair:
                 result.append(x.xml())
                 if i < l - 1: result.append(" ")
             elif result and isinstance(result[-1], str):
+                print(x,file=sys.stderr)
                 result[-1] += " " + x
             else:
                 result.append(x)
