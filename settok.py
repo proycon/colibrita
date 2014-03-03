@@ -93,7 +93,9 @@ def main():
                 else:
                     left = ""
                 alts = fragment.alternatives
-                fragment = Fragment(tok(fragment.value,l1), id=fragment.id)
+                v = tok(fragment.value,l1)
+                print("DEBUG: ", v)
+                fragment = Fragment(v, id=fragment.id)
                 if right.strip():
                     right = tok(right, l2)
                 else:
