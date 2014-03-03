@@ -23,7 +23,7 @@ def tok(s, lang):
 def main():
     try:
         inputset = sys.argv[1]
-        outputset = sys.argv[1]
+        outputset = sys.argv[2]
     except:
         print("Syntax: inputset outputset",file=sys.stderr)
         sys.exit(2)
