@@ -24,8 +24,10 @@ def main():
     try:
         inputset = sys.argv[1]
         outputset = sys.argv[2]
+        l1 = sys.argv[3]
+        l2 = sys.argv[4]
     except:
-        print("Syntax: inputset outputset",file=sys.stderr)
+        print("Syntax: inputset outputset l1 l2",file=sys.stderr)
         sys.exit(2)
 
     writer = Writer(outputset)
@@ -34,15 +36,15 @@ def main():
         if sentencepair.ref:
             for left, fragment, right in sentencepair.fragments(sentencepair.ref):
                 if left.strip():
-                    left = tok(left, reader.L2)
+                    left = tok(left, l2)
                 else:
                     left = ""
                 alts = fragment.alternatives
-                fragment = Fragment(tok(fragment.value),reader.L2, id=1)
+                fragment = Fragment(tok(fragment.value),l2)
                 for alt in alts:
                     fragment.alternatives.append(Alternative(tok(alt)))
                 if right.strip():
-                    right = tok(right, reader.L2)
+                    right = tok(right, l2)
                 else:
                     right = ""
                 if left and right:
@@ -56,15 +58,15 @@ def main():
         if sentencepair.output:
             for left, fragment, right in sentencepair.fragments(sentencepair.output):
                 if left.strip():
-                    left = tok(left, reader.L2)
+                    left = tok(left, l2)
                 else:
                     left = ""
                 alts = fragment.alternatives
-                fragment = Fragment(tok(fragment.value),reader.L2, id=1)
+                fragment = Fragment(tok(fragment.value),l2)
                 for alt in alts:
                     fragment.alternatives.append(Alternative(tok(alt)))
                 if right.strip():
-                    right = tok(right, reader.L2)
+                    right = tok(right, l2)
                 else:
                     right = ""
                 if left and right:
@@ -78,13 +80,13 @@ def main():
         if sentencepair.input:
             for left, fragment, right in sentencepair.fragments(sentencepair.input):
                 if left.strip():
-                    left = tok(left, reader.L2)
+                    left = tok(left, l2)
                 else:
                     left = ""
                 alts = fragment.alternatives
-                fragment = Fragment(tok(fragment.value),reader.L1, id=1)
+                fragment = Fragment(tok(fragment.value),l1, id=1)
                 if right.strip():
-                    right = tok(right, reader.L2)
+                    right = tok(right, l2)
                 else:
                     right = ""
                 if left and right:
