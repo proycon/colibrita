@@ -32,68 +32,68 @@ def main():
     reader = Reader(inputset)
     for sentencepair in reader:
         if sentencepair.ref:
-            left, fragment, right = sentencepair.fragments(sentencepair.ref)
-            if left.strip():
-                left = tok(left, reader.L2)
-            else:
-                left = ""
-            alts = fragment.alternatives
-            fragment = Fragment(tok(fragment.value),reader.L2, id=1)
-            for alt in alts:
-                fragment.alternatives.append(Alternative(tok(alt)))
-            if right.strip():
-                right = tok(right, reader.L2)
-            else:
-                right = ""
-            if left and right:
-                ref = (left, fragment, right)
-            elif left:
-                ref = (left, fragment)
-            elif right:
-                ref = (fragment, right)
-            sentencepair.ref = ref
+            for left, fragment, right in sentencepair.fragments(sentencepair.ref):
+                if left.strip():
+                    left = tok(left, reader.L2)
+                else:
+                    left = ""
+                alts = fragment.alternatives
+                fragment = Fragment(tok(fragment.value),reader.L2, id=1)
+                for alt in alts:
+                    fragment.alternatives.append(Alternative(tok(alt)))
+                if right.strip():
+                    right = tok(right, reader.L2)
+                else:
+                    right = ""
+                if left and right:
+                    ref = (left, fragment, right)
+                elif left:
+                    ref = (left, fragment)
+                elif right:
+                    ref = (fragment, right)
+                sentencepair.ref = ref
 
-        if sentencepair.out:
-            left, fragment, right =sentencepair.fragments(sentencepair.output)
-            if left.strip():
-                left = tok(left, reader.L2)
-            else:
-                left = ""
-            alts = fragment.alternatives
-            fragment = Fragment(tok(fragment.value),reader.L2, id=1)
-            for alt in alts:
-                fragment.alternatives.append(Alternative(tok(alt)))
-            if right.strip():
-                right = tok(right, reader.L2)
-            else:
-                right = ""
-            if left and right:
-                out = (left, fragment, right)
-            elif left:
-                out = (left, fragment)
-            elif right:
-                out = (fragment, right)
-            sentencepair.output = out
+        if sentencepair.output:
+            for left, fragment, right in sentencepair.fragments(sentencepair.output):
+                if left.strip():
+                    left = tok(left, reader.L2)
+                else:
+                    left = ""
+                alts = fragment.alternatives
+                fragment = Fragment(tok(fragment.value),reader.L2, id=1)
+                for alt in alts:
+                    fragment.alternatives.append(Alternative(tok(alt)))
+                if right.strip():
+                    right = tok(right, reader.L2)
+                else:
+                    right = ""
+                if left and right:
+                    out = (left, fragment, right)
+                elif left:
+                    out = (left, fragment)
+                elif right:
+                    out = (fragment, right)
+                sentencepair.output = out
 
         if sentencepair.input:
-            left, fragment, right =sentencepair.fragments(sentencepair.input)
-            if left.strip():
-                left = tok(left, reader.L2)
-            else:
-                left = ""
-            alts = fragment.alternatives
-            fragment = Fragment(tok(fragment.value),reader.L1, id=1)
-            if right.strip():
-                right = tok(right, reader.L2)
-            else:
-                right = ""
-            if left and right:
-                inp = (left, fragment, right)
-            elif left:
-                inp = (left, fragment)
-            elif right:
-                inp = (fragment, right)
-            sentencepair.input = inp
+            for left, fragment, right in sentencepair.fragments(sentencepair.input):
+                if left.strip():
+                    left = tok(left, reader.L2)
+                else:
+                    left = ""
+                alts = fragment.alternatives
+                fragment = Fragment(tok(fragment.value),reader.L1, id=1)
+                if right.strip():
+                    right = tok(right, reader.L2)
+                else:
+                    right = ""
+                if left and right:
+                    inp = (left, fragment, right)
+                elif left:
+                    inp = (left, fragment)
+                elif right:
+                    inp = (fragment, right)
+                sentencepair.input = inp
 
         writer.write(sentencepair)
     reader.close()
