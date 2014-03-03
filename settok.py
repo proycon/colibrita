@@ -54,7 +54,7 @@ def main():
             sentencepair.ref = ref
 
         if sentencepair.out:
-            left, fragment, right =sentencepair.fragments(sentencepair.output):
+            left, fragment, right =sentencepair.fragments(sentencepair.output)
             if left.strip():
                 left = tok(left, reader.L2)
             else:
@@ -76,7 +76,7 @@ def main():
             sentencepair.output = out
 
         if sentencepair.input:
-            left, fragment, right =sentencepair.fragments(sentencepair.input):
+            left, fragment, right =sentencepair.fragments(sentencepair.input)
             if left.strip():
                 left = tok(left, reader.L2)
             else:
