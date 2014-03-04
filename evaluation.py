@@ -1,35 +1,103 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 
 from __future__ import print_function, unicode_literals, division, absolute_import
 
 import argparse
 import sys
 import os
-import subprocess
+import io
 
 from colibrita.format import Reader
-from colibrita.common import log, runcmd, red, green, blue, yellow, white
+from colibrita.common import log, runcmd, red, yellow, white
+
+
+VERSION = "2.0"
 
 def main():
     parser = argparse.ArgumentParser(description="Evaluation")
-    parser.add_argument('--matrexdir',type=str, help="Path to Matrex evaluation scripts",action='store',default="")
+    parser.add_argument('--mtevaldir',type=str, help="Path to MT evaluation scripts",action='store',default="")
     parser.add_argument('--ref',type=str,help='Reference file', action='store',required=True)
     parser.add_argument('--out',type=str,help='Output file', action='store',required=True)
-    parser.add_argument('--debug','-d', help="Debug", action='store_true', default=False)
     parser.add_argument('--workdir','-w',type=str,help='Work directory', action='store',default=".")
     parser.add_argument('-i',dest='casesensitive',help='Measure translation accuracy without regard for case',action='store_false',default=True)
-    parser.add_argument('-a',dest='alternatives',help='Evaluate against alternatives as well (otherwise evaluation will be only against the best/selected option and alternatives will be ignored)',action='store_true',default=False)
+    parser.add_argument('-a',dest='alternatives',help='Considers additional alternatives in system output',action='store_true',default=False)
     args = parser.parse_args()
 
-    totalavgaccuracy, totalwordavgaccuracy, totalavgrecall, matrexsrcfile, matrextgtfile, matrexoutfile = evaluate(Reader(args.ref), Reader(args.out), args.matrexdir, args.workdir, args.casesensitive, args.alternatives)
+    totalavgaccuracy, totalwordavgaccuracy, totalavgrecall, matrexsrcfile, matrextgtfile, matrexoutfile = evaluate(Reader(args.ref), Reader(args.out), args.mtevaldir, args.workdir, args.casesensitive, args.alternatives)
 
     outprefix = '.'.join(args.out.split('.')[:-1])
 
-    if args.matrexdir:
-        mtscore(args.matrexdir, matrexsrcfile, matrextgtfile, matrexoutfile, totalavgaccuracy, totalwordavgaccuracy, totalavgrecall, outprefix, args.workdir)
+    if args.mtevaldir:
+        mtscore(args.mtevaldir, matrexsrcfile, matrextgtfile, matrexoutfile, totalavgaccuracy, totalwordavgaccuracy, totalavgrecall, outprefix, args.workdir)
 
 
-def evaluate(ref, out, matrexdir, workdir, casesensitive=True, alternatives=False):
+def comparefragments(outfragment, reffragment, casesensitive, alternatives):
+    global matches, wordmatches, misses, wordmisses, missedrecall
+    if casesensitive:
+        eq = lambda x,y: " ".join(x) == " ".join(y)
+    else:
+        eq = lambda x,y: " ".join(x).lower() == " ".join(y).lower()
+
+
+    if not outfragment.value or len(outfragment.value) == 0:
+        missedrecall += 1
+        misses += 1
+        wordmisses += 1
+        return 0
+    else:
+        outvalues = [outfragment.value]
+        if alternatives and outfragment.alternatives:
+            for alt in outfragment.alternatives[:4]:
+                outvalues.append( alt.value )
+
+        refvalues = [reffragment.value]
+        for alt in reffragment.alternatives:
+            refvalues.append( alt.value )
+
+
+        wordmatchscores = []
+
+        for outvalue in outvalues:
+            for refvalue in refvalues:
+                if eq(outvalue, refvalue):
+                    wordmatchscore = 1
+                elif len(outvalue) >= len(refvalue):
+                    partialmatch = False
+                    for i in range(0, len(outvalue)):
+                        if eq(outvalue[i:i+len(refvalue)], refvalue):
+                            partialmatch = True
+                            break
+                    if partialmatch:
+                        wordmatchscore = len(refvalue) / len(outvalue)
+                    else:
+                        wordmatchscore = 0
+                elif len(outvalue) < len(refvalue):
+                    partialmatch = False
+                    for i in range(0, len(refvalue)):
+                        if eq(refvalue[i:i+len(outvalue)], outvalue):
+                            partialmatch = True
+                            break
+                    if partialmatch:
+                        wordmatchscore = len(outvalue) / len(refvalue)
+                    else:
+                        wordmatchscore = 0
+                wordmatchscores.append(wordmatchscore)
+
+        wordmatchscore = max(wordmatchscores)
+        wordmatches += wordmatchscore
+        wordmisses += (1 - wordmatchscore)
+        if wordmatchscore == 1:
+            matches += 1
+        else:
+            misses += 1
+        return wordmatchscore
+
+
+
+
+
+def evaluate(ref, out, mtevaldir, workdir, casesensitive=True, alternatives=False):
+    global matches, wordmatches, misses, wordmisses, missedrecall
     ref_it = iter(ref)
     out_it = iter(out)
 
@@ -38,10 +106,6 @@ def evaluate(ref, out, matrexdir, workdir, casesensitive=True, alternatives=Fals
     wordaccuracies = []
     recalls = []
 
-    if casesensitive:
-        eq = lambda x,y: x == y
-    else:
-        eq = lambda x,y: " ".join(x).lower() == " ".join(y).lower()
 
     matrexsrcfile = out.filename.replace('.xml','') + '.matrex-src.xml'
     matrextgtfile = out.filename.replace('.xml','') + '.matrex-ref.xml'
@@ -49,9 +113,9 @@ def evaluate(ref, out, matrexdir, workdir, casesensitive=True, alternatives=Fals
 
 
 
-    matrexsrc = open(matrexsrcfile ,'w', encoding='utf-8')
-    matrextgt = open(matrextgtfile ,'w', encoding='utf-8')
-    matrexout = open(matrexoutfile ,'w', encoding='utf-8')
+    matrexsrc = io.open(matrexsrcfile ,'w', encoding='utf-8')
+    matrextgt = io.open(matrextgtfile ,'w', encoding='utf-8')
+    matrexout = io.open(matrexoutfile ,'w', encoding='utf-8')
 
     for t,f in (('src',matrexsrc),('ref',matrextgt),('tst',matrexout)):
         f.write( "<" + t + "set setid=\"mteval\" srclang=\"src\" trglang=\"tgt\">\n")
@@ -85,6 +149,7 @@ def evaluate(ref, out, matrexdir, workdir, casesensitive=True, alternatives=Fals
         wordmisses = 0
         missedrecall = 0
 
+
         outputfragments = out_s.outputfragmentsdict()
         reffragments = ref_s.reffragmentsdict()
         for inputfragment in ref_s.inputfragmentsdict().values():
@@ -94,56 +159,17 @@ def evaluate(ref, out, matrexdir, workdir, casesensitive=True, alternatives=Fals
             if not inputfragment.id in outputfragments:
                 print("WARNING: Input fragment " + str(inputfragment.id) + " in sentence " + str(ref_s.id) + " is not translated!", file=sys.stderr)
                 misses += 1
+                wordmisses += 1
+                missedrecall += 1
             else:
-                if eq(reffragments[inputfragment.id].value, outputfragments[inputfragment.id].value):
-                    matches += 1
-                    wordmatches += 1
-                elif alternatives and outputfragments[inputfragment.id].alternatives:
-                    for alt in outputfragments[inputfragment.id].alternatives:
-                        if eq(reffragments[inputfragment.id].value, alt.value):
-                            matches += 1
-                            wordmatches += 1
-                            break
-                else:
-                    #TODO: compute partial match against alternatives
-                    misses += 1
-                    if len(outputfragments[inputfragment.id]) == 0:
-                        #missing output
-                        wordmisses += 1
-                        missedrecall += 1
-                    elif len(reffragments[inputfragment.id].value) > len(outputfragments[inputfragment.id].value):
-                        partialmatch = False
-                        for i in range(0, len(reffragments[inputfragment.id].value)):
-                            if eq(reffragments[inputfragment.id].value[i:i+len(outputfragments[inputfragment.id].value)], outputfragments[inputfragment.id].value):
-                                partialmatch = True
-                                break
-                        if partialmatch:
-                            p = len(outputfragments[inputfragment.id].value) / len(reffragments[inputfragment.id].value)
-                            wordmatches += p
-                            wordmisses += 1 - p
-                        else:
-                            wordmisses += 1
-                    elif len(reffragments[inputfragment.id].value) < len(outputfragments[inputfragment.id].value):
-                        partialmatch = False
-                        for i in range(0, len(outputfragments[inputfragment.id].value)):
-                            if eq(outputfragments[inputfragment.id].value[i:i+len(reffragments[inputfragment.id].value)], reffragments[inputfragment.id].value):
-                                partialmatch = True
-                                break
-                        if partialmatch:
-                            p = len(reffragments[inputfragment.id].value) / len(outputfragments[inputfragment.id].value)
-                            wordmatches += p
-                            wordmisses += 1 - p
-                        else:
-                            wordmisses += 1
-                    else:
-                        wordmisses += 1
-
+                comparefragments( outputfragments[inputfragment.id], reffragments[inputfragment.id], casesensitive, alternatives)
 
             if missedrecall == matches +misses:
                 recall = 0.0
             else:
                 recall = (matches+misses)/((matches+misses)-missedrecall)
-            print("Recall for sentence " + str(ref_s.id) + " = " + str(recall))
+
+            print("Recall for sentence " + str(ref_s.id) + " = " + str(recall)  )
             recalls.append(recall)
 
             accuracy = matches/(matches+misses)
@@ -172,7 +198,7 @@ def evaluate(ref, out, matrexdir, workdir, casesensitive=True, alternatives=Fals
     return totalavgaccuracy, totalwordavgaccuracy, totalavgrecall,matrexsrcfile, matrextgtfile, matrexoutfile
 
 
-def mtscore(matrexdir, sourcexml, refxml, targetxml, totalavgaccuracy, totalwordavgaccuracy, totalavgrecall, outprefix, WORKDIR = '.'):
+def mtscore(mtevaldir, sourcexml, refxml, targetxml, totalavgaccuracy, totalwordavgaccuracy, totalavgrecall, outprefix, WORKDIR = '.'):
 
     per = 0
     wer = 0
@@ -181,12 +207,12 @@ def mtscore(matrexdir, sourcexml, refxml, targetxml, totalavgaccuracy, totalword
     nist = 0
     ter = 0
 
-    EXEC_MATREX_WER = matrexdir + '/eval/WER_v01.pl'
-    EXEC_MATREX_PER = matrexdir + '/eval/PER_v01.pl'
-    EXEC_MATREX_BLEU = matrexdir + '/eval/bleu-1.04.pl'
-    EXEC_MATREX_METEOR = matrexdir + '/meteor-0.6/meteor.pl'
-    EXEC_MATREX_MTEVAL = matrexdir + '/mteval-v11b.pl'
-    EXEC_MATREX_TER = matrexdir + '/tercom.jar'
+    EXEC_MATREX_WER = mtevaldir + '/eval/WER_v01.pl'
+    EXEC_MATREX_PER = mtevaldir + '/eval/PER_v01.pl'
+    EXEC_MATREX_BLEU = mtevaldir + '/eval/bleu-1.04.pl'
+    EXEC_MATREX_METEOR = mtevaldir + '/meteor-0.6/meteor.pl'
+    EXEC_MATREX_MTEVAL = mtevaldir + '/mteval-v11b.pl'
+    EXEC_MATREX_TER = mtevaldir + '/tercom.jar'
     EXEC_PERL = 'perl'
     EXEC_JAVA = 'java'
 
@@ -195,7 +221,7 @@ def mtscore(matrexdir, sourcexml, refxml, targetxml, totalavgaccuracy, totalword
         if not runcmd(EXEC_PERL + ' ' + EXEC_MATREX_BLEU + " -r " + refxml + ' -t ' + targetxml + ' -s ' + sourcexml + ' -ci > ' + outprefix + '.bleu.score',  'Computing BLEU score'): errors = True
         if not errors:
             try:
-                f = open(WORKDIR + '/' + outprefix + '.bleu.score')
+                f = io.open(WORKDIR + '/' + outprefix + '.bleu.score')
                 for line in f:
                     if line[0:9] == "BLEUr1n4,":
                         bleu = float(line[10:].strip())
@@ -211,7 +237,7 @@ def mtscore(matrexdir, sourcexml, refxml, targetxml, totalavgaccuracy, totalword
         if not runcmd(EXEC_PERL + ' ' + EXEC_MATREX_WER + " -r " + refxml + ' -t ' + targetxml + ' -s ' + sourcexml + '  > ' + outprefix + '.wer.score', 'Computing WER score'): errors = True
         if not errors:
             try:
-                f = open(WORKDIR + '/' + outprefix + '.wer.score','r',encoding='utf-8')
+                f = io.open(WORKDIR + '/' + outprefix + '.wer.score','r',encoding='utf-8')
                 for line in f:
                     if line[0:11] == "WER score =":
                         wer = float(line[12:19].strip())
@@ -227,7 +253,7 @@ def mtscore(matrexdir, sourcexml, refxml, targetxml, totalavgaccuracy, totalword
         if not runcmd(EXEC_PERL + ' ' + EXEC_MATREX_PER + " -r " + refxml + ' -t ' + targetxml + ' -s ' + sourcexml + '  > ' + outprefix + '.per.score',  'Computing PER score'): errors = True
         if not errors:
             try:
-                f = open(WORKDIR + '/' + outprefix +'.per.score','r',encoding='utf-8')
+                f = io.open(WORKDIR + '/' + outprefix +'.per.score','r',encoding='utf-8')
                 for line in f:
                     if line[0:11] == "PER score =":
                         per = float(line[12:19].strip())
@@ -243,7 +269,7 @@ def mtscore(matrexdir, sourcexml, refxml, targetxml, totalavgaccuracy, totalword
         if not runcmd(EXEC_PERL + ' -I ' + os.path.dirname(EXEC_MATREX_METEOR) + ' ' + EXEC_MATREX_METEOR + " -s colibrita -r " + refxml + ' -t ' + targetxml + ' --modules "exact"  > ' + outprefix + '.meteor.score',  'Computing METEOR score'): errors = True
         if not errors:
             try:
-                f = open(WORKDIR + '/' + outprefix + '.meteor.score','r',encoding='utf-8')
+                f = io.open(WORKDIR + '/' + outprefix + '.meteor.score','r',encoding='utf-8')
                 for line in f:
                     if line[0:6] == "Score:":
                         meteor = float(line[7:].strip())
@@ -259,7 +285,7 @@ def mtscore(matrexdir, sourcexml, refxml, targetxml, totalavgaccuracy, totalword
         if not runcmd(EXEC_PERL + ' ' + EXEC_MATREX_MTEVAL + " -r " + refxml + ' -t ' + targetxml + ' -s ' + sourcexml +  '  > ' + outprefix + '.mteval.score',  'Computing NIST & BLEU scores'): errors = True
         if not errors:
             try:
-                f = open(WORKDIR + '/' + outprefix + '.mteval.score','r',encoding='utf-8')
+                f = io.open(WORKDIR + '/' + outprefix + '.mteval.score','r',encoding='utf-8')
                 for line in f:
                     if line[0:12] == "NIST score =":
                         nist = float(line[13:21].strip())
@@ -289,7 +315,7 @@ def mtscore(matrexdir, sourcexml, refxml, targetxml, totalavgaccuracy, totalword
         if not runcmd(EXEC_JAVA + ' -jar ' + EXEC_MATREX_TER + " -r " + refxml + ' -h ' + targetxml + '  > ' + outprefix + '.ter.score',  'Computing TER score'): errors = True
         if not errors:
             try:
-                f = open(WORKDIR +'/' + outprefix + '.ter.score','r',encoding='utf-8')
+                f = io.open(WORKDIR +'/' + outprefix + '.ter.score','r',encoding='utf-8')
                 for line in f:
                     if line[0:10] == "Total TER:":
                         ter = float(line[11:].strip().split(' ')[0])
@@ -302,7 +328,7 @@ def mtscore(matrexdir, sourcexml, refxml, targetxml, totalavgaccuracy, totalword
 
 
     log("SCORE SUMMARY\n===================\n")
-    f = open(WORKDIR + '/' + outprefix + '.summary.score','w')
+    f = io.open(WORKDIR + '/' + outprefix + '.summary.score','w')
     s = "Accuracy Word-Accuracy Recall BLEU METEOR NIST TER WER PER"
     f.write(s+ "\n")
     log(s)
