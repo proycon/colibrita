@@ -20,7 +20,8 @@ def main():
         sentencepairs.append(sentencepair)
     reader.close()
     writer = Writer(outputset)
-    for i, sentencepair in enumerate(random.shuffle(sentencepairs)):
+    random.shuffle(sentencepairs)
+    for i, sentencepair in enumerate(sentencepairs):
         sentencepair.id = i+1
         writer.write(sentencepair)
     writer.close()
