@@ -229,7 +229,6 @@ class SentencePair:
                 result.append(x.xml())
                 if i < l - 1: result.append(" ")
             elif result and isinstance(result[-1], str):
-                print(x,file=sys.stderr)
                 result[-1] += " " + x
             else:
                 result.append(x)
