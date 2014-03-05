@@ -42,6 +42,7 @@ setup(
             'colibrita-setshuffle = colibrita.setshuffle:main',
             'colibrita-setview = colibrita.setview:main',
             'colibrita-settok = colibrita.settok:main',
+            'colibrita-setdist = colibrita.setdist:main',
             'colibrita-manualsetbuild = colibrita.manualsetbuild:main',
             'colibrita = colibrita.colibrita:main',
         ]
