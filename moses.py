@@ -20,6 +20,7 @@ def main():
     parser.add_argument('--lmorder',type=float, help="Language model order", action='store',default=3)
     parser.add_argument('--dweight',type=float, help="Distortion weight", action='store',default=0.6)
     parser.add_argument('--tmweights',type=str, help="Translation model weights (comma separated)", action='store',default="0.20,0.20,0.20,0.20,0.20")
+    parser.add_argument('-n','--n',type=int,help="Number of output hypotheses per sentence", default=25)
 
     args = parser.parse_args()
 
@@ -53,32 +54,38 @@ def main():
     f.write("[distortion-limit]\n6\n")
     f.close()
 
-    print("Calling moses: moses -f " + args.output + '.moses.ini' ,file=sys.stderr)
-    p = subprocess.Popen('moses -f ' + args.output + '.moses.ini',shell=True,stdout=subprocess.PIPE,stdin=subprocess.PIPE,stderr=subprocess.PIPE)
+    cmd = 'moses -f ' + args.output + '.moses.ini -n-best-list ' + args.output + '.nbestlist ' + str(args.n)
+    print("Calling moses: " + cmd,file=sys.stderr)
+    p = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE,stdin=subprocess.PIPE,stderr=subprocess.PIPE)
     for sentencepair in data:
         for left, sourcefragment, right in sentencepair.inputfragments():
             p.stdin.write( (str(sourcefragment) + "\n").encode('utf-8'))
-    solutions = p.communicate()[0].split(b"\n")
+    #olutions = p.communicate()[0].split(b"\n")
+    p.communicate()
     p.stdin.close()
 
     data.reset()
 
-    print("Processing moses output...",file=sys.stderr)
-    writer = Writer(args.output + '.output.xml')
 
-    solutionindex = 0
-    for sentencepair in data:
-        for left, inputfragment, right in sentencepair.inputfragments():
-            solution = solutions[solutionindex]
-            if solution[-1] == '.': solution = solution[:-1]
-            outputfragment = Fragment(tuple(str(solution,'utf-8').split()), inputfragment.id)
-            print("\t" + str(inputfragment) + " -> " + str(outputfragment), file=sys.stderr)
-            sentencepair.output = sentencepair.input
-            sentencepair.output = sentencepair.replacefragment(inputfragment, outputfragment, sentencepair.output)
-            sentencepair.ref = None
-            solutionindex += 1
-            writer.write(sentencepair)
-    writer.close()
+    #print("Processing moses output...",file=sys.stderr)
+    #writer = Writer(args.output + '.output.xml')
+
+    #with open(args.output+'.nbestlist','r',encoding='utf-8') as f:
+    #    pass
+
+    #solutionindex = 0
+    #for sentencepair in data:
+    #    for left, inputfragment, right in sentencepair.inputfragments():
+    #        solution = solutions[solutionindex]
+    #        if solution[-1] == '.': solution = solution[:-1]
+    #        outputfragment = Fragment(tuple(str(solution,'utf-8').split()), inputfragment.id)
+    #        print("\t" + str(inputfragment) + " -> " + str(outputfragment), file=sys.stderr)
+    #        sentencepair.output = sentencepair.input
+    #        sentencepair.output = sentencepair.replacefragment(inputfragment, outputfragment, sentencepair.output)
+    #        sentencepair.ref = None
+    #        solutionindex += 1
+    #        writer.write(sentencepair)
+    #writer.close()
 
     print("All done.", file=sys.stderr)
 
