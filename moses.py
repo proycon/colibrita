@@ -126,7 +126,7 @@ def main():
             maxscore = -9999999999
             for candidatesentence, targetpattern, tscore, lmscore in candidatesentences:
                 tscore = args.tweightrr * (tscore-besttscore)
-                lmscore = args.lweightrr * (lmscore-bestlmscore)
+                lmscore = args.lmweightrr * (lmscore-bestlmscore)
                 score = tscore + lmscore
                 print(targetpattern + " --- tscore=" + str(tscore) + ", lmscore=" + str(lmscore),file=sys.stderr)
                 if score > maxscore:
