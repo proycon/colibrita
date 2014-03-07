@@ -59,17 +59,20 @@ def main():
     f.write("[distortion-limit]\n6\n")
     f.close()
 
-    cmd = 'moses -f ' + args.output + '.moses.ini -n-best-list ' + args.output + '.nbestlist ' + str(args.n)
-    print("Calling moses: " + cmd,file=sys.stderr)
-    p = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE,stdin=subprocess.PIPE,stderr=subprocess.PIPE)
-    for sentencepair in data:
-        for left, sourcefragment, right in sentencepair.inputfragments():
-            p.stdin.write( (str(sourcefragment) + "\n").encode('utf-8'))
-    p.communicate()
-    p.stdin.close()
 
-    data.reset()
+    if not os.path.exists(args.output + ".nbestlist"):
+        cmd = 'moses -f ' + args.output + '.moses.ini -n-best-list ' + args.output + '.nbestlist ' + str(args.n)
+        print("Calling moses: " + cmd,file=sys.stderr)
+        p = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE,stdin=subprocess.PIPE,stderr=subprocess.PIPE)
+        for sentencepair in data:
+            for left, sourcefragment, right in sentencepair.inputfragments():
+                p.stdin.write( (str(sourcefragment) + "\n").encode('utf-8'))
+        p.communicate()
+        p.stdin.close()
 
+        data.reset()
+    else:
+        print("Moses output already exists, not overwriting. Delete " + args.output + ".nbestlist if you want a fresh run.",file=sys.stderr)
 
 
     print("Loading Language model", file=sys.stderr)
@@ -91,7 +94,7 @@ def main():
             previndex = index
             solution = fields[1]
             rawscores = fields[3].split(' ')
-            tscore = [ float(x) for x in rawscores[7:12].split(' ') ][2]
+            tscore = [ float(x) for x in rawscores[7:12] ][2]
             hypotheses.append( (solution, tscore) )
         sentenceoutput.append( hypotheses ) #don't forget last one
 
