@@ -86,6 +86,7 @@ def main():
     with open(args.output+'.nbestlist','r',encoding='utf-8') as f:
         for line in f:
             fields = line.strip().split("|||")
+            print(fields,file=sys.stderr)
             index = int(fields[0])
             if index != previndex:
                 if hypotheses:
@@ -94,6 +95,7 @@ def main():
             previndex = index
             solution = fields[1]
             rawscores = fields[3].split(' ')
+            print(rawscores,file=sys.stderr)
             tscore = [ float(x) for x in rawscores[7:12] ][2]
             hypotheses.append( (solution, tscore) )
         sentenceoutput.append( hypotheses ) #don't forget last one
