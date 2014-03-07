@@ -109,7 +109,6 @@ def main():
             bestlmscore = -999999999
             besttscore = -999999999
             for hypothesis, tscore in hypotheses:
-                tscore = math.log(tscore) #base-e log
                 #compute new lm score
                 outputfragment = Fragment(tuple(hypothesis.split(' ')), inputfragment.id)
                 candidatesentence = sentencepair.replacefragment(inputfragment, outputfragment, sentencepair.output)
