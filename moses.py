@@ -96,7 +96,7 @@ def main():
             solution = fields[1]
             rawscores = fields[2].split(' ')
             print(rawscores,file=sys.stderr)
-            tscore = [ float(x) for x in rawscores[7:12] ][2]
+            tscore = float(rawscores[9])
             hypotheses.append( (solution, tscore) )
         sentenceoutput.append( hypotheses ) #don't forget last one
 
