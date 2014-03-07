@@ -741,6 +741,14 @@ class ClassifierExperts:
                         yield subfragment + fragmentation
 
 
+#class MosesModel:
+#    def __init__(self, workdir, ttable):
+#        self.workdir = workdir
+#        self.ttable = ttable
+
+
+
+
 def loaddttable(filename):
     dttable = {}
     f = open(filename)
@@ -783,6 +791,7 @@ def main():
     parser.add_argument('--Tclones', dest='timbl_clones', help="Timbl clones (number of CPUs to use for parallel processing)", type=int,action='store',default=1)
     parser.add_argument('-o','--output',type=str,help="Output prefix", required = True)
     parser.add_argument('--baseline', help="Baseline test (use with --test, requires no previous --train)", action='store_true',default=False)
+    #parser.add_argument('--moses', help="Use Moses as Translation Model, no classifiers will be used, use with -T", action='store_true',default=False)
     parser.add_argument('--lm',type=str, help="Use language model in testing (file in ARPA format, as produced by for instance SRILM)", action='store',default="")
     parser.add_argument('--lmweight',type=float, help="Language model weight (when --lm is used)", action='store',default=1)
     parser.add_argument('--tmweight',type=float, help="Translation model weight (when --lm is used)", action='store',default=1)
@@ -790,7 +799,6 @@ def main():
     parser.add_argument('--folds',type=int, help="Number of folds to use in for cross-validatio (used with -a)", action='store',default=10)
     parser.add_argument('--trainfortest',type=str, help="Do only limited training that covers a particular test set (speeds up training considerably)", action='store',default="")
     parser.add_argument('-T','--ttable', type=str,help="Phrase translation table (file) to use when testing with --lm and without classifier training", action='store',default="")
-
     args = parser.parse_args()
 
     try:
@@ -853,7 +861,7 @@ def main():
         else:
             lm = None
 
-        if args.leftcontext or args.rightcontext or args.keywords:
+        if (args.leftcontext or args.rightcontext or args.keywords): # and not args.moses:
             if not os.path.isdir(args.output):
                 print("Output directory " + args.output + " does not exist, did you forget to train the system first?", file=sys.stderr)
                 sys.exit(2)
@@ -870,12 +878,21 @@ def main():
             print("Loading translation table",file=sys.stderr)
             ttable = PhraseTable(args.ttable,False, False, "|||", 3, 0,None, None)
             data = Reader(args.dataset)
-            print("Making baseline",file=sys.stderr)
-            if args.lm:
-                print("(with LM)",file=sys.stderr)
-                makebaseline(ttable, args.output + '.output.xml', data, lm, args.tmweight, args.lmweight)
-            elif args.baseline:
-                makebaseline(ttable, args.output + '.output.xml', data)
+            if args.baseline:
+                print("Making baseline",file=sys.stderr)
+                if args.lm:
+                    print("(with LM)",file=sys.stderr)
+                    makebaseline(ttable, args.output + '.output.xml', data, lm, args.tmweight, args.lmweight)
+                elif args.baseline:
+                    makebaseline(ttable, args.output + '.output.xml', data)
+            #elif args.moses:
+            #    print("Initiating Moses",file=sys.stderr)
+            #    mosesmodel = MosesModel(args.output, ttable)
+            else:
+                print("Specify --baseline or --moses", file=sys.stderr)
+
+
+
         else:
             print("Don't know what to do! Specify some classifier options or -T with --lm or --baseline", file=sys.stderr)
     elif args.settype == 'run' or args.settype == 'server':
