@@ -124,6 +124,7 @@ def main():
                 tscore = args.tweightrr * (tscore-besttscore)
                 lmscore = args.lweightrr * (lmscore-bestlmscore)
                 score = tscore + lmscore
+                print(targetpattern + " --- tscore=" + str(tscore) + ", lmscore=" + str(lmscore),file=sys.stderr)
                 if score > maxscore:
                     maxscore = score
                     translation = targetpattern
