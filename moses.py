@@ -11,7 +11,7 @@ from colibrita.format import Reader, Writer, Fragment
 
 def main():
     parser = argparse.ArgumentParser(description="Colibrita - Translation Assistance using Moses", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('-f','--dataset', type=str,help="Dataset file", action='store',default="",required=False)
+    parser.add_argument('-f','--dataset', type=str,help="Dataset file", action='store',default="",required=True)
     parser.add_argument('--debug','-d', help="Debug", action='store_true', default=False)
     parser.add_argument('-o','--output',type=str,help="Output prefix", required = True)
     parser.add_argument('-T','--ttable', type=str,help="Phrase translation table (file) to use when testing with --lm and without classifier training", action='store',required=True)
