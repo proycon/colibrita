@@ -139,7 +139,7 @@ def main():
             print("\t" + str(inputfragment) + " -> " + str(outputfragment), file=sys.stderr)
 
             if args.a:
-                for score, solution in solution[1:1+args.a]:
+                for score, solution in solutions[1:1+args.a]:
                     outputfragment.alternatives.append( Alternative( tuple(solution.split()), confidence=score) )
 
             sentencepair.output = sentencepair.replacefragment(inputfragment, outputfragment, sentencepair.output)
