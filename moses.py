@@ -6,7 +6,7 @@ import argparse
 import sys
 import os
 import subprocess
-from colibrita.format import Reader, Writer, Fragment
+from colibrita.format import Reader, Writer, Fragment, Alternative
 from pynlpl.lm.lm import ARPALanguageModel
 from copy import copy
 import math
@@ -26,6 +26,7 @@ def main():
     parser.add_argument('--lmweightrr',type=float, help="Language model weight in reranking", action='store',default=1)
     parser.add_argument('--tweightrr',type=float, help="Translation model weight in reranking", action='store',default=1)
     parser.add_argument('-n','--n',type=int,help="Number of output hypotheses per sentence", default=25)
+    parser.add_argument('-a','--a',type=int,help="Add alternative translations, up to the specified numer", default=0)
 
     args = parser.parse_args()
 
@@ -122,20 +123,25 @@ def main():
 
                 candidatesentences.append( ( candidatesentence, hypothesis, tscore, lmscore ) )
 
-            #get the strongest sentence
-            maxscore = -9999999999
+            #compute scores
+            solutions = []
             for candidatesentence, targetpattern, tscore, lmscore in candidatesentences:
                 tscore = args.tweightrr * (tscore-besttscore)
                 lmscore = args.lmweightrr * (lmscore-bestlmscore)
                 score = tscore + lmscore
                 print(targetpattern + " --- tscore=" + str(tscore) + ", lmscore=" + str(lmscore),file=sys.stderr)
-                if score > maxscore:
-                    maxscore = score
-                    translation = targetpattern
+                solutions.append( (score, targetpattern) )
 
-            translation = tuple(translation.split())
+            solutions = sorted(solutions, key=lambda x: -1 * x[0])
+
+            translation = tuple(solutions[0][1].split())
             outputfragment = Fragment(translation, inputfragment.id)
             print("\t" + str(inputfragment) + " -> " + str(outputfragment), file=sys.stderr)
+
+            if args.a:
+                for score, solution in solution[1:1+args.a]:
+                    outputfragment.alternatives.append( Alternative( tuple(solution.split()), confidence=score) )
+
             sentencepair.output = sentencepair.replacefragment(inputfragment, outputfragment, sentencepair.output)
 
             writer.write(sentencepair)
