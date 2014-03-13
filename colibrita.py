@@ -11,6 +11,7 @@ import math
 import timbl
 import lxml.etree
 import datetime
+import time
 from collections import defaultdict
 from urllib.parse import quote_plus, unquote_plus
 from copy import copy
@@ -678,7 +679,7 @@ class ClassifierExperts:
 
         return outputfragment
 
-    def processsentence(self, sentencepair, dttable, generalleftcontext, generalrightcontext, generaldokeywords, timbloptions, lm=None,tweight=1,lmweight=1, dofragmentdecode=True):
+    def processsentence(self, sentencepair, dttable, generalleftcontext, generalrightcontext, generaldokeywords, timbloptions, lm=None,ttable=None,tweight=1,lmweight=1, dofragmentdecode=True):
         print("Processing sentence " + str(sentencepair.id),file=sys.stderr)
         sentencepair.ref = None
         sentencepair.output = copy(sentencepair.input)
@@ -692,6 +693,14 @@ class ClassifierExperts:
                 print("\tDirect translation " + str(inputfragment) + " -> " + str(outputfragment), file=sys.stderr)
             elif str(inputfragment) in self.classifiers:
                 outputfragment =  self.classify(inputfragment, left, right, sentencepair, dttable, generalleftcontext, generalrightcontext, generaldokeywords, timbloptions, lm,tweight,lmweight)
+            elif ttable and str(inputfragment) in ttable:
+                outputfragment = None
+                for targetpattern, scores in sorted(ttable[str(inputfragment)],key=lambda x: -1* x[1][2]):
+                    outputfragment = Fragment(tuple( targetpattern.split(' ') ), inputfragment.id )
+                    print("\tFallback translation from phrasetable" + str(inputfragment) + " -> " + str(outputfragment), file=sys.stderr)
+                    break
+                if outputfragment is None:
+                    raise Exception("No outputfragment found in phrasetable!!! Shouldn't happen")
             elif dofragmentdecode and len(inputfragment) > 1:
                 print("\tFragment not directly translatable: " + str(inputfragment), file=sys.stderr)
                 solutions = []
@@ -703,9 +712,6 @@ class ClassifierExperts:
                         elif fragment in self.classifiers:
                             translatedfragmentation.append( self.classify( left + tuple(translatedfragmentation), tuple(['{UNKNOWN}'] * 10), sentencepair, dttable, generalleftcontext, generalrightcontext, generaldokeywords, timbloptions, lm,tweight,lmweight) )
                     solutions.append(translatedfragmentation)
-
-
-
             else:
                 #no translation found
                 outputfragment = Fragment(None, inputfragment.id)
@@ -716,11 +722,11 @@ class ClassifierExperts:
     def loaddttable(self):
         return loaddttable(self.workdir + '/directtranslation.table')
 
-    def test(self, data, outputfile, leftcontext, rightcontext, dokeywords, timbloptions, lm=None,tweight=1,lmweight=1, dofragmentdecode=True):
+    def test(self, data, outputfile, leftcontext, rightcontext, dokeywords, timbloptions, lm=None,ttable=None,tweight=1,lmweight=1, dofragmentdecode=True):
         dttable = self.loaddttable()
         writer = Writer(outputfile)
         for sentencepair in data:
-            sentencepair = self.processsentence(sentencepair, dttable, leftcontext, rightcontext, dokeywords, timbloptions, lm, tweight, lmweight, dofragmentdecode)
+            sentencepair = self.processsentence(sentencepair, dttable, leftcontext, rightcontext, dokeywords, timbloptions, lm, ttable, tweight, lmweight, dofragmentdecode)
             writer.write(sentencepair)
         writer.close()
 
@@ -728,7 +734,7 @@ class ClassifierExperts:
     def decodefragments(self, inputfragment, dttable):
         assert isinstance(inputfragment, tuple)
         results = 0
-        for i in reverse(range(1,len(inputfragment))):
+        for i in reversed(range(1,len(inputfragment))):
             subfragment = " ".join(inputfragment[0:i])
             if subfragment in self.classifiers or subfragment in dttable:
                 fragmentation = [subfragment]
@@ -798,7 +804,7 @@ def main():
     parser.add_argument('--port',type=int, help="Server port (use with --server)", action='store',default=7893)
     parser.add_argument('--folds',type=int, help="Number of folds to use in for cross-validatio (used with -a)", action='store',default=10)
     parser.add_argument('--trainfortest',type=str, help="Do only limited training that covers a particular test set (speeds up training considerably)", action='store',default="")
-    parser.add_argument('-T','--ttable', type=str,help="Phrase translation table (file) to use when testing with --lm and without classifier training", action='store',default="")
+    parser.add_argument('-T','--ttable', type=str,help="Phrase translation table (file) to use, will be tried as a fallback when no classifiers are made, also required when testing with --lm and without classifier training", action='store',default="")
     args = parser.parse_args()
 
     try:
@@ -871,9 +877,16 @@ def main():
             experts = ClassifierExperts(args.output)
             print("Loading classifiers",file=sys.stderr)
             experts.load(timbloptions, args.leftcontext, args.rightcontext, args.keywords, None, args.autoconf)
+            if args.ttable:
+                print("Loading translation table",file=sys.stderr)
+                ttable = PhraseTable(args.ttable,False, False, "|||", 3, 0,None, None)
+            else:
+                print("WARNING: No phrase translation-table loaded as fallback (-T), recall may be less!!!!!")
+                time.sleep(5)
+
             print("Running...",file=sys.stderr)
             data = Reader(args.dataset)
-            experts.test(data, args.output + '.output.xml', args.leftcontext, args.rightcontext, args.keywords, timbloptions , lm, args.tmweight, args.lmweight, args.decodefragments)
+            experts.test(data, args.output + '.output.xml', args.leftcontext, args.rightcontext, args.keywords, timbloptions , lm, ttable, args.tmweight, args.lmweight, args.decodefragments)
         elif args.ttable:
             print("Loading translation table",file=sys.stderr)
             ttable = PhraseTable(args.ttable,False, False, "|||", 3, 0,None, None)
@@ -940,7 +953,7 @@ def main():
                 else:
                     sentencepair = plaintext2sentencepair(line)
                     if experts:
-                        sentencepair = experts.processsentence(sentencepair, dttable, args.leftcontext, args.rightcontext, args.keywords, timbloptions, lm, args.tmweight, args.lmweight, args.decodefragments)
+                        sentencepair = experts.processsentence(sentencepair, dttable, args.leftcontext, args.rightcontext, args.keywords, timbloptions, lm, ttable, args.tmweight, args.lmweight, args.decodefragments)
                     elif args.ttable:
                         pass #TODO
                     print(str(lxml.etree.tostring(sentencepair.xml(), encoding='utf-8',xml_declaration=False, pretty_print=True),'utf-8'), file=sys.stderr)
