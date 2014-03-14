@@ -231,10 +231,10 @@ def makeset(output, settype, workdir, source, target, sourcelang, targetlang, mo
     ttablefile = workdir + '/model/phrase-table.gz'
     gizamodelfile_t2s = workdir + '/giza.' + sourcelang + '-' + targetlang + '/' + sourcelang + '-' + targetlang + '.A3.final.gz'# pylint: disable=E1101
     gizamodelfile_s2t = workdir + '/giza.' + targetlang + '-' + sourcelang + '/' + targetlang + '-' + sourcelang + '.A3.final.gz'# pylint: disable=E1101
-    patternmodelfile_source = workdir + '/' + settype + '.' + sourcelang + '.indexedpatternmodel.colibri'# pylint: disable=E1101
-    patternmodelfile_target = workdir + '/' + settype + '.' + targetlang + '.indexedpatternmodel.colibri'# pylint: disable=E1101
-    classfile_source = workdir + '/' + sourcelang + '.cls'# pylint: disable=E1101
-    classfile_target = workdir + '/' + targetlang + '.cls'# pylint: disable=E1101
+    patternmodelfile_source = workdir + '/' + settype + '.' + sourcelang + '.colibri.indexedpatternmodel'# pylint: disable=E1101
+    patternmodelfile_target = workdir + '/' + settype + '.' + targetlang + '.colibri.indexedpatternmodel'# pylint: disable=E1101
+    classfile_source = workdir + '/' + sourcelang + '.colibri..cls'# pylint: disable=E1101
+    classfile_target = workdir + '/' + targetlang + '.colibri..cls'# pylint: disable=E1101
 
     if not os.path.exists(workdir):
         os.mkdir(workdir)
