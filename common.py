@@ -115,7 +115,7 @@ def extractpairs(ttablefile, gizamodelfile_s2t, gizamodelfile_t2s, patternmodelf
 
         #gather all target patterns found  in this sentence
         sourcepatterns = list(patternmodel_source.reverseindex_bysentence(sentence))
-        targetpatterns = [ targetpattern.decode(classdecoder_target) for targetpattern in patternmodel_target.reverseindex_bysentence(sentence) ]
+        targetpatterns = [ targetpattern.tostring(classdecoder_target) for targetpattern in patternmodel_target.reverseindex_bysentence(sentence) ]
 
         if DEBUG: print("(extractpatterns) processing sentence " + str(sentence) + ", collected " + str(len(sourcepatterns)) + " source patterns and " + str(len(targetpatterns)) + " target patterns", file=sys.stderr)
 
@@ -126,7 +126,7 @@ def extractpairs(ttablefile, gizamodelfile_s2t, gizamodelfile_t2s, patternmodelf
 
         #iterate over all source patterns found in this sentence
         for sourcepattern in sourcepatterns:
-            sourcepattern = sourcepattern.decode(classdecoder_source)
+            sourcepattern = sourcepattern.tostring(classdecoder_source)
             if any(( noword(x) for x in sourcepattern.split() ) ):
                 continue
 
