@@ -271,7 +271,7 @@ def buildpatternmodel(corpusname, sourcelang, targetlang, occurrencethreshold=2)
     if not runcmd('colibri-classencode -o ' + targetlang + ' ' + corpusname + '.' + targetlang, "Encoding target corpus", targetlang + ".colibri.cls", corpusname + '.' +  targetlang + ".colibri.dat"): return False
 
     if not runcmd('colibri-patternmodeller -c ' + sourcelang + '.colibri.cls -f ' + corpusname + '.' + sourcelang + '.colibri.dat ' + options + ' -o ' + corpusname + '.' +  sourcelang + '.colibri.indexedpatternmodel > /dev/null', "Generating pattern model for source",   corpusname + '.' +  sourcelang + ".colibri.indexedpatternmodel"): return False
-    if not runcmd('colibri-patternmodeller -c ' + targetlang + '.colibri.cls -f ' + corpusname + '.' + targetlang + '.colibri.dat ' + options + ' -o ' + corpusname + '.' +  sourcelang + '.colibri.indexedpatternmodel > /dev/null', "Generating pattern model for target",   corpusname + '.' +  targetlang + ".colibri.indexedpatternmodel"): return False
+    if not runcmd('colibri-patternmodeller -c ' + targetlang + '.colibri.cls -f ' + corpusname + '.' + targetlang + '.colibri.dat ' + options + ' -o ' + corpusname + '.' +  targetlang + '.colibri.indexedpatternmodel > /dev/null', "Generating pattern model for target",   corpusname + '.' +  targetlang + ".colibri.indexedpatternmodel"): return False
 
     return True
 
