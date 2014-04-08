@@ -115,7 +115,7 @@ def extractpairs(ttablefile, gizamodelfile_s2t, gizamodelfile_t2s, patternmodelf
 
         #gather all target patterns found  in this sentence
         sourcepatterns = list(patternmodel_source.reverseindex_bysentence(sentence))
-        targetpatterns = [ targetpattern.decode(classdecoder_target) for targetpattern in patternmodel_target.reverseindex_bysentence(sentence) ]
+        targetpatterns = [ targetpattern.tostring(classdecoder_target) for targetpattern in patternmodel_target.reverseindex_bysentence(sentence) ]
 
         if DEBUG: print("(extractpatterns) processing sentence " + str(sentence) + ", collected " + str(len(sourcepatterns)) + " source patterns and " + str(len(targetpatterns)) + " target patterns", file=sys.stderr)
 
@@ -126,40 +126,40 @@ def extractpairs(ttablefile, gizamodelfile_s2t, gizamodelfile_t2s, patternmodelf
 
         #iterate over all source patterns found in this sentence
         for sourcepattern in sourcepatterns:
-            sourcepattern = sourcepattern.decode(classdecoder_source)
-            if any(( noword(x) for x in sourcepattern.split() ) ):
+            sourcepattern_s = sourcepattern.tostring(classdecoder_source)
+            if any(( noword(x) for x in sourcepattern_s.split() ) ):
                 continue
 
 
-            sourceindices = [ (x,y) for x,y in patternmodel_source.indices(sourcepattern) if x == sentence ]
-            source_n = sourcepattern.count(" ") + 1
+            sourceindices = [ (x,y) for x,y in patternmodel_source[sourcepattern] if x == sentence ]
+            source_n = sourcepattern_s.count(" ") + 1
             assert bool(sourceindices)
-            if sourcepattern in ttable:
-                if DEBUG: print("(extractpatterns) -- source pattern candidate " + str(sourcepattern) + " (occuring " + str(len(sourceindices)) + " time(s)), has " + str(len(ttable[sourcepattern])) + " translation options in phrase-table" , file=sys.stderr)
+            if sourcepattern_s in ttable:
+                if DEBUG: print("(extractpatterns) -- source pattern candidate " + str(sourcepattern_s) + " (occuring " + str(len(sourceindices)) + " time(s)), has " + str(len(ttable[sourcepattern_s])) + " translation options in phrase-table" , file=sys.stderr)
                 sourcesentence = s2t.source
                 targetsentence = s2t.target
 
-                targetoptions = sorted( ( (targetpattern, scores) for targetpattern, scores in ttable[sourcepattern] ) , key=lambda x: x[1] )
+                targetoptions = sorted( ( (targetpattern_s, scores) for targetpattern_s, scores in ttable[sourcepattern_s] ) , key=lambda x: x[1] )
                 bestscore = targetoptions[0][1][0] * targetoptions[0][1][2]
 
                 #iterate over the target patterns in the phrasetable
-                for targetpattern, scores in ttable[sourcepattern]:
-                    if DEBUG: print("(extractpatterns) -- considering target pattern from phrase-table: " + str(targetpattern) , file=sys.stderr)
-                    if targetpattern in targetpatterns:
-                        if any(( noword(x) for x in targetpattern.split() ) ):
+                for targetpattern_s, scores in ttable[sourcepattern_s]:
+                    if DEBUG: print("(extractpatterns) -- considering target pattern from phrase-table: " + str(targetpattern_s) , file=sys.stderr)
+                    if targetpattern_s in targetpatterns:
+                        if any(( noword(x) for x in targetpattern_s.split() ) ):
                             continue
                         joinedprob = scores[0] * scores[2]
                         if joinedprob < bestscore * divergencefrombestthreshold:
                             continue
 
                         #we have a pair, occurring in pattern models and phrase table
-                        target_n = targetpattern.count(" ") + 1
+                        target_n = targetpattern_s.count(" ") + 1
 
                         #obtain positional offsets for source and target in sentence
-                        targetindices = [ (x,y) for x,y in patternmodel_target.indices(targetpattern) if x == sentence]
+                        targetindices = [ (x,y) for x,y in patternmodel_target[classencoder_target.buildpattern(targetpattern_s)] if x == sentence]
                         assert bool(targetindices)
 
-                        if DEBUG: print("(extractpatterns) --- found target pattern candidate " + str(targetpattern) + " (occuring " + str(len(targetindices)) + " time(s))" , file=sys.stderr)
+                        if DEBUG: print("(extractpatterns) --- found target pattern candidate " + str(targetpattern_s) + " (occuring " + str(len(targetindices)) + " time(s))" , file=sys.stderr)
 
                         #yield the pair and full context
                         for _, sourceoffset in sourceindices:
@@ -177,7 +177,7 @@ def extractpairs(ttablefile, gizamodelfile_s2t, gizamodelfile_t2s, patternmodelf
                                         break
                                 if valid:
                                     if DEBUG: print("(extractpatterns) --- ok", file=sys.stderr)
-                                    yield sourcepattern, targetpattern, sourceoffset, targetoffset, tuple(sourcesentence), tuple(targetsentence), sentence
+                                    yield sourcepattern_s, targetpattern_s, sourceoffset, targetoffset, tuple(sourcesentence), tuple(targetsentence), sentence
 
 
 def generate(testoutput, ttablefile, gizamodelfile_s2t, gizamodelfile_t2s, patternmodelfile_source, patternmodelfile_target, classfile_source, classfile_target, size =0, joinedprobabilitythreshold = 0.01, divergencefrombestthreshold=0.8,DEBUG = False):
@@ -231,10 +231,10 @@ def makeset(output, settype, workdir, source, target, sourcelang, targetlang, mo
     ttablefile = workdir + '/model/phrase-table.gz'
     gizamodelfile_t2s = workdir + '/giza.' + sourcelang + '-' + targetlang + '/' + sourcelang + '-' + targetlang + '.A3.final.gz'# pylint: disable=E1101
     gizamodelfile_s2t = workdir + '/giza.' + targetlang + '-' + sourcelang + '/' + targetlang + '-' + sourcelang + '.A3.final.gz'# pylint: disable=E1101
-    patternmodelfile_source = workdir + '/' + settype + '.' + sourcelang + '.indexedpatternmodel.colibri'# pylint: disable=E1101
-    patternmodelfile_target = workdir + '/' + settype + '.' + targetlang + '.indexedpatternmodel.colibri'# pylint: disable=E1101
-    classfile_source = workdir + '/' + sourcelang + '.cls'# pylint: disable=E1101
-    classfile_target = workdir + '/' + targetlang + '.cls'# pylint: disable=E1101
+    patternmodelfile_source = workdir + '/' + settype + '.' + sourcelang + '.colibri.indexedpatternmodel'# pylint: disable=E1101
+    patternmodelfile_target = workdir + '/' + settype + '.' + targetlang + '.colibri.indexedpatternmodel'# pylint: disable=E1101
+    classfile_source = workdir + '/' + sourcelang + '.colibri.cls'# pylint: disable=E1101
+    classfile_target = workdir + '/' + targetlang + '.colibri.cls'# pylint: disable=E1101
 
     if not os.path.exists(workdir):
         os.mkdir(workdir)
@@ -271,7 +271,7 @@ def buildpatternmodel(corpusname, sourcelang, targetlang, occurrencethreshold=2)
     if not runcmd('colibri-classencode -o ' + targetlang + ' ' + corpusname + '.' + targetlang, "Encoding target corpus", targetlang + ".colibri.cls", corpusname + '.' +  targetlang + ".colibri.dat"): return False
 
     if not runcmd('colibri-patternmodeller -c ' + sourcelang + '.colibri.cls -f ' + corpusname + '.' + sourcelang + '.colibri.dat ' + options + ' -o ' + corpusname + '.' +  sourcelang + '.colibri.indexedpatternmodel > /dev/null', "Generating pattern model for source",   corpusname + '.' +  sourcelang + ".colibri.indexedpatternmodel"): return False
-    if not runcmd('colibri-patternmodeller -c ' + targetlang + '.colibri.cls -f ' + corpusname + '.' + targetlang + '.colibri.dat ' + options + ' -o ' + corpusname + '.' +  sourcelang + '.colibri.indexedpatternmodel > /dev/null', "Generating pattern model for target",   corpusname + '.' +  targetlang + ".colibri.indexedpatternmodel"): return False
+    if not runcmd('colibri-patternmodeller -c ' + targetlang + '.colibri.cls -f ' + corpusname + '.' + targetlang + '.colibri.dat ' + options + ' -o ' + corpusname + '.' +  targetlang + '.colibri.indexedpatternmodel > /dev/null', "Generating pattern model for target",   corpusname + '.' +  targetlang + ".colibri.indexedpatternmodel"): return False
 
     return True
 
