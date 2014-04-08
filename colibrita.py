@@ -776,12 +776,13 @@ def getlimit(testset):
 
 def main():
     parser = argparse.ArgumentParser(description="Colibrita - Translation Assistance", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('--train',dest='settype',help="Training mode", action='store_const',const='train')
+    parser.add_argument('--train',dest='settype',help="Training mode using pregenerated training set (use with -f)", action='store_const',const='train')
+    parser.add_argument('--trainfromscratch',dest='settype',help="Build classifiers and train (without pregenerated XML trainingset)", action='store_const',const='trainfromscratch')
     parser.add_argument('--test',dest='settype',help="Test mode (against a specific test set)", action='store_const',const='test')
     parser.add_argument('--run',dest='settype',help="Run mode (reads input from stdin)", action='store_const',const='run')
     parser.add_argument('--server',dest='settype', help="Server mode (RESTFUL HTTP Server)", action='store_const',const='server')
     parser.add_argument('--igen',dest='settype',help="Instance generation without actual training", action='store_const',const='igen')
-    parser.add_argument('-f','--dataset', type=str,help="Dataset file", action='store',default="",required=False)
+    parser.add_argument('-f','--dataset', type=str,help="Dataset file (XML) for training or testing", action='store',default="",required=False)
     parser.add_argument('--debug','-d', help="Debug", action='store_true', default=False)
     parser.add_argument('-a','--autoconf', help="Automatically determine best feature configuration per expert (cross-validated), values for -l and -r are considered maxima, set -k to consider keywords, needs to be specified both at training time and at test time!", action='store_true',default=False)
     parser.add_argument('-l','--leftcontext',type=int, help="Left local context size", action='store',default=0)
@@ -804,7 +805,19 @@ def main():
     parser.add_argument('--port',type=int, help="Server port (use with --server)", action='store',default=7893)
     parser.add_argument('--folds',type=int, help="Number of folds to use in for cross-validatio (used with -a)", action='store',default=10)
     parser.add_argument('--trainfortest',type=str, help="Do only limited training that covers a particular test set (speeds up training considerably)", action='store',default="")
-    parser.add_argument('-T','--ttable', type=str,help="Phrase translation table (file) to use, will be tried as a fallback when no classifiers are made, also required when testing with --lm and without classifier training", action='store',default="")
+    parser.add_argument('-T','--ttable', type=str,help="Phrase translation table (file) to use, will be tried as a fallback when no classifiers are made, also required when testing with --lm and without classifier training, and when using --trainfromscratch", action='store',default="")
+
+    #setgen options
+    parser.add_argument('--source', type=str,help="Used with --trainfromscratch: Source language corpus", action='store',required=False)
+    parser.add_argument('--target', type=str,help="Used with --trainfromscratch: Target language corpus", action='store',required=False)
+    parser.add_argument('--sourcelang', type=str,help="Used with --trainfromscratch: Source language code (the fallback language)", action='store',required=False)
+    parser.add_argument('--targetlang', type=str,help="Used with --trainfromscratch: Target language code (the intended language)", action='store',required=False)
+    parser.add_argument('-p', dest='joinedprobabilitythreshold', help="Used with --trainfromscratch: Joined probabiity threshold for inclusion of fragments from phrase translation-table: min(P(s|t) * P(t|s))", type=float,action='store',default=0.01)
+    parser.add_argument('-D', dest='divergencefrombestthreshold', help="Used with --trainfromscratch: Maximum divergence from best translation option. If set to 0.8, the only alternatives considered are those that have a joined probability of equal or above 80\% of that the best translation option", type=float,action='store',default=0.8)
+
+    parser.add_argument('--mosesdir',type=str, help="Path to moses (for --trainfromscratch)",action='store',default="")
+    parser.add_argument('--bindir',type=str, help="Path to external bin dir (path where moses bins are installed, for --trainfromscratch)",action='store',default="/usr/local/bin")
+
     args = parser.parse_args()
 
     try:
@@ -820,7 +833,24 @@ def main():
         timbloptions += " --clones=" + str(args.timbl_clones)
 
 
-    if args.settype == 'train' or args.settype == 'igen':
+    if args.settype == 'trainfromscratch':
+        if not args.source:
+            print("--trainfromscratch requires parameter --source",file=sys.stderr)
+            sys.exit(2)
+        if not args.target:
+            print("--trainfromscratch requires parameter --target",file=sys.stderr)
+            sys.exit(2)
+        if not args.sourcelang:
+            print("--trainfromscratch requires parameter --sourcelang",file=sys.stderr)
+            sys.exit(2)
+        if not args.targetlang:
+            print("--trainfromscratch requires parameter --targetlang",file=sys.stderr)
+            sys.exit(2)
+        if not args.ttable:
+            print("--trainfromscratch requires parameter --ttable/-T",file=sys.stderr)
+            sys.exit(2)
+
+    elif args.settype == 'train' or args.settype == 'igen':
         if args.baseline:
             print("Baseline does not need further training, use --test instead", file=sys.stderr)
             sys.exit(2)
