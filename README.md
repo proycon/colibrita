@@ -30,27 +30,27 @@ Debian/Ubuntu-based Linux distributions.
 
 Colibrita depends on pynlpl and colibri-core. Install pynlpl:
 
-$ sudo easy_install3 pynlpl
+    $ sudo easy_install3 pynlpl
 
 Download colibri-core from https://github.com/proycon/colibri-core and install as follows:
 
-$ cd colibri-core
-$ bash bootstrap
-$ ./configure 
-$ make
-$ sudo make install
-$ sudo python3 ./setup.py build_ext 
-$ sudo python3 ./setup.py install
+    $ cd colibri-core
+    $ bash bootstrap
+    $ ./configure 
+    $ make
+    $ sudo make install
+    $ sudo python3 ./setup.py build_ext 
+    $ sudo python3 ./setup.py install
 
 Then install colibrita:
 
-$ cd colibrita
-$ sudo python3 ./setup.py install
+    $ cd colibrita
+    $ sudo python3 ./setup.py install
 
 Usage
 -------------
 
-
+    
 
 
 
