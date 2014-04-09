@@ -28,8 +28,8 @@ g++,  autoconf,  automake, autoconf-archive, libtool , libboost-dev, libboost-py
 If you intend to build your own training models, then you will also require the
 following two dependencies:
 
-    * **Moses** - https://github.com/moses-smt/mosesdecoder
-    * **GIZA++** - http://code.google.com/p/giza-pp/ 
+ * **Moses** - https://github.com/moses-smt/mosesdecoder
+ * **GIZA++** - http://code.google.com/p/giza-pp/ 
 
 Other unix systems including FreeBSD and Mac OS X will most likely work 
 too, but especially for that latter considerable extra effort may be required
