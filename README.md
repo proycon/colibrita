@@ -99,6 +99,9 @@ The following tools are available:
  * ``colibrita-manualsetbuild`` - Small interactive console-based script for creating
    datasets manually
 
+
+All tools take ``-h`` for help on usage options.
+
 Set generation
 --------------
 
