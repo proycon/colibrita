@@ -18,7 +18,7 @@ Colibrita was developed to test whether L2 context information aids in translati
 
 
 Installation
----------------
+===============
 
 Colibrita is written in Python 3. It is a complex system involving quite a
 number of dependencies.
@@ -81,7 +81,7 @@ http://lst.science.ru.nl/~proycon/mtevalscripts.tar.gz
 
 
 Usage
--------------
+===========
 
 The following tools are available:
 
@@ -101,7 +101,7 @@ The following tools are available:
    datasets manually
 
 Set generation
-- - - - - - - - 
+--------------
 
 Building a model starts with generating a training set from a parallel corpus.
 Ensure you have two plain-text files, one in the source language, one in the
@@ -132,7 +132,7 @@ A test set can be generated in the same fashion:
 
 
 Training
-- - - - - - -
+--------------
 
 The next step is feature extraction and classifier training:
 
@@ -173,7 +173,7 @@ Some notes:
    well and assumes a directory by this name exists
 
 Evaluation
-- - - - - - - 
+--------------
 
 System output can subsequently be evaluated against the test set using
 ``colibrita-evaluate``:
