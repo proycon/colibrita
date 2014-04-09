@@ -162,7 +162,7 @@ Some notes about this example:
    live setting.
 
 Testing
-- - - - - - 
+---------
 
 Testing follows a very similar syntax:
 
