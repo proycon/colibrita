@@ -12,9 +12,7 @@ their native L1 when they are uncertain of the proper word or expression in L2.
 These L1 fragments are subsequently translated, along with the L2 context, into
 L2 fragments.
 
-Colibrita was developed to test whether L2 context information aids in translation of L1 fragments. The results are accepted for publication in ACL 2014, in the paper:
-
-    Maarten van Gompel, Antal van den Bosch. Translation Assistance by Translation of L1 Fragments in an L2 Context. Proceedings of ACL 2014 Conference (to appear still)
+Colibrita was developed to test whether L2 context information aids in translation of L1 fragments. The results are accepted for publication in ACL 2014, in the paper: *Maarten van Gompel, Antal van den Bosch*. **Translation Assistance by Translation of L1 Fragments in an L2 Context**. Proceedings of ACL 2014 Conference (to appear still)
 
 
 Installation
@@ -29,6 +27,7 @@ g++,  autoconf,  automake, autoconf-archive, libtool , libboost-dev, libboost-py
 
 If you intend to build your own training models, then you will also require the
 following two dependencies:
+
     * **Moses** - https://github.com/moses-smt/mosesdecoder
     * **GIZA++** - http://code.google.com/p/giza-pp/ 
 
@@ -115,7 +114,9 @@ obtainable from http://lst.science.ru.nl/~proycon/colibrita-acl2014-data.zip :
 
 Given this input data, you can use Colibrita's *setgen* tool: 
 
-     $ colibrita-setgen --train --mosesdir=/path/to/mosesdecoder -S nl -T en -s europarl200k-train.nl.txt -t europarl200k-train.en.txt --bindir=/usr/local/bin -o europarl200k
+     $ colibrita-setgen --train --mosesdir=/path/to/mosesdecoder -S nl -T en \
+     -s europarl200k-train.nl.txt -t europarl200k-train.en.txt --bindir=/usr/local/bin \
+     -o europarl200k
 
 This tool will invoke Moses (which will in turn invoke GIZA++) and the
 Colibri-Core patternmodeller. It builds word alignments, a phrase-translation
@@ -128,7 +129,9 @@ and correspond to the parameters λ1 and λ2 in our ACL 2014 paper.
 
 A test set can be generated in the same fashion:
 
-     $ colibrita-setgen --test --mosesdir=/path/to/mosesdecoder -S nl -T en -s europarl200k-test.nl.txt -t europarl200k-test.en.txt --bindir=/usr/local/bin -o europarl200k
+     $ colibrita-setgen --test --mosesdir=/path/to/mosesdecoder -S nl -T en \
+     -s europarl200k-test.nl.txt -t europarl200k-test.en.txt --bindir=/usr/local/bin \
+     -o europarl200k
 
 
 Training
@@ -136,7 +139,8 @@ Training
 
 The next step is feature extraction and classifier training:
 
-    $ colibrita --train -f europarl200k.train.xml -l 1 -r 1 -o exp-l1r1 --Tclones 4 --trainfortest europarl200k-test.xml
+    $ colibrita --train -f europarl200k.train.xml -l 1 -r 1 \
+    -o exp-l1r1 --Tclones 4 --trainfortest europarl200k-test.xml
 
 
 The output will consist of a whole bunch of classifiers (ibase files) in the
@@ -162,7 +166,8 @@ Testing
 
 Testing follows a very similar syntax:
 
-    $ colibrita --test -f europarl200k.test.xml -l 1 -r 1 -o exp-l1r1 -T train-europarl200k/model/phrase-table.gz
+    $ colibrita --test -f europarl200k.test.xml -l 1 -r 1 \
+    -o exp-l1r1 -T train-europarl200k/model/phrase-table.gz
 
 This will generate a file exp-l1r1-output.xml that contains the system output
 
@@ -178,7 +183,8 @@ Evaluation
 System output can subsequently be evaluated against the test set using
 ``colibrita-evaluate``:
 
-    $ colibrita-evaluate --mtevaldir /path/to/mtevalscripts --ref europarl200k.test.xml --out exp-l1r1-output.xml
+    $ colibrita-evaluate --mtevaldir /path/to/mtevalscripts \
+    --ref europarl200k.test.xml --out exp-l1r1-output.xml
 
 A summary of all Scores will be written in ``exp-l1r1-output.summary.score`` .
 
