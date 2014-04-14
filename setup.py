@@ -49,5 +49,5 @@ setup(
     },
     #include_package_data=True,
     #package_data = {'foliatools': ['*.xsl'] },
-    install_requires=['colibricore >= 0.4', 'pynlpl >= 0.6.5', 'lxml >= 2.2']
+    install_requires=['colibricore >= 0.4', 'colibrimt >= 0.1.3', 'pynlpl >= 0.6.5', 'lxml >= 2.2']
 )
