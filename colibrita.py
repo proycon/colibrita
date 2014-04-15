@@ -19,8 +19,8 @@ from copy import copy
 from colibrita.format import Writer, Reader, Fragment, Alternative
 from colibrita.common import plaintext2sentencepair
 from colibrita.baseline import makebaseline
+from colibrimt.alignmentmodel import AlignmentModel
 from pynlpl.lm.lm import ARPALanguageModel
-from pynlpl.formats.moses import PhraseTable
 
 try:
     from twisted.web import server, resource
@@ -805,7 +805,7 @@ def main():
     parser.add_argument('--port',type=int, help="Server port (use with --server)", action='store',default=7893)
     parser.add_argument('--folds',type=int, help="Number of folds to use in for cross-validatio (used with -a)", action='store',default=10)
     parser.add_argument('--trainfortest',type=str, help="Do only limited training that covers a particular test set (speeds up training considerably)", action='store',default="")
-    parser.add_argument('-T','--ttable', type=str,help="Phrase translation table (file) to use, will be tried as a fallback when no classifiers are made, also required when testing with --lm and without classifier training, and when using --trainfromscratch", action='store',default="")
+    parser.add_argument('-T','--ttable', type=str,help="Phrase translation table (file) to use, must be a Colibri alignment model (use colibri-mosesphrasetable2alignmodel). Will be tried as a fallback when no classifiers are made, also required when testing with --lm and without classifier training, and when using --trainfromscratch", action='store',default="")
 
     #setgen options
     parser.add_argument('--source', type=str,help="Used with --trainfromscratch: Source language corpus", action='store',required=False)
@@ -849,6 +849,8 @@ def main():
         if not args.ttable:
             print("--trainfromscratch requires parameter --ttable/-T",file=sys.stderr)
             sys.exit(2)
+
+
 
     elif args.settype == 'train' or args.settype == 'igen':
         if args.baseline:
@@ -908,8 +910,10 @@ def main():
             print("Loading classifiers",file=sys.stderr)
             experts.load(timbloptions, args.leftcontext, args.rightcontext, args.keywords, None, args.autoconf)
             if args.ttable:
-                print("Loading translation table",file=sys.stderr)
-                ttable = PhraseTable(args.ttable,False, False, "|||", 3, 0,None, None)
+                print("Loading translation table (colibri alignment model)",file=sys.stderr)
+                ttable = AlignmentModel();
+                ttable.load(args.ttable)
+                #ttable = PhraseTable(args.ttable,False, False, "|||", 3, 0,None, None)
             else:
                 print("WARNING: No phrase translation-table loaded as fallback (-T), recall may be less!!!!!")
                 time.sleep(5)
@@ -919,7 +923,10 @@ def main():
             experts.test(data, args.output + '.output.xml', args.leftcontext, args.rightcontext, args.keywords, timbloptions , lm, ttable, args.tmweight, args.lmweight, args.decodefragments)
         elif args.ttable:
             print("Loading translation table",file=sys.stderr)
-            ttable = PhraseTable(args.ttable,False, False, "|||", 3, 0,None, None)
+            ttable = AlignmentModel();
+            ttable.load(args.ttable)
+            #ttable = PhraseTable(args.ttable,False, False, "|||", 3, 0,None, None)
+
             data = Reader(args.dataset)
             if args.baseline:
                 print("Making baseline",file=sys.stderr)
@@ -972,7 +979,9 @@ def main():
             experts.load(timbloptions, args.leftcontext, args.rightcontext, args.keywords)
         elif args.ttable:
             print("Loading translation table",file=sys.stderr)
-            ttable = PhraseTable(args.ttable,False, False, "|||", 3, 0,None, None)
+            ttable = AlignmentModel()
+            ttable.load(args.ttable)
+            #ttable = PhraseTable(args.ttable,False, False, "|||", 3, 0,None, None)
 
         if args.settype == 'run':
             print("Reading from standard input, enclose words/phrases in fallback language in asteriskes (*), type q<enter> to quit",file=sys.stderr)

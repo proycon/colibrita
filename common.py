@@ -4,7 +4,8 @@ from colibrita.format import SentencePair, Fragment, Writer, Reader
 from pynlpl.formats.moses import PhraseTable
 from pynlpl.formats.giza import GizaModel
 from pynlpl.textprocessors import Tokenizer
-from colibricore import ClassDecoder, ClassEncoder, IndexedPatternModel
+from colibricore import ClassDecoder, ClassEncoder, PatternModelOptions, IndexedPatternModel
+from colibrimt.alignmentmodel import AlignmentModel
 
 import sys
 import os
@@ -61,7 +62,9 @@ def plaintext2sentencepair(text,id=1):
 
 def extractpairs(ttablefile, gizamodelfile_s2t, gizamodelfile_t2s, patternmodelfile_source, patternmodelfile_target, classfile_source, classfile_target, joinedprobabilitythreshold, divergencefrombestthreshold, DEBUG):
     if DEBUG: print("Loading phrase-table", file=sys.stderr)
-    ttable = PhraseTable(ttablefile,False, False, "|||", 3, 0,None, None, lambda x: x[0] * x[2] > joinedprobabilitythreshold)
+    #ttable = PhraseTable(ttablefile,False, False, "|||", 3, 0,None, None, lambda x: x[0] * x[2] > joinedprobabilitythreshold)
+    ttable = AlignmentModel()
+    ttable.load(ttablefile)
 
     if DEBUG: print("Loading GIZA model (s->t)", file=sys.stderr)
     gizamodel_s2t = GizaModel(gizamodelfile_s2t)
@@ -75,9 +78,11 @@ def extractpairs(ttablefile, gizamodelfile_s2t, gizamodelfile_t2s, patternmodelf
     classencoder_target = ClassEncoder(classfile_target)
 
     if DEBUG: print("Loading source pattern model " + patternmodelfile_source, file=sys.stderr)
-    patternmodel_source = IndexedPatternModel(patternmodelfile_source)
+    options = PatternModelOptions()
+    #options.DOREVERSEINDEX = False
+    patternmodel_source = IndexedPatternModel(patternmodelfile_source, options)
     if DEBUG: print("Loading target pattern model " + patternmodelfile_target, file=sys.stderr)
-    patternmodel_target = IndexedPatternModel(patternmodelfile_target)
+    patternmodel_target = IndexedPatternModel(patternmodelfile_target, options)
 
 
     #with open(sourcecorpusfile, 'r', encoding='utf-8') as f:
