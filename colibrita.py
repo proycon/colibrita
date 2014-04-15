@@ -9,9 +9,8 @@ import itertools
 import glob
 import math
 import timbl
-import lxml.etree
 import datetime
-import time
+import pickle
 from collections import defaultdict
 from urllib.parse import quote_plus, unquote_plus
 from copy import copy
@@ -19,6 +18,7 @@ from copy import copy
 from colibrita.format import Writer, Reader, Fragment, Alternative
 from colibrita.common import plaintext2sentencepair
 from colibrita.baseline import makebaseline
+from colibricore import ClassEncoder, ClassDecoder
 from colibrimt.alignmentmodel import AlignmentModel
 from pynlpl.lm.lm import ARPALanguageModel
 
@@ -38,36 +38,36 @@ try:
             self.args = args
             self.timbloptions = timbloptions
 
-        def render_GET(self, request):
-            self.numberRequests += 1
-            if b'input' in request.args:
-                request.setHeader(b"content-type", b"application/xml")
-                print("Server input: ", request.args[b'input'][0], file=sys.stderr)
-                line = str(request.args[b'input'][0],'utf-8')
-                sentencepair = plaintext2sentencepair(line)
-                if self.experts:
-                    sentencepair = self.experts.processsentence(sentencepair, self.dttable, self.args.leftcontext, self.args.rightcontext, self.args.keywords, self.timbloptions, self.lm, self.args.tmweight, self.args.lmweight)
-                elif self.ttable:
-                    pass #TODO
-                return lxml.etree.tostring(sentencepair.xml(), encoding='utf-8',xml_declaration=False, pretty_print=True)
-            else:
-                request.setHeader(b"content-type", b"text/html")
-                return b"""<?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
-<html>
-  <head>
-        <meta http-equiv="content-type" content="application/xhtml+xml; charset=utf-8"/>
-        <title>Colibrita &cdot; Translation Assistant</title>
-  </head>
-  <body>
-      Enter text in target language, enclose fall-back language content in asteriskes (*):<br />
-      <form action="/" method="get">
-          <input name="input" /><br />
-          <input type="submit">
-      </form>
-  </body>
-</html>"""
+        #def render_GET(self, request):
+        #    self.numberRequests += 1
+        #    if b'input' in request.args:
+        #        request.setHeader(b"content-type", b"application/xml")
+        #        print("Server input: ", request.args[b'input'][0], file=sys.stderr)
+        #        line = str(request.args[b'input'][0],'utf-8')
+        #        sentencepair = plaintext2sentencepair(line)
+        #        if self.experts:
+        #            sentencepair = self.experts.processsentence(sentencepair, self.dttable, self.args.leftcontext, self.args.rightcontext, self.args.keywords, self.timbloptions, self.lm, self.args.tmweight, self.args.lmweight)
+        #        elif self.ttable:
+        #            pass #TODO
+        #        return lxml.etree.tostring(sentencepair.xml(), encoding='utf-8',xml_declaration=False, pretty_print=True)
+        #    else:
+        #        request.setHeader(b"content-type", b"text/html")
+        #        return b"""<?xml version="1.0" encoding="utf-8"?>
+#<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+#<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+#<html>
+#  <head>
+#        <meta http-equiv="content-type" content="application/xhtml+xml; charset=utf-8"/>
+#        <title>Colibrita &cdot; Translation Assistant</title>
+#  </head>
+#  <body>
+#      Enter text in target language, enclose fall-back language content in asteriskes (*):<br />
+#      <form action="/" method="get">
+#          <input name="input" /><br />
+#          <input type="submit">
+#      </form>
+#  </body>
+#</html>"""
 
     class ColibritaServer:
         def __init__(self, port, experts, dttable, ttable, lm, args, timbloptions):
@@ -550,7 +550,7 @@ class ClassifierExperts:
 
 
 
-    def classify(self, inputfragment, left, right, sentencepair, dttable, generalleftcontext, generalrightcontext, generaldokeywords, timbloptions, lm=None,tweight=1,lmweight=1):
+    def classify(self, inputfragment, left, right, sentencepair, generalleftcontext, generalrightcontext, generaldokeywords, timbloptions, lm=None,tweight=1,lmweight=1):
         #translation by classifier
         classifier = self.classifiers[str(inputfragment)]
 
@@ -679,54 +679,53 @@ class ClassifierExperts:
 
         return outputfragment
 
-    def processsentence(self, sentencepair, dttable, generalleftcontext, generalrightcontext, generaldokeywords, timbloptions, lm=None,ttable=None,tweight=1,lmweight=1, dofragmentdecode=True):
+    def processsentence(self, sentencepair, ttable, sourceclassencoder, targetclassdecoder, generalleftcontext, generalrightcontext, generaldokeywords, timbloptions, lm=None,tweight=1,lmweight=1, dofragmentdecode=True):
         print("Processing sentence " + str(sentencepair.id),file=sys.stderr)
         sentencepair.ref = None
         sentencepair.output = copy(sentencepair.input)
 
         for left, inputfragment, right in sentencepair.inputfragments():
+            inputfragment_s = str(inputfragment)
+            inputfragment_p = sourceclassencoder.build(inputfragment_s)
             left = tuple(left.split())
             right = tuple(right.split())
-            if str(inputfragment) in dttable:
-                #direct translation
-                outputfragment = Fragment(tuple(dttable[str(inputfragment)].split()), inputfragment.id)
-                print("\tDirect translation " + str(inputfragment) + " -> " + str(outputfragment), file=sys.stderr)
-            elif str(inputfragment) in self.classifiers:
-                outputfragment =  self.classify(inputfragment, left, right, sentencepair, dttable, generalleftcontext, generalrightcontext, generaldokeywords, timbloptions, lm,tweight,lmweight)
-            elif ttable and str(inputfragment) in ttable:
+            if inputfragment_s in self.classifiers:
+                outputfragment =  self.classify(inputfragment_s, left, right, sentencepair, generalleftcontext, generalrightcontext, generaldokeywords, timbloptions, lm,tweight,lmweight)
+            elif ttable and inputfragment_p in ttable:
                 outputfragment = None
-                for targetpattern, scores in sorted(ttable[str(inputfragment)],key=lambda x: -1* x[1][2]):
-                    outputfragment = Fragment(tuple( targetpattern.split(' ') ), inputfragment.id )
+                for targetpattern, scores in sorted(ttable[inputfragment_p],key=lambda x: -1* x[1][2]):
+                    targetpattern_s = targetpattern.tostring(targetclassdecoder)
+                    outputfragment = Fragment(tuple( targetpattern_s.split(' ') ), inputfragment.id )
                     print("\tFallback translation from phrasetable" + str(inputfragment) + " -> " + str(outputfragment), file=sys.stderr)
                     break
                 if outputfragment is None:
                     raise Exception("No outputfragment found in phrasetable!!! Shouldn't happen")
-            elif dofragmentdecode and len(inputfragment) > 1:
-                print("\tFragment not directly translatable: " + str(inputfragment), file=sys.stderr)
-                solutions = []
-                for fragmentation in self.decodefragments(inputfragment, dttable):
-                    translatedfragmentation = []
-                    for fragment in fragmentation:
-                        if fragment in dttable:
-                            translatedfragmentation.append(dttable[fragment])
-                        elif fragment in self.classifiers:
-                            translatedfragmentation.append( self.classify( left + tuple(translatedfragmentation), tuple(['{UNKNOWN}'] * 10), sentencepair, dttable, generalleftcontext, generalrightcontext, generaldokeywords, timbloptions, lm,tweight,lmweight) )
-                    solutions.append(translatedfragmentation)
+            #elif dofragmentdecode and len(inputfragment) > 1:
+                #print("\tFragment not directly translatable: " + str(inputfragment), file=sys.stderr)
+                #solutions = []
+                #for fragmentation in self.decodefragments(inputfragment, dttable):
+                #    translatedfragmentation = []
+                #    for fragment in fragmentation:
+                #        if fragment in dttable:
+                #            translatedfragmentation.append(dttable[fragment])
+                #        elif fragment in self.classifiers:
+                #            translatedfragmentation.append( self.classify( left + tuple(translatedfragmentation), tuple(['{UNKNOWN}'] * 10), sentencepair, dttable, generalleftcontext, generalrightcontext, generaldokeywords, timbloptions, lm,tweight,lmweight) )
+                #    solutions.append(translatedfragmentation)
+                pass
             else:
                 #no translation found
                 outputfragment = Fragment(None, inputfragment.id)
-                print("\tNo translation for " + str(inputfragment), file=sys.stderr)
+                print("\tNo translation for " + inputfragment_s, file=sys.stderr)
             sentencepair.output = sentencepair.replacefragment(inputfragment, outputfragment, sentencepair.output)
         return sentencepair
 
     def loaddttable(self):
         return loaddttable(self.workdir + '/directtranslation.table')
 
-    def test(self, data, outputfile, leftcontext, rightcontext, dokeywords, timbloptions, lm=None,ttable=None,tweight=1,lmweight=1, dofragmentdecode=True):
-        dttable = self.loaddttable()
+    def test(self, data, outputfile, ttable, sourceclassencoder, targetclassdecoder, leftcontext, rightcontext, dokeywords, timbloptions, lm=None,tweight=1,lmweight=1, dofragmentdecode=True):
         writer = Writer(outputfile)
         for sentencepair in data:
-            sentencepair = self.processsentence(sentencepair, dttable, leftcontext, rightcontext, dokeywords, timbloptions, lm, ttable, tweight, lmweight, dofragmentdecode)
+            sentencepair = self.processsentence(sentencepair, ttable, sourceclassencoder, targetclassdecoder, leftcontext, rightcontext, dokeywords, timbloptions, lm, ttable, tweight, lmweight, dofragmentdecode)
             writer.write(sentencepair)
         writer.close()
 
@@ -776,19 +775,25 @@ def getlimit(testset):
 
 def main():
     parser = argparse.ArgumentParser(description="Colibrita - Translation Assistance", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('--train',dest='settype',help="Training mode using pregenerated training set (use with -f)", action='store_const',const='train')
-    parser.add_argument('--trainfromscratch',dest='settype',help="Build classifiers and train (without pregenerated XML trainingset)", action='store_const',const='trainfromscratch')
-    parser.add_argument('--test',dest='settype',help="Test mode (against a specific test set)", action='store_const',const='test')
-    parser.add_argument('--run',dest='settype',help="Run mode (reads input from stdin)", action='store_const',const='run')
-    parser.add_argument('--server',dest='settype', help="Server mode (RESTFUL HTTP Server)", action='store_const',const='server')
-    parser.add_argument('--igen',dest='settype',help="Instance generation without actual training", action='store_const',const='igen')
-    parser.add_argument('-f','--dataset', type=str,help="Dataset file (XML) for training or testing", action='store',default="",required=False)
+    parser.add_argument('--trainfromset',type=str,help="Training mode using pregenerated training set (use with -f)", action='store',default="")
+    parser.add_argument('--train',help="Build classifiers and train from scratch based on a parallel corpus", action='store_true')
+    parser.add_argument('--source', type=str,help="Source language corpus for training (plaintext)", action='store',required=False)
+    parser.add_argument('--target', type=str,help="Target language corpus for training (plaintext)", action='store',required=False)
+    parser.add_argument('-M','--phrasetable', type=str,help="Moses phrasetable to use for training (--train)", action='store',default="")
+    parser.add_argument('--trainfortest',type=str, help="Do only limited training that covers a particular test set (speeds up training and reduces memory considerably!), use with --train or --trainfromset", action='store',default="")
+    parser.add_argument('--test',type=str,help="Test mode (against a specific test set)", action='store_const',const='test')
+    parser.add_argument('--run',help="Run mode (reads input from stdin)", action='store_true')
+    parser.add_argument('--server', help="Server mode (RESTFUL HTTP Server)", action='store_true')
+    #parser.add_argument('--igen',dest='settype',help="Instance generation from a training set (-f) without actual training", action='store_const',const='igen')
+    #parser.add_argument('-f','--dataset', type=str,help="Dataset file (XML) for training or testing", action='store',default="",required=False)
     parser.add_argument('--debug','-d', help="Debug", action='store_true', default=False)
     parser.add_argument('-a','--autoconf', help="Automatically determine best feature configuration per expert (cross-validated), values for -l and -r are considered maxima, set -k to consider keywords, needs to be specified both at training time and at test time!", action='store_true',default=False)
     parser.add_argument('-l','--leftcontext',type=int, help="Left local context size", action='store',default=0)
     parser.add_argument('-r','--rightcontext',type=int,help="Right local context size", action='store',default=0)
+
+    parser.add_argument('--maxlength',type=int,help="Maximum length of phrases", action='store',default=10)
     parser.add_argument('-k','--keywords',help="Add global keywords in context", action='store_true',default=False)
-    parser.add_argument('-F','--decodefragments',help="Attempt to decode long unknown fragments by breaking it up into smaller parts", action='store_true',default=False)
+    parser.add_argument('-F','--decodefragments',help="Attempt to decode long unknown fragments by breaking it up into smaller parts (not implemented yet!)", action='store_true',default=False)
     parser.add_argument("--kt",dest="bow_absolute_threshold", help="Keyword needs to occur at least this many times in the context (absolute number)", type=int, action='store',default=3)
     parser.add_argument("--kp",dest="bow_prob_threshold", help="minimal P(translation|keyword)", type=int, action='store',default=0.001)
     parser.add_argument("--kg",dest="bow_filter_threshold", help="Keyword needs to occur at least this many times globally in the entire corpus (absolute number)", type=int, action='store',default=20)
@@ -804,14 +809,9 @@ def main():
     parser.add_argument('--tmweight',type=float, help="Translation model weight (when --lm is used)", action='store',default=1)
     parser.add_argument('--port',type=int, help="Server port (use with --server)", action='store',default=7893)
     parser.add_argument('--folds',type=int, help="Number of folds to use in for cross-validatio (used with -a)", action='store',default=10)
-    parser.add_argument('--trainfortest',type=str, help="Do only limited training that covers a particular test set (speeds up training considerably)", action='store',default="")
     parser.add_argument('-T','--ttable', type=str,help="Phrase translation table (file) to use, must be a Colibri alignment model (use colibri-mosesphrasetable2alignmodel). Will be tried as a fallback when no classifiers are made, also required when testing with --lm and without classifier training, and when using --trainfromscratch", action='store',default="")
 
     #setgen options
-    parser.add_argument('--source', type=str,help="Used with --trainfromscratch: Source language corpus", action='store',required=False)
-    parser.add_argument('--target', type=str,help="Used with --trainfromscratch: Target language corpus", action='store',required=False)
-    parser.add_argument('--sourcelang', type=str,help="Used with --trainfromscratch: Source language code (the fallback language)", action='store',required=False)
-    parser.add_argument('--targetlang', type=str,help="Used with --trainfromscratch: Target language code (the intended language)", action='store',required=False)
     parser.add_argument('-p', dest='joinedprobabilitythreshold', help="Used with --trainfromscratch: Joined probabiity threshold for inclusion of fragments from phrase translation-table: min(P(s|t) * P(t|s))", type=float,action='store',default=0.01)
     parser.add_argument('-D', dest='divergencefrombestthreshold', help="Used with --trainfromscratch: Maximum divergence from best translation option. If set to 0.8, the only alternatives considered are those that have a joined probability of equal or above 80\% of that the best translation option", type=float,action='store',default=0.8)
 
@@ -820,11 +820,9 @@ def main():
 
     args = parser.parse_args()
 
-    try:
-        if not args.settype in ['train','test','run','server', 'igen']:
-            raise ValueError
-    except ValueError:
-        print("Specify either --train, --test, --run, --server, --igen")
+
+    if not args.train and not args.test and not args.trainfromset:
+        print("Specify either --train, --test, --trainfromset")
         sys.exit(2)
 
 
@@ -833,33 +831,15 @@ def main():
         timbloptions += " --clones=" + str(args.timbl_clones)
 
 
-    if args.settype == 'trainfromscratch':
-        if not args.source:
-            print("--trainfromscratch requires parameter --source",file=sys.stderr)
-            sys.exit(2)
-        if not args.target:
-            print("--trainfromscratch requires parameter --target",file=sys.stderr)
-            sys.exit(2)
-        if not args.sourcelang:
-            print("--trainfromscratch requires parameter --sourcelang",file=sys.stderr)
-            sys.exit(2)
-        if not args.targetlang:
-            print("--trainfromscratch requires parameter --targetlang",file=sys.stderr)
-            sys.exit(2)
-        if not args.ttable:
-            print("--trainfromscratch requires parameter --ttable/-T",file=sys.stderr)
-            sys.exit(2)
 
 
+    if args.trainfromset:
 
-    elif args.settype == 'train' or args.settype == 'igen':
-        if args.baseline:
-            print("Baseline does not need further training, use --test instead", file=sys.stderr)
-            sys.exit(2)
-        elif not args.dataset:
-            print("Specify a dataset to use for training! (-f)", file=sys.stderr)
-            sys.exit(2)
-        elif args.lm:
+
+        ####################### TRAIN FROM XML SET (old method) #################################3
+        #TODO!! ADAPT TO NEW COLIBRI-MT STYLE!
+
+        if args.lm:
             print("WARNING: Language model specified during training, will be ignored", file=sys.stderr)
 
         print("Parameters: ", repr(args), file=sys.stderr)
@@ -871,27 +851,127 @@ def main():
         else:
             limit = None
 
-        data = Reader(args.dataset)
+        data = Reader(args.trainfromset)
         if not os.path.isdir(args.output):
             os.mkdir(args.output)
-        if not os.path.exists(args.output + '/directtranslation.table'):
+        if not os.path.exists(args.output + '/phrasetable.colibri.alignmodel-keys'):
+            print("Creating alignment model from Moses phrasetable, unconstrained",file=sys.stderr)
+            r = os.system("colibri-mosesphrasetable2alignmodel -i " + args.phrasetable + " -o " + args.output + "/phrasetable -j " + str(args.joinedprobabilitythreshold) + " -D " + str(args.divergencefrombestthreshold))
+            if r != 0:
+                print("Failed",file=sys.stderr)
+                sys.exit(2)
+
             print("Building classifiers", file=sys.stderr)
             experts.build(data, args.leftcontext, args.rightcontext, args.keywords, args.compute_bow_params, args.bow_absolute_threshold, args.bow_prob_threshold, args.bow_filter_threshold, timbloptions, limit)
-        elif args.settype == 'train':
+        else:
             print("Classifiers already built", file=sys.stderr)
             experts.load(timbloptions, args.leftcontext, args.rightcontext, args.keywords, limit, args.autoconf)
-        else:
-            print("Instances already generated",file=sys.stderr)
-        if args.settype == 'train' and args.autoconf:
+        if args.autoconf:
             experts.autoconf(args.folds, args.leftcontext, args.rightcontext, args.keywords, timbloptions, limit)
-        if args.settype == 'train': experts.train(args.leftcontext, args.rightcontext, args.keywords, limit)
-    elif args.settype == 'test':
+        experts.train(args.leftcontext, args.rightcontext, args.keywords, limit)
 
+
+
+    elif args.train:
+        ####################### TRAIN FROM SCRATCH #################################3
+        if not os.path.isdir(args.output):
+            os.mkdir(args.output)
+        if not args.source:
+            print("--train requires parameter --source",file=sys.stderr)
+            sys.exit(2)
+        if not args.target:
+            print("--train requires parameter --target",file=sys.stderr)
+            sys.exit(2)
+        if not args.phrasetable or not os.path.exists(args.phrasetable):
+            print("--train required a Moses phrase-translation table (-M). Not Found",file=sys.stderr)
+            sys.exit(2)
+
+        sourceclassfile  = args.source.replace('.txt','') + '.colibri.cls'
+        sourcecorpusfile  = args.source.replace('.txt','') + '.colibri.dat'
+        targetclassfile = args.target.replace('.txt','') + '.colibri.cls'
+        targetcorpusfile  = args.target.replace('.txt','') + '.colibri.dat'
+        conf = {'sourceclassfile':sourceclassfile, 'targetclassfile': targetclassfile,'sourcecorpusfile':sourcecorpusfile,'targetcorpusfile': targetcorpusfile}
+        pickle.dump(conf, open(args.output+'/colibrita.conf','wb'))
+
+        if not os.path.exists(sourcecorpusfile) or not os.path.exists(sourceclassfile):
+            print("Encoding source corpus",file=sys.stderr)
+            r = os.system("colibri-classencode " + args.source)
+            if r != 0:
+                print("Failed",file=sys.stderr)
+                sys.exit(2)
+
+        if not os.path.exists(targetcorpusfile) or not os.path.exists(targetclassfile):
+            print("Encoding target corpus",file=sys.stderr)
+            r = os.system("colibri-classencode " + args.target)
+            if r != 0:
+                print("Failed",file=sys.stderr)
+                sys.exit(2)
+
+        if args.trainfortest:
+            #Extract source-half of translation tabl
+            #print("Extracting source-side of phrasetable)",file=sys.stderr)
+            #os system("cat " + args.phrasetable + " | awk 'FS=\"|\" { gsub(/^[ \t]+/, \"\", $1); gsub(/[ \t]+$/, \"\", $1); if ($1 != \"\") print $1; }' | uniq  > "  + args.phrasetable  + ".sourcedump")
+
+            #print("Extracting target-side of phrasetable)",file=sys.stderr)
+            #os system("cat " + args.phrasetable + " | awk 'FS=\"|\" { gsub(/^[ \t]+/, \"\", $4); gsub(/[ \t]+$/, \"\", $4); if ($1 != \"\") print $4; }' | uniq  > "  + args.phrasetable  + ".sourcedump")
+            #test data to plain text intermediate format (fragments only)
+
+            if not os.path.exists(args.output + "/testfragments.colibri.unindexedpatternmodel"):
+                with open(args.output + "/testfragments.txt",'r',encoding='utf-8') as f:
+                    for sentencepair in Reader(args.trainfortest):
+                        for fragment in sentencepair.fragments(sentencepair.input, True).values():
+                            fragment = " ".join(fragment.value)
+                            f.write(fragment  +"\n")
+
+                print("Encoding test fragments",file=sys.stderr)
+                r = os.system("colibri-classencode -e -c " + sourceclassfile + " -d " + args.output)
+                if r != 0:
+                    print("Failed",file=sys.stderr)
+                    sys.exit(2)
+                os.rename(args.output + "/testfragments.colibri.cls", args.output + "/source.colibri.cls")
+                sourceclassfile =  args.output + "/source.colibri.cls"
+
+
+                #train an unindexed patternmodel model on testdata, to be used as constraint for the alignment model
+                print("Building patternmodel on fragments in testdata",file=sys.stderr)
+                r = os.system("colibri-patternmodeller -u -t 1 -l " + str(args.maxlength) + " -f " + args.output+"/testfragments.colibri.dat -o " + args.output+"/testfragments.colibri.unindexedpatternmodel")
+                if r != 0:
+                    print("Failed",file=sys.stderr)
+                    sys.exit(2)
+
+                os.unlink(args.output+"/testfragments.txt")
+
+            #Convert moses phrasetable to alignment model, constrained by testset
+            print("Creating alignment model from Moses phrasetable, constrained by testset",file=sys.stderr)
+            r = os.system("colibri-mosesphrasetable2alignmodel -i " + args.phrasetable + " -m " + args.output+"/testfragments.colibri.unindexedpatternmodel -o " + args.output + "/alignmodel -j " + str(args.joinedprobabilitythreshold) + " -D " + str(args.divergencefrombestthreshold))
+            if r != 0:
+                print("Failed",file=sys.stderr)
+                sys.exit(2)
+        else:
+
+            #Convert moses phrasetable to alignment model, unconstrained by testset
+            print("Creating alignment model from Moses phrasetable, unconstrained",file=sys.stderr)
+            r = os.system("colibri-mosesphrasetable2alignmodel -i " + args.phrasetable + " -o " + args.output + "/phrasetable -j " + str(args.joinedprobabilitythreshold) + " -D " + str(args.divergencefrombestthreshold))
+            if r != 0:
+                print("Failed",file=sys.stderr)
+                sys.exit(2)
+
+        print("Extracting features and building classifiers",file=sys.stderr)
+        r = os.system("colibri-extractfeatures --crosslingual -C -X -i " + args.output + "/phrasetable -f " + targetcorpusfile + " -l " + args.leftcontext + " -r " + args.rightcontext + " -o " + args.output)
+        if r != 0:
+            print("Failed",file=sys.stderr)
+            sys.exit(2)
+
+
+
+    if args.test:
         if not args.dataset:
             print("Specify a dataset to use for testing! (-f)", file=sys.stderr)
             sys.exit(2)
 
+
         print("Parameters: ", repr(args), file=sys.stderr)
+
 
         if args.lm:
             print("Loading Language model", file=sys.stderr)
@@ -903,103 +983,110 @@ def main():
             if not os.path.isdir(args.output):
                 print("Output directory " + args.output + " does not exist, did you forget to train the system first?", file=sys.stderr)
                 sys.exit(2)
-            if not os.path.exists(args.output + '/directtranslation.table'):
-                print("Direct translation table does not exist, did you forget to train the system first?", file=sys.stderr)
+            if not os.path.isdir(args.output + "/phrasetable.colibri.alignmodel-keys"):
+                print("Alignment model in output directory " + args.output + " does not exist, did you forget to train the system first?", file=sys.stderr)
                 sys.exit(2)
+            if not os.path.exists(args.output+'/colibrita.conf'):
+                print("No colibrita.conf found in specified directory (-o). Has the system been trained?", file=sys.stderr)
+                sys.exit(2)
+
+            print("Loading configuration", file=sys.stderr)
+            conf = pickle.load(open(args.output + '/colibrita.conf','rb'))
+            sourceclassfile = conf['sourceclassfile']
+            targetclassfile = conf['targetclassfile']
+
+            print("Loading source class encoder", file=sys.stderr)
+            sourceclassencoder = ClassEncoder(sourceclassfile)
+            print("Loading target class decoder", file=sys.stderr)
+            targetclassdecoder = ClassDecoder(targetclassfile)
+
+
             experts = ClassifierExperts(args.output)
             print("Loading classifiers",file=sys.stderr)
             experts.load(timbloptions, args.leftcontext, args.rightcontext, args.keywords, None, args.autoconf)
-            if args.ttable:
-                print("Loading translation table (colibri alignment model)",file=sys.stderr)
-                ttable = AlignmentModel();
-                ttable.load(args.ttable)
-                #ttable = PhraseTable(args.ttable,False, False, "|||", 3, 0,None, None)
-            else:
-                print("WARNING: No phrase translation-table loaded as fallback (-T), recall may be less!!!!!")
-                time.sleep(5)
+
+            print("Loading translation table (colibri alignment model)",file=sys.stderr)
+            ttable = AlignmentModel();
+            ttable.load(args.output + "/phrasetable")
+            #ttable = PhraseTable(args.ttable,False, False, "|||", 3, 0,None, None)
+
 
             print("Running...",file=sys.stderr)
             data = Reader(args.dataset)
-            experts.test(data, args.output + '.output.xml', args.leftcontext, args.rightcontext, args.keywords, timbloptions , lm, ttable, args.tmweight, args.lmweight, args.decodefragments)
-        elif args.ttable:
+            experts.test(data,ttable, args.output + '.output.xml', sourceclassencoder,targetclassdecoder, args.leftcontext, args.rightcontext, args.keywords, timbloptions , lm,  args.tmweight, args.lmweight, args.decodefragments)
+
+        elif args.baseline:
             print("Loading translation table",file=sys.stderr)
             ttable = AlignmentModel();
-            ttable.load(args.ttable)
+            ttable.load(args.output + "/phrasetable")
             #ttable = PhraseTable(args.ttable,False, False, "|||", 3, 0,None, None)
 
             data = Reader(args.dataset)
-            if args.baseline:
-                print("Making baseline",file=sys.stderr)
-                if args.lm:
-                    print("(with LM)",file=sys.stderr)
-                    makebaseline(ttable, args.output + '.output.xml', data, lm, args.tmweight, args.lmweight)
-                elif args.baseline:
-                    makebaseline(ttable, args.output + '.output.xml', data)
-            #elif args.moses:
-            #    print("Initiating Moses",file=sys.stderr)
-            #    mosesmodel = MosesModel(args.output, ttable)
-            else:
-                print("Specify --baseline or --moses", file=sys.stderr)
-
+            print("Making baseline",file=sys.stderr)
+            if args.lm:
+                print("(with LM)",file=sys.stderr)
+                makebaseline(ttable, args.output + '.output.xml', data, lm, args.tmweight, args.lmweight)
+            elif args.baseline:
+                makebaseline(ttable, args.output + '.output.xml', data)
 
 
         else:
             print("Don't know what to do! Specify some classifier options or -T with --lm or --baseline", file=sys.stderr)
-    elif args.settype == 'run' or args.settype == 'server':
+    #elif args.settype == 'run' or args.settype == 'server':
 
-        if args.settype == 'server':
-            try:
-                ColibritaServer
-            except:
-                print("Server not available, twisted not loaded...", file=sys.stderr)
-                sys.exit(2)
+    #    if args.settype == 'server':
+    #        try:
+    #            ColibritaServer
+    #        except:
+    #            print("Server not available, twisted not loaded...", file=sys.stderr)
+    #            sys.exit(2)
 
-        print("Parameters: ", repr(args), file=sys.stderr)
-        if args.lm:
-            print("Loading Language model", file=sys.stderr)
-            lm = ARPALanguageModel(args.lm)
-        else:
-            lm = None
+    #    print("Parameters: ", repr(args), file=sys.stderr)
+    #    if args.lm:
+    #        print("Loading Language model", file=sys.stderr)
+    #        lm = ARPALanguageModel(args.lm)
+    #    else:
+    #        lm = None
 
-        if args.autoconf:
-            print("Warning: Autoconf specified at testing time, has no effect. Has to be specified at training time", file=sys.stderr)
+    #    if args.autoconf:
+    #        print("Warning: Autoconf specified at testing time, has no effect. Has to be specified at training time", file=sys.stderr)
 
-        experts = None
-        dttable = {}
-        ttable = None
-        if args.leftcontext or args.rightcontext or args.keywords:
-            if not os.path.exists(args.output + '/directtranslation.table'):
-                print("Direct translation table does not exist, did you forget to train the system first?", file=sys.stderr)
-                sys.exit(2)
-            else:
-                print("Loading direct translation table", file=sys.stderr)
-                dttable = loaddttable(args.output + '/directtranslation.table')
-            experts = ClassifierExperts(args.output)
-            print("Loading classifiers",file=sys.stderr)
-            experts.load(timbloptions, args.leftcontext, args.rightcontext, args.keywords)
-        elif args.ttable:
-            print("Loading translation table",file=sys.stderr)
-            ttable = AlignmentModel()
-            ttable.load(args.ttable)
+    #    experts = None
+    #    dttable = {}
+    #    ttable = None
+    #    if args.leftcontext or args.rightcontext or args.keywords:
+    #        if not os.path.exists(args.output + '/directtranslation.table'):
+    #            print("Direct translation table does not exist, did you forget to train the system first?", file=sys.stderr)
+    #            sys.exit(2)
+    #        else:
+    #            print("Loading direct translation table", file=sys.stderr)
+    #            dttable = loaddttable(args.output + '/directtranslation.table')
+    #        experts = ClassifierExperts(args.output)
+    #        print("Loading classifiers",file=sys.stderr)
+    #        experts.load(timbloptions, args.leftcontext, args.rightcontext, args.keywords)
+    #    elif args.ttable:
+    #        print("Loading translation table",file=sys.stderr)
+    #        ttable = AlignmentModel()
+    #        ttable.load(args.ttable)
             #ttable = PhraseTable(args.ttable,False, False, "|||", 3, 0,None, None)
 
-        if args.settype == 'run':
-            print("Reading from standard input, enclose words/phrases in fallback language in asteriskes (*), type q<enter> to quit",file=sys.stderr)
-            for line in sys.stdin:
-                line = line.strip()
-                if line == "q":
-                    break
-                else:
-                    sentencepair = plaintext2sentencepair(line)
-                    if experts:
-                        sentencepair = experts.processsentence(sentencepair, dttable, args.leftcontext, args.rightcontext, args.keywords, timbloptions, lm, ttable, args.tmweight, args.lmweight, args.decodefragments)
-                    elif args.ttable:
-                        pass #TODO
-                    print(str(lxml.etree.tostring(sentencepair.xml(), encoding='utf-8',xml_declaration=False, pretty_print=True),'utf-8'), file=sys.stderr)
-                    print(sentencepair.outputstr())
-        elif args.settype == 'server':
-            print("Starting Colibrita server on port " + str(args.port),file=sys.stderr)
-            ColibritaServer(args.port, experts, dttable, ttable, lm, args, timbloptions)
+        #if args.settype == 'run':
+        #    print("Reading from standard input, enclose words/phrases in fallback language in asteriskes (*), type q<enter> to quit",file=sys.stderr)
+        #    for line in sys.stdin:
+        #        line = line.strip()
+        #        if line == "q":
+        #            break
+        #        else:
+        #            sentencepair = plaintext2sentencepair(line)
+        #            if experts:
+        #                sentencepair = experts.processsentence(sentencepair, ttable, args.leftcontext, args.rightcontext, args.keywords, timbloptions, lm, ttable, args.tmweight, args.lmweight, args.decodefragments)
+        #            elif args.ttable:
+        #                pass #TODO
+        #            print(str(lxml.etree.tostring(sentencepair.xml(), encoding='utf-8',xml_declaration=False, pretty_print=True),'utf-8'), file=sys.stderr)
+        #            print(sentencepair.outputstr())
+        #elif args.settype == 'server':
+        #    print("Starting Colibrita server on port " + str(args.port),file=sys.stderr)
+        #    ColibritaServer(args.port, experts, dttable, ttable, lm, args, timbloptions)
 
     print("All done.", file=sys.stderr)
 
