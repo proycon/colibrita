@@ -856,7 +856,7 @@ def main():
             os.mkdir(args.output)
         if not os.path.exists(args.output + '/phrasetable.colibri.alignmodel-keys'):
             print("Creating alignment model from Moses phrasetable, unconstrained",file=sys.stderr)
-            r = os.system("colibri-mosesphrasetable2alignmodel -i " + args.phrasetable + " -o " + args.output + "/phrasetable -j " + str(args.joinedprobabilitythreshold) + " -D " + str(args.divergencefrombestthreshold) + " -S " + sourceclassfile + " -T " + targetclassfile)
+            r = os.system("colibri-mosesphrasetable2alignmodel -i " + args.phrasetable + " -o " + args.output + "/phrasetable -j " + str(args.joinedprobabilitythreshold) + " -d " + str(args.divergencefrombestthreshold) + " -S " + sourceclassfile + " -T " + targetclassfile)
             if r != 0:
                 print("Failed",file=sys.stderr)
                 sys.exit(2)
@@ -943,7 +943,7 @@ def main():
 
             #Convert moses phrasetable to alignment model, constrained by testset
             print("Creating alignment model from Moses phrasetable, constrained by testset",file=sys.stderr)
-            r = os.system("colibri-mosesphrasetable2alignmodel -i " + args.phrasetable + " -m " + args.output+"/testfragments.colibri.unindexedpatternmodel -o " + args.output + "/alignmodel -j " + str(args.joinedprobabilitythreshold) + " -D " + str(args.divergencefrombestthreshold) + " -S " + sourceclassfile + " -T " + targetclassfile)
+            r = os.system("colibri-mosesphrasetable2alignmodel -i " + args.phrasetable + " -m " + args.output+"/testfragments.colibri.unindexedpatternmodel -o " + args.output + "/alignmodel -j " + str(args.joinedprobabilitythreshold) + " -d " + str(args.divergencefrombestthreshold) + " -S " + sourceclassfile + " -T " + targetclassfile)
             if r != 0:
                 print("Failed",file=sys.stderr)
                 sys.exit(2)
@@ -951,13 +951,13 @@ def main():
 
             #Convert moses phrasetable to alignment model, unconstrained by testset
             print("Creating alignment model from Moses phrasetable, unconstrained",file=sys.stderr)
-            r = os.system("colibri-mosesphrasetable2alignmodel -i " + args.phrasetable + " -o " + args.output + "/phrasetable -j " + str(args.joinedprobabilitythreshold) + " -D " + str(args.divergencefrombestthreshold) + " -S " + sourceclassfile + " -T " + targetclassfile)
+            r = os.system("colibri-mosesphrasetable2alignmodel -i " + args.phrasetable + " -o " + args.output + "/phrasetable -j " + str(args.joinedprobabilitythreshold) + " -d " + str(args.divergencefrombestthreshold) + " -S " + sourceclassfile + " -T " + targetclassfile)
             if r != 0:
                 print("Failed",file=sys.stderr)
                 sys.exit(2)
 
         print("Extracting features and building classifiers",file=sys.stderr)
-        r = os.system("colibri-extractfeatures --crosslingual -C -X -i " + args.output + "/phrasetable -f " + targetcorpusfile + " -l " + args.leftcontext + " -r " + args.rightcontext + " -o " + args.output)
+        r = os.system("colibri-extractfeatures --crosslingual -C -X -i " + args.output + "/phrasetable -f " + targetcorpusfile + " -l " + int(args.leftcontext) + " -r " + int(args.rightcontext) + " -o " + args.output)
         if r != 0:
             print("Failed",file=sys.stderr)
             sys.exit(2)
