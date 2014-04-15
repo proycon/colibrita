@@ -781,7 +781,7 @@ def main():
     parser.add_argument('--target', type=str,help="Target language corpus for training (plaintext)", action='store',required=False)
     parser.add_argument('-M','--phrasetable', type=str,help="Moses phrasetable to use for training (--train)", action='store',default="")
     parser.add_argument('--trainfortest',type=str, help="Do only limited training that covers a particular test set (speeds up training and reduces memory considerably!), use with --train or --trainfromset", action='store',default="")
-    parser.add_argument('--test',type=str,help="Test mode (against a specific test set)", action='store_const',const='test')
+    parser.add_argument('--test',help="Test mode (against a specific test set)", action='store_true')
     parser.add_argument('--run',help="Run mode (reads input from stdin)", action='store_true')
     parser.add_argument('--server', help="Server mode (RESTFUL HTTP Server)", action='store_true')
     #parser.add_argument('--igen',dest='settype',help="Instance generation from a training set (-f) without actual training", action='store_const',const='igen')
@@ -856,7 +856,7 @@ def main():
             os.mkdir(args.output)
         if not os.path.exists(args.output + '/phrasetable.colibri.alignmodel-keys'):
             print("Creating alignment model from Moses phrasetable, unconstrained",file=sys.stderr)
-            r = os.system("colibri-mosesphrasetable2alignmodel -i " + args.phrasetable + " -o " + args.output + "/phrasetable -j " + str(args.joinedprobabilitythreshold) + " -D " + str(args.divergencefrombestthreshold))
+            r = os.system("colibri-mosesphrasetable2alignmodel -i " + args.phrasetable + " -o " + args.output + "/phrasetable -j " + str(args.joinedprobabilitythreshold) + " -D " + str(args.divergencefrombestthreshold) + " -S " + sourceclassfile + " -T " + targetclassfile)
             if r != 0:
                 print("Failed",file=sys.stderr)
                 sys.exit(2)
@@ -943,7 +943,7 @@ def main():
 
             #Convert moses phrasetable to alignment model, constrained by testset
             print("Creating alignment model from Moses phrasetable, constrained by testset",file=sys.stderr)
-            r = os.system("colibri-mosesphrasetable2alignmodel -i " + args.phrasetable + " -m " + args.output+"/testfragments.colibri.unindexedpatternmodel -o " + args.output + "/alignmodel -j " + str(args.joinedprobabilitythreshold) + " -D " + str(args.divergencefrombestthreshold))
+            r = os.system("colibri-mosesphrasetable2alignmodel -i " + args.phrasetable + " -m " + args.output+"/testfragments.colibri.unindexedpatternmodel -o " + args.output + "/alignmodel -j " + str(args.joinedprobabilitythreshold) + " -D " + str(args.divergencefrombestthreshold) + " -S " + sourceclassfile + " -T " + targetclassfile)
             if r != 0:
                 print("Failed",file=sys.stderr)
                 sys.exit(2)
@@ -951,7 +951,7 @@ def main():
 
             #Convert moses phrasetable to alignment model, unconstrained by testset
             print("Creating alignment model from Moses phrasetable, unconstrained",file=sys.stderr)
-            r = os.system("colibri-mosesphrasetable2alignmodel -i " + args.phrasetable + " -o " + args.output + "/phrasetable -j " + str(args.joinedprobabilitythreshold) + " -D " + str(args.divergencefrombestthreshold))
+            r = os.system("colibri-mosesphrasetable2alignmodel -i " + args.phrasetable + " -o " + args.output + "/phrasetable -j " + str(args.joinedprobabilitythreshold) + " -D " + str(args.divergencefrombestthreshold) + " -S " + sourceclassfile + " -T " + targetclassfile)
             if r != 0:
                 print("Failed",file=sys.stderr)
                 sys.exit(2)
