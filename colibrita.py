@@ -888,8 +888,11 @@ def main():
 
         sourceclassfile  = args.source.replace('.txt','') + '.colibri.cls'
         sourcecorpusfile  = args.source.replace('.txt','') + '.colibri.dat'
+        sourcemodelfile  = args.source.replace('.txt','') + '.colibri.indexedpatternmodel'
         targetclassfile = args.target.replace('.txt','') + '.colibri.cls'
         targetcorpusfile  = args.target.replace('.txt','') + '.colibri.dat'
+        targetmodelfile  = args.target.replace('.txt','') + '.colibri.indexedpatternmodel'
+
         conf = {'sourceclassfile':sourceclassfile, 'targetclassfile': targetclassfile,'sourcecorpusfile':sourcecorpusfile,'targetcorpusfile': targetcorpusfile}
         pickle.dump(conf, open(args.output+'/colibrita.conf','wb'))
 
@@ -900,9 +903,24 @@ def main():
                 print("Failed",file=sys.stderr)
                 sys.exit(2)
 
+
+        if not os.path.exists(sourcemodelfile):
+            print("Building pattern model on source corpus",file=sys.stderr)
+            r = os.system("colibri-patternmodeller -2 -t 2 -l " + str(args.maxlength) + " -f " + sourcecorpusfile + " -o " + sourcemodelfile)
+            if r != 0:
+                print("Failed",file=sys.stderr)
+                sys.exit(2)
+
         if not os.path.exists(targetcorpusfile) or not os.path.exists(targetclassfile):
             print("Encoding target corpus",file=sys.stderr)
             r = os.system("colibri-classencode " + args.target)
+            if r != 0:
+                print("Failed",file=sys.stderr)
+                sys.exit(2)
+
+        if not os.path.exists(targetmodelfile):
+            print("Building pattern model on target corpus",file=sys.stderr)
+            r = os.system("colibri-patternmodeller -2 -t 2 -l " + str(args.maxlength) + " -f " + targetcorpusfile + " -o " + targetmodelfile)
             if r != 0:
                 print("Failed",file=sys.stderr)
                 sys.exit(2)
@@ -957,7 +975,7 @@ def main():
                 sys.exit(2)
 
         print("Extracting features and building classifiers",file=sys.stderr)
-        r = os.system("colibri-extractfeatures --crosslingual -C -X -i " + args.output + "/phrasetable -f " + targetcorpusfile + " -l " + str(args.leftcontext) + " -r " + str(args.rightcontext) + " -o " + args.output)
+        r = os.system("colibri-extractfeatures --crosslingual -C -X -i " + args.output + "/phrasetable -f " + targetcorpusfile + " -l " + str(args.leftcontext) + " -r " + str(args.rightcontext) + " -o " + args.output + " -s " + sourcemodelfile + " -t " + targetmodelfile + " -S " + sourceclassfile + " -T " + targetclassfile + " -c " + targetclassfile)
         if r != 0:
             print("Failed",file=sys.stderr)
             sys.exit(2)
