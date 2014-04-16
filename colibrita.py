@@ -960,22 +960,25 @@ def main():
                 os.unlink(args.output+"/testfragments.txt")
 
             #Convert moses phrasetable to alignment model, constrained by testset
-            print("Creating alignment model from Moses phrasetable, constrained by testset",file=sys.stderr)
-            r = os.system("colibri-mosesphrasetable2alignmodel -i " + args.phrasetable + " -m " + args.output+"/testfragments.colibri.unindexedpatternmodel -o " + args.output + "/alignmodel -j " + str(args.joinedprobabilitythreshold) + " -d " + str(args.divergencefrombestthreshold) + " -S " + sourceclassfile + " -T " + targetclassfile)
+            cmd = "colibri-mosesphrasetable2alignmodel -i " + args.phrasetable + " -m " + args.output+"/testfragments.colibri.unindexedpatternmodel -o " + args.output + "/alignmodel -j " + str(args.joinedprobabilitythreshold) + " -d " + str(args.divergencefrombestthreshold) + " -S " + sourceclassfile + " -T " + targetclassfile
+            print("Creating alignment model from Moses phrasetable, constrained by testset: " + cmd,file=sys.stderr)
+            r = os.system(cmd)
             if r != 0:
                 print("Failed",file=sys.stderr)
                 sys.exit(2)
         else:
 
             #Convert moses phrasetable to alignment model, unconstrained by testset
-            print("Creating alignment model from Moses phrasetable, unconstrained",file=sys.stderr)
-            r = os.system("colibri-mosesphrasetable2alignmodel -i " + args.phrasetable + " -o " + args.output + "/phrasetable -j " + str(args.joinedprobabilitythreshold) + " -d " + str(args.divergencefrombestthreshold) + " -S " + sourceclassfile + " -T " + targetclassfile)
+            cmd = "colibri-mosesphrasetable2alignmodel -i " + args.phrasetable + " -o " + args.output + "/phrasetable -j " + str(args.joinedprobabilitythreshold) + " -d " + str(args.divergencefrombestthreshold) + " -S " + sourceclassfile + " -T " + targetclassfile
+            print("Creating alignment model from Moses phrasetable, unconstrained:" + cmd,file=sys.stderr)
+            r = os.system(cmd)
             if r != 0:
                 print("Failed",file=sys.stderr)
                 sys.exit(2)
 
-        print("Extracting features and building classifiers",file=sys.stderr)
-        r = os.system("colibri-extractfeatures --crosslingual -C -X -i " + args.output + "/phrasetable -f " + targetcorpusfile + " -l " + str(args.leftcontext) + " -r " + str(args.rightcontext) + " -o " + args.output + " -s " + sourcemodelfile + " -t " + targetmodelfile + " -S " + sourceclassfile + " -T " + targetclassfile + " -c " + targetclassfile)
+        cmd = "colibri-extractfeatures --crosslingual -C -X -i " + args.output + "/phrasetable -f " + targetcorpusfile + " -l " + str(args.leftcontext) + " -r " + str(args.rightcontext) + " -o " + args.output + " -s " + sourcemodelfile + " -t " + targetmodelfile + " -S " + sourceclassfile + " -T " + targetclassfile + " -c " + targetclassfile
+        print("Extracting features and building classifiers: " + cmd,file=sys.stderr)
+        r = os.system(cmd)
         if r != 0:
             print("Failed",file=sys.stderr)
             sys.exit(2)
