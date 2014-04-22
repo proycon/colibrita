@@ -16,7 +16,6 @@ from urllib.parse import quote_plus, unquote_plus
 from copy import copy
 
 from colibrita.format import Writer, Reader, Fragment, Alternative
-from colibrita.common import plaintext2sentencepair
 from colibrita.baseline import makebaseline
 from colibricore import ClassEncoder, ClassDecoder
 from colibrimt.alignmentmodel import AlignmentModel
@@ -856,7 +855,7 @@ def main():
             os.mkdir(args.output)
         if not os.path.exists(args.output + '/phrasetable.colibri.alignmodel-keys'):
             print("Creating alignment model from Moses phrasetable, unconstrained",file=sys.stderr)
-            r = os.system("colibri-mosesphrasetable2alignmodel -i " + args.phrasetable + " -o " + args.output + "/phrasetable -j " + str(args.joinedprobabilitythreshold) + " -d " + str(args.divergencefrombestthreshold) + " -S " + sourceclassfile + " -T " + targetclassfile)
+            r = os.system("colibri-mosesphrasetable2alignmodel -i " + args.phrasetable + " -o " + args.output + "/phrasetable -j " + str(args.joinedprobabilitythreshold) + " -d " + str(args.divergencefrombestthreshold) + " -S " + args.sourceclassfile + " -T " + args.targetclassfile)
             if r != 0:
                 print("Failed",file=sys.stderr)
                 sys.exit(2)
@@ -976,7 +975,7 @@ def main():
                 print("Failed",file=sys.stderr)
                 sys.exit(2)
 
-        cmd = "colibri-extractfeatures --crosslingual -C -X -i " + args.output + "/phrasetable -f " + targetcorpusfile + " -l " + str(args.leftcontext) + " -r " + str(args.rightcontext) + " -o " + args.output + " -s " + sourcemodelfile + " -t " + targetmodelfile + " -S " + sourceclassfile + " -T " + targetclassfile + " -c " + targetclassfile
+        cmd = "colibri-extractfeatures --crosslingual -C -X -i " + args.output + "/phrasetable -f " + targetcorpusfile + " -l " + str(args.leftcontext) + " -r " + str(args.rightcontext) + " -o " + args.output + "/colibri.alignmodel -s " + sourcemodelfile + " -t " + targetmodelfile + " -S " + sourceclassfile + " -T " + targetclassfile + " -c " + targetclassfile
         print("Extracting features and building classifiers: " + cmd,file=sys.stderr)
         r = os.system(cmd)
         if r != 0:
@@ -1004,7 +1003,7 @@ def main():
             if not os.path.isdir(args.output):
                 print("Output directory " + args.output + " does not exist, did you forget to train the system first?", file=sys.stderr)
                 sys.exit(2)
-            if not os.path.isdir(args.output + "/phrasetable.colibri.alignmodel-keys"):
+            if not os.path.isdir(args.output + "/colibri.alignmodel"):
                 print("Alignment model in output directory " + args.output + " does not exist, did you forget to train the system first?", file=sys.stderr)
                 sys.exit(2)
             if not os.path.exists(args.output+'/colibrita.conf'):
@@ -1027,9 +1026,7 @@ def main():
             experts.load(timbloptions, args.leftcontext, args.rightcontext, args.keywords, None, args.autoconf)
 
             print("Loading translation table (colibri alignment model)",file=sys.stderr)
-            ttable = AlignmentModel();
-            ttable.load(args.output + "/phrasetable")
-            #ttable = PhraseTable(args.ttable,False, False, "|||", 3, 0,None, None)
+            ttable = AlignmentModel(args.output + "/colibri.alignmodel");
 
 
             print("Running...",file=sys.stderr)
