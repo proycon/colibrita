@@ -1049,7 +1049,7 @@ def main():
 
             print("Running...",file=sys.stderr)
             data = Reader(args.test)
-            experts.test(data,ttable, args.output + '.output.xml', sourceclassencoder,targetclassdecoder, args.leftcontext, args.rightcontext, args.keywords, timbloptions , lm,  args.tmweight, args.lmweight, args.decodefragments)
+            experts.test(data, args.output + '.output.xml', ttable, sourceclassencoder,targetclassdecoder, args.leftcontext, args.rightcontext, args.keywords, timbloptions , lm,  args.tmweight, args.lmweight, args.decodefragments)
 
         elif args.baseline:
             print("Loading translation table",file=sys.stderr)
