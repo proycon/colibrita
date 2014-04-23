@@ -977,12 +977,32 @@ def main():
                     print("Failed",file=sys.stderr)
                     sys.exit(2)
 
-        cmd = "colibri-extractfeatures --crosslingual -C -X -i " + args.output + "/colibri.alignmodel -f " + targetcorpusfile + " -l " + str(args.leftcontext) + " -r " + str(args.rightcontext) + " -o " + args.output + " -s " + sourcemodelfile + " -t " + targetmodelfile + " -S " + sourceclassfile + " -T " + targetclassfile + " -c " + targetclassfile
-        print("Extracting features and building classifiers: " + cmd,file=sys.stderr)
-        r = os.system(cmd)
-        if r != 0:
-            print("Failed",file=sys.stderr)
-            sys.exit(2)
+        if not os.path.exists(args.output+'/classifier.conf'):
+            cmd = "colibri-extractfeatures --crosslingual -C -X -i " + args.output + "/colibri.alignmodel -f " + targetcorpusfile + " -l " + str(args.leftcontext) + " -r " + str(args.rightcontext) + " -o " + args.output + " -s " + sourcemodelfile + " -t " + targetmodelfile + " -S " + sourceclassfile + " -T " + targetclassfile + " -c " + targetclassfile
+            print("Extracting features and building classifiers: " + cmd,file=sys.stderr)
+            r = os.system(cmd)
+            if r != 0:
+                print("Failed",file=sys.stderr)
+                sys.exit(2)
+        else:
+            print("Classifiers already generated",file=sys.stderr)
+
+
+        if not os.path.exists(args.output + '/trained'):
+            print("Loading and training classifiers",file=sys.stderr)
+            limit = None
+            experts = ClassifierExperts(args.output)
+            experts.load(timbloptions, args.leftcontext, args.rightcontext, args.keywords, limit, args.autoconf)
+            if args.autoconf:
+                experts.autoconf(args.folds, args.leftcontext, args.rightcontext, args.keywords, timbloptions, limit)
+            experts.train(args.leftcontext, args.rightcontext, args.keywords, limit)
+
+            f = open(args.output + "/trained",'w')
+            f.close()
+        else:
+            print("Classifiers already trained", file=sys.stderr)
+
+            print("Training stage done", file=sys.stderr)
 
 
 
