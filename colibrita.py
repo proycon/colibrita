@@ -780,11 +780,11 @@ def main():
     parser.add_argument('--target', type=str,help="Target language corpus for training (plaintext)", action='store',required=False)
     parser.add_argument('-M','--phrasetable', type=str,help="Moses phrasetable to use for training (--train)", action='store',default="")
     parser.add_argument('--trainfortest',type=str, help="Do only limited training that covers a particular test set (speeds up training and reduces memory considerably!), use with --train or --trainfromset", action='store',default="")
-    parser.add_argument('--test',help="Test mode (against a specific test set)", action='store_true')
+    parser.add_argument('--test',type=str,help="Test mode (against a specific test set)", action='store',default="")
+    parser.add_argument('--baseline', type=str,help="Baseline test on specified test set", action='store',default=False)
     parser.add_argument('--run',help="Run mode (reads input from stdin)", action='store_true')
     parser.add_argument('--server', help="Server mode (RESTFUL HTTP Server)", action='store_true')
     #parser.add_argument('--igen',dest='settype',help="Instance generation from a training set (-f) without actual training", action='store_const',const='igen')
-    #parser.add_argument('-f','--dataset', type=str,help="Dataset file (XML) for training or testing", action='store',default="",required=False)
     parser.add_argument('--debug','-d', help="Debug", action='store_true', default=False)
     parser.add_argument('-a','--autoconf', help="Automatically determine best feature configuration per expert (cross-validated), values for -l and -r are considered maxima, set -k to consider keywords, needs to be specified both at training time and at test time!", action='store_true',default=False)
     parser.add_argument('-l','--leftcontext',type=int, help="Left local context size", action='store',default=0)
@@ -801,7 +801,6 @@ def main():
     parser.add_argument('--Tk', dest='timbl_k', help="Timbl k", type=int,action='store',default=1)
     parser.add_argument('--Tclones', dest='timbl_clones', help="Timbl clones (number of CPUs to use for parallel processing)", type=int,action='store',default=1)
     parser.add_argument('-o','--output',type=str,help="Output prefix", required = True)
-    parser.add_argument('--baseline', help="Baseline test (use with --test, requires no previous --train)", action='store_true',default=False)
     #parser.add_argument('--moses', help="Use Moses as Translation Model, no classifiers will be used, use with -T", action='store_true',default=False)
     parser.add_argument('--lm',type=str, help="Use language model in testing (file in ARPA format, as produced by for instance SRILM)", action='store',default="")
     parser.add_argument('--lmweight',type=float, help="Language model weight (when --lm is used)", action='store',default=1)
@@ -1007,9 +1006,6 @@ def main():
 
 
     if args.test:
-        if not args.dataset:
-            print("Specify a dataset to use for testing! (-f)", file=sys.stderr)
-            sys.exit(2)
 
 
         print("Parameters: ", repr(args), file=sys.stderr)
@@ -1052,7 +1048,7 @@ def main():
 
 
             print("Running...",file=sys.stderr)
-            data = Reader(args.dataset)
+            data = Reader(args.test)
             experts.test(data,ttable, args.output + '.output.xml', sourceclassencoder,targetclassdecoder, args.leftcontext, args.rightcontext, args.keywords, timbloptions , lm,  args.tmweight, args.lmweight, args.decodefragments)
 
         elif args.baseline:
@@ -1060,7 +1056,7 @@ def main():
             ttable = AlignmentModel(args.output + "/colibri.alignmodel");
             #ttable = PhraseTable(args.ttable,False, False, "|||", 3, 0,None, None)
 
-            data = Reader(args.dataset)
+            data = Reader(args.baselene)
             print("Making baseline",file=sys.stderr)
             if args.lm:
                 print("(with LM)",file=sys.stderr)
