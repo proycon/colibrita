@@ -696,7 +696,7 @@ class ClassifierExperts:
                 outputfragment =  self.classify(inputfragment_s, left, right, sentencepair, generalleftcontext, generalrightcontext, generaldokeywords, timbloptions, lm,tweight,lmweight)
             elif ttable and inputfragment_p and inputfragment_p in ttable:
                 outputfragment = None
-                for targetpattern, scores in sorted(ttable[inputfragment_p],key=lambda x: -1* x[1][2]):
+                for targetpattern, scores in sorted(ttable[inputfragment_p].items(),key=lambda x: -1* x[1][2]):
                     targetpattern_s = targetpattern.tostring(targetclassdecoder)
                     outputfragment = Fragment(tuple( targetpattern_s.split(' ') ), inputfragment.id )
                     print("\tFallback translation from phrasetable" + str(inputfragment) + " -> " + str(outputfragment), file=sys.stderr)
