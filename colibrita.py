@@ -582,7 +582,7 @@ class ClassifierExperts:
                     f_left = list(["<DUMMY-IGNORED>"] * (classifier.leftcontext - leftcontext)) + f_left
             features += f_left
 
-        features.append(inputfragment)
+        features.append(str(inputfragment))
 
         if rightcontext or classifier.rightcontext:
             f_right = list(right[:rightcontext])
@@ -694,7 +694,7 @@ class ClassifierExperts:
             left = tuple(left.split())
             right = tuple(right.split())
             if inputfragment_s in self.classifiers:
-                outputfragment =  self.classify(inputfragment_s, left, right, sentencepair, generalleftcontext, generalrightcontext, generaldokeywords, timbloptions, lm,tweight,lmweight)
+                outputfragment =  self.classify(inputfragment, left, right, sentencepair, generalleftcontext, generalrightcontext, generaldokeywords, timbloptions, lm,tweight,lmweight)
             elif ttable and inputfragment_p and inputfragment_p in ttable:
                 outputfragment = None
                 for targetpattern, scores in sorted(ttable[inputfragment_p].items(),key=lambda x: -1* x[1][2]):
