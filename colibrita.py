@@ -855,7 +855,7 @@ def main():
             os.mkdir(args.output)
         if not os.path.exists(args.output + '/phrasetable.colibri.alignmodel-keys'):
             print("Creating alignment model from Moses phrasetable, unconstrained",file=sys.stderr)
-            r = os.system("colibri-mosesphrasetable2alignmodel -i " + args.phrasetable + " -o " + args.output + "/phrasetable -j " + str(args.joinedprobabilitythreshold) + " -d " + str(args.divergencefrombestthreshold) + " -S " + args.sourceclassfile + " -T " + args.targetclassfile)
+            r = os.system("colibri-mosesphrasetable2alignmodel -i " + args.phrasetable + " -o " + args.output + "/colibri.alignmodel -j " + str(args.joinedprobabilitythreshold) + " -d " + str(args.divergencefrombestthreshold) + " -S " + args.sourceclassfile + " -T " + args.targetclassfile)
             if r != 0:
                 print("Failed",file=sys.stderr)
                 sys.exit(2)
@@ -976,7 +976,7 @@ def main():
                 print("Failed",file=sys.stderr)
                 sys.exit(2)
 
-        cmd = "colibri-extractfeatures --crosslingual -C -X -i " + args.output + "/colibri.alignmodel -f " + targetcorpusfile + " -l " + str(args.leftcontext) + " -r " + str(args.rightcontext) + " -o " + args.output + "/colibri.alignmodel -s " + sourcemodelfile + " -t " + targetmodelfile + " -S " + sourceclassfile + " -T " + targetclassfile + " -c " + targetclassfile
+        cmd = "colibri-extractfeatures --crosslingual -C -X -i " + args.output + "/colibri.alignmodel -f " + targetcorpusfile + " -l " + str(args.leftcontext) + " -r " + str(args.rightcontext) + " -o " + args.output + " -s " + sourcemodelfile + " -t " + targetmodelfile + " -S " + sourceclassfile + " -T " + targetclassfile + " -c " + targetclassfile
         print("Extracting features and building classifiers: " + cmd,file=sys.stderr)
         r = os.system(cmd)
         if r != 0:
