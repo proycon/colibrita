@@ -582,7 +582,7 @@ class ClassifierExperts:
                     f_left = list(["<DUMMY-IGNORED>"] * (classifier.leftcontext - leftcontext)) + f_left
             features += f_left
 
-
+        features.append(inputfragment)
 
         if rightcontext or classifier.rightcontext:
             f_right = list(right[:rightcontext])
@@ -685,10 +685,11 @@ class ClassifierExperts:
 
         for left, inputfragment, right in sentencepair.inputfragments():
             inputfragment_s = str(inputfragment)
+            print("\tFragment: ", inputfragment_s, file=sys.stderr)
             try:
                 inputfragment_p = sourceclassencoder.buildpattern(inputfragment_s)
             except IOError:
-                print("NOTICE: One or more words in '" + inputfragment_s + "' were not seen during training",file=sys.stderr)
+                print("\tNOTICE: One or more words in '" + inputfragment_s + "' were not seen during training",file=sys.stderr)
                 inputfragment_p = None
             left = tuple(left.split())
             right = tuple(right.split())
