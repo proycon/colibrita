@@ -685,7 +685,11 @@ class ClassifierExperts:
 
         for left, inputfragment, right in sentencepair.inputfragments():
             inputfragment_s = str(inputfragment)
-            inputfragment_p = sourceclassencoder.build(inputfragment_s)
+            try:
+                inputfragment_p = sourceclassencoder.build(inputfragment_s)
+            except IOError:
+                print("NOTICE: One or more words in '" + inputfragment_s + "' were not seen durin training",file=sys.stderr)
+                inputfragment_p = None
             left = tuple(left.split())
             right = tuple(right.split())
             if inputfragment_s in self.classifiers:
