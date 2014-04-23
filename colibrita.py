@@ -1021,7 +1021,7 @@ def main():
             if not os.path.isdir(args.output):
                 print("Output directory " + args.output + " does not exist, did you forget to train the system first?", file=sys.stderr)
                 sys.exit(2)
-            if not os.path.isdir(args.output + "/colibri.alignmodel"):
+            if not os.path.exists(args.output + "/colibri.alignmodel"):
                 print("Alignment model in output directory " + args.output + " does not exist, did you forget to train the system first?", file=sys.stderr)
                 sys.exit(2)
             if not os.path.exists(args.output+'/colibrita.conf'):
