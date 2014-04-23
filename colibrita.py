@@ -688,13 +688,13 @@ class ClassifierExperts:
             try:
                 inputfragment_p = sourceclassencoder.build(inputfragment_s)
             except IOError:
-                print("NOTICE: One or more words in '" + inputfragment_s + "' were not seen durin training",file=sys.stderr)
+                print("NOTICE: One or more words in '" + inputfragment_s + "' were not seen durin trainingFragment",file=sys.stderr)
                 inputfragment_p = None
             left = tuple(left.split())
             right = tuple(right.split())
             if inputfragment_s in self.classifiers:
                 outputfragment =  self.classify(inputfragment_s, left, right, sentencepair, generalleftcontext, generalrightcontext, generaldokeywords, timbloptions, lm,tweight,lmweight)
-            elif ttable and inputfragment_p in ttable:
+            elif ttable and inputfragment_p and inputfragment_p in ttable:
                 outputfragment = None
                 for targetpattern, scores in sorted(ttable[inputfragment_p],key=lambda x: -1* x[1][2]):
                     targetpattern_s = targetpattern.tostring(targetclassdecoder)
