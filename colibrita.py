@@ -824,8 +824,8 @@ def main():
     args = parser.parse_args()
 
 
-    if not args.train and not args.test and not args.trainfromset:
-        print("Specify either --train, --test, --trainfromset")
+    if not args.train and not args.test and not args.trainfromset and not args.trainfortest:
+        print("Specify either --train, --test, --trainfromset, --trainfortst")
         sys.exit(2)
 
 
@@ -875,7 +875,7 @@ def main():
 
 
 
-    elif args.train:
+    elif args.train or args.trainfortest:
         ####################### TRAIN FROM SCRATCH #################################3
         if not os.path.isdir(args.output):
             os.mkdir(args.output)
