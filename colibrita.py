@@ -938,7 +938,7 @@ def main():
             #test data to plain text intermediate format (fragments only)
 
             if not os.path.exists(args.output + "/testfragments.colibri.unindexedpatternmodel"):
-                with open(args.output + "/testfragments.txt",'r',encoding='utf-8') as f:
+                with open(args.output + "/testfragments.txt",'w',encoding='utf-8') as f:
                     for sentencepair in Reader(args.trainfortest):
                         for fragment in sentencepair.fragments(sentencepair.input, True).values():
                             fragment = " ".join(fragment.value)
