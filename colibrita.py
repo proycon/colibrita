@@ -945,7 +945,7 @@ def main():
                             f.write(fragment  +"\n")
 
                 print("Encoding test fragments",file=sys.stderr)
-                r = os.system("colibri-classencode -e -c " + sourceclassfile + " -d " + args.output + " " + args.output + "/testfragments.txt")
+                r = os.system("colibri-classencode -e -c " + sourceclassfile + " -d " + args.output + "/ " + args.output + "/testfragments.txt")
                 if r != 0:
                     print("Failed",file=sys.stderr)
                     sys.exit(2)
