@@ -895,56 +895,96 @@ def main():
         targetclassfile = args.target.replace('.txt','') + '.colibri.cls'
         targetcorpusfile  = args.target.replace('.txt','') + '.colibri.dat'
         targetmodelfile  = args.target.replace('.txt','') + '.colibri.indexedpatternmodel'
+        sourceconstraintfile = args.output + "/sourceconstraints.colibri.unindexedpatternmodel"
+        targetconstraintfile = args.output + "/targetconstraints.colibri.unindexedpatternmodel"
 
         conf = {'sourceclassfile':sourceclassfile, 'targetclassfile': targetclassfile,'sourcecorpusfile':sourcecorpusfile,'targetcorpusfile': targetcorpusfile}
         pickle.dump(conf, open(args.output+'/colibrita.conf','wb'))
 
         if not os.path.exists(sourcecorpusfile) or not os.path.exists(sourceclassfile):
-            print("Encoding source corpus",file=sys.stderr)
+            print("1.1) Encoding source corpus",file=sys.stderr)
             r = os.system("colibri-classencode " + args.source)
             if r != 0:
                 print("Failed",file=sys.stderr)
                 sys.exit(2)
 
 
-        if not os.path.exists(sourcemodelfile):
-            print("Building pattern model on source corpus",file=sys.stderr)
-            r = os.system("colibri-patternmodeller -2 -t 2 -l " + str(args.maxlength) + " -f " + sourcecorpusfile + " -o " + sourcemodelfile)
-            if r != 0:
-                print("Failed",file=sys.stderr)
-                sys.exit(2)
 
         if not os.path.exists(targetcorpusfile) or not os.path.exists(targetclassfile):
-            print("Encoding target corpus",file=sys.stderr)
+            print("1.2) Encoding target corpus",file=sys.stderr)
             r = os.system("colibri-classencode " + args.target)
             if r != 0:
                 print("Failed",file=sys.stderr)
                 sys.exit(2)
 
+        #Extract source-half of translation table
+        if args.phrasetable[-3:] == '.gz':
+            cat = "zcat"
+        else:
+            cat = "cat"
+
+        if not os.path.exists(args.phrasetable + ".sourcedump"):
+            print("1.3) Extracting source-side of phrasetable",file=sys.stderr)
+            os.system(cat + " " + args.phrasetable + " | awk 'FS=\"|\" { gsub(/^[ \t]+/, \"\", $1); gsub(/[ \t]+$/, \"\", $1); if ($1 != \"\") print $1; }' | uniq  > "  + args.phrasetable  + ".sourcedump")
+
+        if not os.path.exists(args.phrasetable + ".sourcedump.colibri.dat"):
+            print("1.4) Encoding source-side of phrasetable")
+            r = os.system("colibri-classencode -c " + sourceclassfile + " " + args.source)
+            if r != 0:
+                print("Failed",file=sys.stderr)
+                sys.exit(2)
+
+
+        if not os.path.exists(args.phrasetable + ".targetdump"):
+            print("1.5) Extracting target-side of phrasetable",file=sys.stderr)
+            os.system(cat + " " + args.phrasetable + " | awk 'FS=\"|\" { gsub(/^[ \t]+/, \"\", $4); gsub(/[ \t]+$/, \"\", $4); if ($1 != \"\") print $4; }' | uniq  > "  + args.phrasetable  + ".targetdump")
+
+
+        if not os.path.exists(args.phrasetable + ".sourcedump.colibri.dat"):
+            print("1.6) Encoding target-side of phrasetable")
+            r = os.system("colibri-classencode -c " + sourceclassfile + " " + args.source)
+            if r != 0:
+                print("Failed",file=sys.stderr)
+                sys.exit(2)
+
+        if not os.path.exists(sourceconstraintfile):
+            print("1.7) Building constraint model of phrasetable source-side",file=sys.stderr)
+            r = os.system("colibri-patternmodeller -u -t 1 -l " + str(args.maxlength) + " -f " + args.phrasetable + ".sourcedump.colibri.dat" + " -o " + sourceconstraintfile)
+            if r != 0:
+                print("Failed",file=sys.stderr)
+                sys.exit(2)
+
+        if not os.path.exists(targetconstraintfile):
+            print("1.8) Building constraint model of phrasetable target-side",file=sys.stderr)
+            r = os.system("colibri-patternmodeller -u -t 1 -l " + str(args.maxlength) + " -f " + args.phrasetable + ".targetdump.colibri.dat" + " -o " + targetconstraintfile)
+            if r != 0:
+                print("Failed",file=sys.stderr)
+                sys.exit(2)
+
+        if not os.path.exists(sourcemodelfile):
+            print("1.9) Building indexed pattern model on source corpus (constrained by phrasetable)",file=sys.stderr)
+            r = os.system("colibri-patternmodeller -t 1 -l " + str(args.maxlength) + " -f " + sourcecorpusfile + " -o " + sourcemodelfile + " -j " + sourceconstraintfile)
+            if r != 0:
+                print("Failed",file=sys.stderr)
+                sys.exit(2)
+
         if not os.path.exists(targetmodelfile):
-            print("Building pattern model on target corpus",file=sys.stderr)
-            r = os.system("colibri-patternmodeller -2 -t 2 -l " + str(args.maxlength) + " -f " + targetcorpusfile + " -o " + targetmodelfile)
+            print("1.10) Building indexed pattern model on target corpus (constrained by phrasetable)",file=sys.stderr)
+            r = os.system("colibri-patternmodeller -t 1 -l " + str(args.maxlength) + " -f " + targetcorpusfile + " -o " + targetmodelfile + " -j " + targetconstraintfile)
             if r != 0:
                 print("Failed",file=sys.stderr)
                 sys.exit(2)
 
         if args.trainfortest:
-            #Extract source-half of translation tabl
-            #print("Extracting source-side of phrasetable)",file=sys.stderr)
-            #os system("cat " + args.phrasetable + " | awk 'FS=\"|\" { gsub(/^[ \t]+/, \"\", $1); gsub(/[ \t]+$/, \"\", $1); if ($1 != \"\") print $1; }' | uniq  > "  + args.phrasetable  + ".sourcedump")
-
-            #print("Extracting target-side of phrasetable)",file=sys.stderr)
-            #os system("cat " + args.phrasetable + " | awk 'FS=\"|\" { gsub(/^[ \t]+/, \"\", $4); gsub(/[ \t]+$/, \"\", $4); if ($1 != \"\") print $4; }' | uniq  > "  + args.phrasetable  + ".sourcedump")
-            #test data to plain text intermediate format (fragments only)
-
             if not os.path.exists(args.output + "/testfragments.colibri.unindexedpatternmodel"):
+                print("2.1) Reading test fragments",file=sys.stderr)
                 with open(args.output + "/testfragments.txt",'w',encoding='utf-8') as f:
                     for sentencepair in Reader(args.trainfortest):
                         for fragment in sentencepair.fragments(sentencepair.input, True).values():
                             fragment = " ".join(fragment.value)
                             f.write(fragment  +"\n")
 
-                print("Encoding test fragments",file=sys.stderr)
+                print("2.2) Encoding test fragments",file=sys.stderr)
                 r = os.system("colibri-classencode -e -c " + sourceclassfile + " -d " + args.output + "/ " + args.output + "/testfragments.txt")
                 if r != 0:
                     print("Failed",file=sys.stderr)
@@ -954,8 +994,8 @@ def main():
 
 
                 #train an unindexed patternmodel model on testdata, to be used as constraint for the alignment model
-                print("Building patternmodel on fragments in testdata",file=sys.stderr)
-                r = os.system("colibri-patternmodeller -u -t 1 -l " + str(args.maxlength) + " -f " + args.output+"/testfragments.colibri.dat -o " + args.output+"/testfragments.colibri.unindexedpatternmodel")
+                print("2.3) Building patternmodel on fragments in testdata",file=sys.stderr)
+                r = os.system("colibri-patternmodeller -u -t 1 -l " + str(args.maxlength) + " -f " + args.output+"/testfragments.colibri.dat -o " + args.output+"/testfragments.colibri.unindexedpatternmodel -j " + sourceconstraintfile)
                 if r != 0:
                     print("Failed",file=sys.stderr)
                     sys.exit(2)
@@ -964,18 +1004,21 @@ def main():
 
             if not os.path.exists(args.output+"/colibri.alignmodel"):
                 #Convert moses phrasetable to alignment model, constrained by testset
-                cmd = "colibri-mosesphrasetable2alignmodel -i " + args.phrasetable + " -m " + args.output+"/testfragments.colibri.unindexedpatternmodel -o " + args.output + "/colibri.alignmodel -j " + str(args.joinedprobabilitythreshold) + " -d " + str(args.divergencefrombestthreshold) + " -S " + sourceclassfile + " -T " + targetclassfile
-                print("Creating alignment model from Moses phrasetable, constrained by testset: " + cmd,file=sys.stderr)
+                #no normalisation!
+                cmd = "colibri-mosesphrasetable2alignmodel -N -i " + args.phrasetable + " -m " + args.output+"/testfragments.colibri.unindexedpatternmodel -M " + targetconstraintfile + " -o " + args.output + "/colibri.alignmodel -j " + str(args.joinedprobabilitythreshold) + " -d " + str(args.divergencefrombestthreshold) + " -S " + sourceclassfile + " -T " + targetclassfile
+                print("2.4) Creating alignment model from Moses phrasetable, constrained by testset: " + cmd,file=sys.stderr)
                 r = os.system(cmd)
                 if r != 0:
                     print("Failed",file=sys.stderr)
                     sys.exit(2)
         else:
+            #not constrained by testset
+
 
             if not os.path.exists(args.output+"/colibri.alignmodel"):
-                #Convert moses phrasetable to alignment model, unconstrained by testset
-                cmd = "colibri-mosesphrasetable2alignmodel -i " + args.phrasetable + " -o " + args.output + "/colibri.alignmodel -j " + str(args.joinedprobabilitythreshold) + " -d " + str(args.divergencefrombestthreshold) + " -S " + sourceclassfile + " -T " + targetclassfile
-                print("Creating alignment model from Moses phrasetable, unconstrained:" + cmd,file=sys.stderr)
+                #Convert moses phrasetable to alignment model, unconstrained by testset. No normalisation
+                cmd = "colibri-mosesphrasetable2alignmodel -N -i " + args.phrasetable + " -o " + args.output + "/colibri.alignmodel -j " + str(args.joinedprobabilitythreshold) + " -m " + sourceconstraintfile + " -M " + targetconstraintfile + " -d " + str(args.divergencefrombestthreshold) + " -S " + sourceclassfile + " -T " + targetclassfile
+                print("2) Creating alignment model from Moses phrasetable, unconstrained by testset:" + cmd,file=sys.stderr)
                 r = os.system(cmd)
                 if r != 0:
                     print("Failed",file=sys.stderr)
@@ -983,7 +1026,7 @@ def main():
 
         if not os.path.exists(args.output+'/classifier.conf'):
             cmd = "colibri-extractfeatures --crosslingual -C -X -i " + args.output + "/colibri.alignmodel -f " + targetcorpusfile + " -l " + str(args.leftcontext) + " -r " + str(args.rightcontext) + " -o " + args.output + " -s " + sourcemodelfile + " -t " + targetmodelfile + " -S " + sourceclassfile + " -T " + targetclassfile + " -c " + targetclassfile
-            print("Extracting features and building classifiers: " + cmd,file=sys.stderr)
+            print("3) Extracting features and building classifiers: " + cmd,file=sys.stderr)
             r = os.system(cmd)
             if r != 0:
                 print("Failed",file=sys.stderr)
@@ -993,7 +1036,7 @@ def main():
 
 
         if not os.path.exists(args.output + '/trained'):
-            print("Loading and training classifiers",file=sys.stderr)
+            print("4) Loading and training classifiers",file=sys.stderr)
             limit = None
             experts = ClassifierExperts(args.output)
             experts.load(timbloptions, args.leftcontext, args.rightcontext, args.keywords, limit, args.autoconf)
