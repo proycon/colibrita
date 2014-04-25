@@ -929,7 +929,7 @@ def main():
 
         if not os.path.exists(args.phrasetable + ".sourcedump.colibri.dat"):
             print("1.4) Encoding source-side of phrasetable")
-            r = os.system("colibri-classencode -c " + sourceclassfile + " " + args.source)
+            r = os.system("colibri-classencode -c " + sourceclassfile + " " + args.phrasetable + ".sourcedump")
             if r != 0:
                 print("Failed",file=sys.stderr)
                 sys.exit(2)
@@ -942,7 +942,7 @@ def main():
 
         if not os.path.exists(args.phrasetable + ".sourcedump.colibri.dat"):
             print("1.6) Encoding target-side of phrasetable")
-            r = os.system("colibri-classencode -c " + sourceclassfile + " " + args.source)
+            r = os.system("colibri-classencode -c " + sourceclassfile + " " + args.phrasetable + ".targetdump")
             if r != 0:
                 print("Failed",file=sys.stderr)
                 sys.exit(2)
