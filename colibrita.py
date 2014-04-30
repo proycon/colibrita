@@ -815,8 +815,8 @@ def main():
     parser.add_argument('-T','--ttable', type=str,help="Phrase translation table (file) to use, must be a Colibri alignment model (use colibri-mosesphrasetable2alignmodel). Will be tried as a fallback when no classifiers are made, also required when testing with --lm and without classifier training, and when using --trainfromscratch", action='store',default="")
 
     #setgen options
-    parser.add_argument('-p', dest='joinedprobabilitythreshold', help="Used with --trainfromscratch: Joined probabiity threshold for inclusion of fragments from phrase translation-table: min(P(s|t) * P(t|s))", type=float,action='store',default=0.01)
-    parser.add_argument('-D', dest='divergencefrombestthreshold', help="Used with --trainfromscratch: Maximum divergence from best translation option. If set to 0.8, the only alternatives considered are those that have a joined probability of equal or above 0.8 of the best translation option", type=float,action='store',default=0.8)
+    parser.add_argument('-p', dest='joinedprobabilitythreshold', help="Used with --trainfromscratch: Joined probabiity threshold for inclusion of fragments from phrase translation-table: min(P(s|t) * P(t|s))", type=float,action='store',default=0)
+    parser.add_argument('-D', dest='divergencefrombestthreshold', help="Used with --trainfromscratch: Maximum divergence from best translation option. If set to 0.8, the only alternatives considered are those that have a joined probability of equal or above 0.8 of the best translation option", type=float,action='store',default=0)
 
     parser.add_argument('--mosesdir',type=str, help="Path to moses (for --trainfromscratch)",action='store',default="")
     parser.add_argument('--bindir',type=str, help="Path to external bin dir (path where moses bins are installed, for --trainfromscratch)",action='store',default="/usr/local/bin")
@@ -995,7 +995,8 @@ def main():
 
         if not os.path.exists(targetmodelfile):
             print("3.3) Building indexed pattern model on target corpus (constrained by phrasetable)",file=sys.stderr)
-            r = os.system("colibri-patternmodeller -2 -t 2 -l " + str(args.maxlength) + " -f " + targetcorpusfile + " -o " + targetmodelfile + " -j " + args.output + "/targetconstraints.colibri.patternsetmodel")
+            #threshold 1 is needed here
+            r = os.system("colibri-patternmodeller -t 1 -l " + str(args.maxlength) + " -f " + targetcorpusfile + " -o " + targetmodelfile + " -j " + args.output + "/targetconstraints.colibri.patternsetmodel")
             if r != 0:
                 print("Failed",file=sys.stderr)
                 sys.exit(2)
