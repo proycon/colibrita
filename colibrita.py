@@ -988,7 +988,7 @@ def main():
         if not os.path.exists(sourcemodelfile):
             print("3.2) Building indexed pattern model on source corpus (constrained by phrasetable)",file=sys.stderr)
             #threshold 2 is okay because extracting context features and building classifiers for patterns occuring only once is useless anyway
-            r = os.system("colibri-patternmodeller -2 -t 2 -l " + str(args.maxlength) + " -f " + sourcecorpusfile + " -o " + sourcemodelfile + " -j " + args.output + "/colibri.alignmodel")
+            r = os.system("colibri-patternmodeller -t 2 -l " + str(args.maxlength) + " -f " + sourcecorpusfile + " -o " + sourcemodelfile + " -j " + args.output + "/colibri.alignmodel")
             if r != 0:
                 print("Failed",file=sys.stderr)
                 sys.exit(2)
