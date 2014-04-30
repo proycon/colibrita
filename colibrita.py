@@ -1000,9 +1000,9 @@ def main():
                 sys.exit(2)
 
         if not os.path.exists(targetmodelfile):
-            print("3.3) Building indexed pattern model on target corpus (constrained by phrasetable): ", cmd, file=sys.stderr)
             #threshold 1 is needed here
             cmd = "colibri-patternmodeller -t 1 -l " + str(args.maxlength) + " -f " + targetcorpusfile + " -o " + targetmodelfile + " -j " + args.output + "/targetconstraints.colibri.patternsetmodel"
+            print("3.3) Building indexed pattern model on target corpus (constrained by phrasetable): ", cmd, file=sys.stderr)
             r = os.system(cmd)
             if r != 0:
                 print("Failed",file=sys.stderr)
