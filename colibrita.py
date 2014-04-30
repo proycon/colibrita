@@ -974,11 +974,16 @@ def main():
 
         print("3.1) Loading alignment model",file=sys.stderr)
         alignmodel = AlignmentModel(args.output + "/colibri.alignmodel")
+        print("\t" + str(len(alignmodel)) + " source-side patterns loaded",file=sys.stderr)
+
         print("3.1) Extracting target constraint model",file=sys.stderr)
         targetconstraintmodel = PatternSetModel()
+        targetpatterncount = 0
         for pattern in alignmodel.targetpatterns():
+            targetpatterncount += 1
             targetconstraintmodel.add(pattern)
         targetconstraintmodel.write(args.output + "/targetconstraints.colibri.patternsetmodel")
+        print("\t" + str(targetpatterncount) + " target-side patterns found",file=sys.stderr)
 
 
         del alignmodel
@@ -986,24 +991,26 @@ def main():
 
 
         if not os.path.exists(sourcemodelfile):
-            print("3.2) Building indexed pattern model on source corpus (constrained by phrasetable)",file=sys.stderr)
+            cmd = "colibri-patternmodeller -t 2 -l " + str(args.maxlength) + " -f " + sourcecorpusfile + " -o " + sourcemodelfile + " -j " + args.output + "/colibri.alignmodel"
+            print("3.2) Building indexed pattern model on source corpus (constrained by phrasetable): ", cmd,file=sys.stderr)
             #threshold 2 is okay because extracting context features and building classifiers for patterns occuring only once is useless anyway
-            r = os.system("colibri-patternmodeller -t 2 -l " + str(args.maxlength) + " -f " + sourcecorpusfile + " -o " + sourcemodelfile + " -j " + args.output + "/colibri.alignmodel")
+            r = os.system(cmd)
             if r != 0:
                 print("Failed",file=sys.stderr)
                 sys.exit(2)
 
         if not os.path.exists(targetmodelfile):
-            print("3.3) Building indexed pattern model on target corpus (constrained by phrasetable)",file=sys.stderr)
+            print("3.3) Building indexed pattern model on target corpus (constrained by phrasetable): ", cmdfile=sys.stderr)
             #threshold 1 is needed here
-            r = os.system("colibri-patternmodeller -t 1 -l " + str(args.maxlength) + " -f " + targetcorpusfile + " -o " + targetmodelfile + " -j " + args.output + "/targetconstraints.colibri.patternsetmodel")
+            cmd = "colibri-patternmodeller -t 1 -l " + str(args.maxlength) + " -f " + targetcorpusfile + " -o " + targetmodelfile + " -j " + args.output + "/targetconstraints.colibri.patternsetmodel"
+            r = os.system(cmd)
             if r != 0:
                 print("Failed",file=sys.stderr)
                 sys.exit(2)
 
 
         if not os.path.exists(args.output+'/classifier.conf'):
-            cmd = "colibri-extractfeatures --crosslingual -C -X -i " + args.output + "/colibri.alignmodel -f " + targetcorpusfile + " -l " + str(args.leftcontext) + " -r " + str(args.rightcontext) + " -o " + args.output + " -s " + sourcemodelfile + " -t " + targetmodelfile + " -S " + sourceclassfile + " -T " + targetclassfile + " -c " + targetclassfile
+            cmd = "colibri-extractfeatures --crosslingual -C -X -i " + args.output + "/colibri.alignmodel -f " + targetcorpusfile + " -l " + str(args.leftcontext) + " -r " + str(args.rightcontext) + " -o " + args.output + " -s " + sourcemodelfile + " -t " + targetmodelfile + " -S " + sourceclassfile + " -T " + targetclassfile + " -c " + targetclassfile #TODO: do sourcemodel and targetmodel work with --crosslingual??
             print("4) Extracting features and building classifiers: " + cmd,file=sys.stderr)
             r = os.system(cmd)
             if r != 0:
