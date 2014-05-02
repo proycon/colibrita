@@ -949,7 +949,7 @@ def main():
             if not os.path.exists(args.output+"/colibri.alignmodel"):
                 #Convert moses phrasetable to alignment model, constrained by testset
                 #no normalisation!
-                cmd = "colibri-mosesphrasetable2alignmodel -N -i " + args.phrasetable + " -m " + args.output+"/testfragments.colibri.unindexedpatternmodel -o " + args.output + "/colibri.alignmodel -j " + str(args.joinedprobabilitythreshold) + " -d " + str(args.divergencefrombestthreshold) + " -S " + sourceclassfile + " -T " + targetclassfile
+                cmd = "colibri-mosesphrasetable2alignmodel -i " + args.phrasetable + " -m " + args.output+"/testfragments.colibri.unindexedpatternmodel -o " + args.output + "/colibri.alignmodel -j " + str(args.joinedprobabilitythreshold) + " -d " + str(args.divergencefrombestthreshold) + " -S " + sourceclassfile + " -T " + targetclassfile
                 print("2.4) Creating alignment model from Moses phrasetable, constrained by testset: " + cmd,file=sys.stderr)
                 r = os.system(cmd)
                 if r != 0:
@@ -960,7 +960,7 @@ def main():
 
             if not os.path.exists(args.output+"/colibri.alignmodel"):
                 #Convert moses phrasetable to alignment model, unconstrained by testset. No normalisation
-                cmd = "colibri-mosesphrasetable2alignmodel -N -i " + args.phrasetable + " -o " + args.output + "/colibri.alignmodel -j " + str(args.joinedprobabilitythreshold) + " -d " + str(args.divergencefrombestthreshold) + " -S " + sourceclassfile + " -T " + targetclassfile
+                cmd = "colibri-mosesphrasetable2alignmodel -i " + args.phrasetable + " -o " + args.output + "/colibri.alignmodel -j " + str(args.joinedprobabilitythreshold) + " -d " + str(args.divergencefrombestthreshold) + " -S " + sourceclassfile + " -T " + targetclassfile
                 print("2) Creating alignment model from Moses phrasetable, unconstrained by testset:" + cmd,file=sys.stderr)
                 r = os.system(cmd)
                 if r != 0:
