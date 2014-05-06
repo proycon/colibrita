@@ -1039,6 +1039,11 @@ def main():
 
 
     if args.baseline:
+        print("Loading configuration", file=sys.stderr)
+        conf = pickle.load(open(args.output + '/colibrita.conf','rb'))
+        sourceclassfile = conf['sourceclassfile']
+        targetclassfile = conf['targetclassfile']
+
         print("Loading source class encoder", file=sys.stderr)
         sourceclassencoder = ClassEncoder(sourceclassfile)
         print("Loading target class decoder", file=sys.stderr)
