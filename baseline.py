@@ -17,21 +17,29 @@ from colibrita.common import extractpairs, makesentencepair, runcmd, makeset
 def makebaseline(ttable, outputfile, testset,sourceencoder, targetdecoder, lm=None,tweight=1, lmweight=1):
     output = Writer(outputfile)
     for sentencepair in testset:
-        print("Sentence #" + sentencepair.id,file=sys.stderr)
+        print("Sentence #" + str(sentencepair.id),file=sys.stderr)
         sentencepair.ref = None
         sentencepair.output = copy(sentencepair.input)
         for left, inputfragment, right in sentencepair.inputfragments():
+            inputfragment_s = str(inputfragment)
+            print("\tFragment: ", inputfragment_s, file=sys.stderr)
+            try:
+                inputfragment_p = sourceencoder.buildpattern(inputfragment_s)
+            except IOError:
+                print("\tNOTICE: One or more words in '" + inputfragment_s + "' were not seen during training",file=sys.stderr)
+                inputfragment_p = None
+
             translation = None
-            if str(inputfragment) in ttable:
+            if inputfragment_p in ttable:
                 if lm:
                     candidatesentences = []
                     bestlmscore = -999999999
                     besttscore = -999999999
-                    for targetpattern, scores in ttable[str(inputfragment)]:
+                    for targetpattern, scores in ttable[inputfragment_p]:
                         assert scores[2] >= 0 and scores[2] <= 1
                         tscore = math.log(scores[2]) #convert to base-e log (LM is converted to base-e upon load)
-                        translation = tuple(targetpattern.split())
-                        outputfragment = Fragment(translation, inputfragment.id)
+                        targetpattern_s = targetpattern.tostring(targetdecoder)
+                        outputfragment = Fragment(tuple( targetpattern_s.split(' ') ), inputfragment.id )
                         candidatesentence = sentencepair.replacefragment(inputfragment, outputfragment, sentencepair.output)
                         lminput = " ".join(sentencepair._str(candidatesentence)).split(" ") #joining and splitting deliberately to ensure each word is one item
                         lmscore = lm.score(lminput)
@@ -52,17 +60,17 @@ def makebaseline(ttable, outputfile, testset,sourceencoder, targetdecoder, lm=No
                             translation = targetpattern
                 else:
                     maxscore = 0
-                    for targetpattern, scores in ttable[str(inputfragment)]:
+                    for targetpattern, scores in ttable[inputfragment_p]:
+                        targetpattern_s = targetpattern.tostring(targetdecoder)
                         if scores[2] > maxscore:
                             maxscore = scores[2]
-                            translation = targetpattern
-                translation = tuple(translation.split())
-                outputfragment = Fragment(translation, inputfragment.id)
-                print("\t" + str(inputfragment) + " -> " + str(outputfragment), file=sys.stderr)
+                            translation = targetpattern_s
+                outputfragment = Fragment(tuple( translation.split(' ') ), inputfragment.id )
+                print("\t" + inputfragment_s + " -> " + str(outputfragment), file=sys.stderr)
                 sentencepair.output = sentencepair.replacefragment(inputfragment, outputfragment, sentencepair.output)
             else:
                 outputfragment = Fragment(None, inputfragment.id)
-                print("\t" + str(inputfragment) + " -> NO TRANSLATION", file=sys.stderr)
+                print("\t" + inputfragment_s + " -> NO TRANSLATION", file=sys.stderr)
                 sentencepair.output = sentencepair.replacefragment(inputfragment, outputfragment, sentencepair.output)
         output.write(sentencepair)
     testset.close()
