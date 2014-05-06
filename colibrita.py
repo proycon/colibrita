@@ -1053,7 +1053,7 @@ def main():
         ttable = AlignmentModel(args.output + "/colibri.alignmodel");
 
 
-        data = Reader(args.baselene)
+        data = Reader(args.baseline)
         print("Making baseline",file=sys.stderr)
         if args.lm:
             print("(with LM)",file=sys.stderr)
