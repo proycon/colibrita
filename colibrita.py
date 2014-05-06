@@ -786,7 +786,7 @@ def main():
     parser.add_argument('-M','--phrasetable', type=str,help="Moses phrasetable to use for training (--train)", action='store',default="")
     parser.add_argument('--trainfortest',type=str, help="Do only limited training that covers a particular test set (speeds up training and reduces memory considerably!), use with --train or --trainfromset", action='store',default="")
     parser.add_argument('--test',type=str,help="Test mode (against a specific test set)", action='store',default="")
-    parser.add_argument('--baseline', type=str,help="Baseline test on specified test set", action='store',default="")
+    parser.add_argument('--baseline', type=str,help="Baseline (against specified test set)", action='store',default="")
     parser.add_argument('--run',help="Run mode (reads input from stdin)", action='store_true')
     parser.add_argument('--server', help="Server mode (RESTFUL HTTP Server)", action='store_true')
     #parser.add_argument('--igen',dest='settype',help="Instance generation from a training set (-f) without actual training", action='store_const',const='igen')
@@ -1046,7 +1046,6 @@ def main():
 
         print("Loading translation table",file=sys.stderr)
         ttable = AlignmentModel(args.output + "/colibri.alignmodel");
-        #ttable = PhraseTable(args.ttable,False, False, "|||", 3, 0,None, None)
 
 
         data = Reader(args.baselene)
@@ -1054,7 +1053,7 @@ def main():
         if args.lm:
             print("(with LM)",file=sys.stderr)
             makebaseline(ttable, args.output + '.output.xml', data, sourceclassencoder, targetclassdecoder, lm, args.tmweight, args.lmweight)
-        elif args.baseline:
+        else:
             makebaseline(ttable, args.output + '.output.xml', data, sourceclassencoder, targetclassdecoder)
 
     elif args.test:
