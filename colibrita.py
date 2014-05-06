@@ -1038,7 +1038,26 @@ def main():
 
 
 
-    if args.test:
+    if args.baseline:
+        print("Loading source class encoder", file=sys.stderr)
+        sourceclassencoder = ClassEncoder(sourceclassfile)
+        print("Loading target class decoder", file=sys.stderr)
+        targetclassdecoder = ClassDecoder(targetclassfile)
+
+        print("Loading translation table",file=sys.stderr)
+        ttable = AlignmentModel(args.output + "/colibri.alignmodel");
+        #ttable = PhraseTable(args.ttable,False, False, "|||", 3, 0,None, None)
+
+
+        data = Reader(args.baselene)
+        print("Making baseline",file=sys.stderr)
+        if args.lm:
+            print("(with LM)",file=sys.stderr)
+            makebaseline(ttable, args.output + '.output.xml', data, sourceclassencoder, targetclassdecoder, lm, args.tmweight, args.lmweight)
+        elif args.baseline:
+            makebaseline(ttable, args.output + '.output.xml', data, sourceclassencoder, targetclassdecoder)
+
+    elif args.test:
 
 
         print("Parameters: ", repr(args), file=sys.stderr)
@@ -1084,28 +1103,11 @@ def main():
             data = Reader(args.test)
             experts.test(data, args.output + '.output.xml', ttable, sourceclassencoder,targetclassdecoder, args.leftcontext, args.rightcontext, args.keywords, timbloptions , lm,  args.tmweight, args.lmweight, args.decodefragments)
 
-        elif args.baseline:
-            print("Loading source class encoder", file=sys.stderr)
-            sourceclassencoder = ClassEncoder(sourceclassfile)
-            print("Loading target class decoder", file=sys.stderr)
-            targetclassdecoder = ClassDecoder(targetclassfile)
-
-            print("Loading translation table",file=sys.stderr)
-            ttable = AlignmentModel(args.output + "/colibri.alignmodel");
-            #ttable = PhraseTable(args.ttable,False, False, "|||", 3, 0,None, None)
-
-
-            data = Reader(args.baselene)
-            print("Making baseline",file=sys.stderr)
-            if args.lm:
-                print("(with LM)",file=sys.stderr)
-                makebaseline(ttable, args.output + '.output.xml', data, sourceclassencoder, targetclassdecoder, lm, args.tmweight, args.lmweight)
-            elif args.baseline:
-                makebaseline(ttable, args.output + '.output.xml', data, sourceclassencoder, targetclassdecoder)
-
-
         else:
             print("Don't know what to do! Specify some classifier options or -T with --lm or --baseline", file=sys.stderr)
+
+    else:
+        print("Nothing to do, shouldn't happen", file=sys.stderr)
     #elif args.settype == 'run' or args.settype == 'server':
 
     #    if args.settype == 'server':
