@@ -35,7 +35,7 @@ def makebaseline(ttable, outputfile, testset,sourceencoder, targetdecoder, lm=No
                     candidatesentences = []
                     bestlmscore = -999999999
                     besttscore = -999999999
-                    for targetpattern, scores in ttable[inputfragment_p]:
+                    for targetpattern, scores in ttable[inputfragment_p].items():
                         assert scores[2] >= 0 and scores[2] <= 1
                         tscore = math.log(scores[2]) #convert to base-e log (LM is converted to base-e upon load)
                         targetpattern_s = targetpattern.tostring(targetdecoder)
@@ -60,7 +60,7 @@ def makebaseline(ttable, outputfile, testset,sourceencoder, targetdecoder, lm=No
                             translation = targetpattern
                 else:
                     maxscore = 0
-                    for targetpattern, scores in ttable[inputfragment_p]:
+                    for targetpattern, scores in ttable[inputfragment_p].items():
                         targetpattern_s = targetpattern.tostring(targetdecoder)
                         if scores[2] > maxscore:
                             maxscore = scores[2]
