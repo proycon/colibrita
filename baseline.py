@@ -14,7 +14,7 @@ from colibrita.format import Reader, Writer, Fragment
 from colibrita.common import extractpairs, makesentencepair, runcmd, makeset
 
 
-def makebaseline(ttable, outputfile, testset,lm=None,tweight=1, lmweight=1):
+def makebaseline(ttable, outputfile, testset,sourceencoder, targetdecoder, lm=None,tweight=1, lmweight=1):
     output = Writer(outputfile)
     for sentencepair in testset:
         print("Sentence #" + sentencepair.id,file=sys.stderr)

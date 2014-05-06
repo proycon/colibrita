@@ -824,8 +824,8 @@ def main():
     args = parser.parse_args()
 
 
-    if not args.train and not args.test and not args.trainfromset and not args.trainfortest:
-        print("Specify either --train, --test, --trainfromset, --trainfortst")
+    if not args.train and not args.test and not args.trainfromset and not args.trainfortest and not args.baseline:
+        print("Specify either --train, --test, --trainfromset, --trainfortst, --baseline")
         sys.exit(2)
 
 
@@ -1085,17 +1085,23 @@ def main():
             experts.test(data, args.output + '.output.xml', ttable, sourceclassencoder,targetclassdecoder, args.leftcontext, args.rightcontext, args.keywords, timbloptions , lm,  args.tmweight, args.lmweight, args.decodefragments)
 
         elif args.baseline:
+            print("Loading source class encoder", file=sys.stderr)
+            sourceclassencoder = ClassEncoder(sourceclassfile)
+            print("Loading target class decoder", file=sys.stderr)
+            targetclassdecoder = ClassDecoder(targetclassfile)
+
             print("Loading translation table",file=sys.stderr)
             ttable = AlignmentModel(args.output + "/colibri.alignmodel");
             #ttable = PhraseTable(args.ttable,False, False, "|||", 3, 0,None, None)
+
 
             data = Reader(args.baselene)
             print("Making baseline",file=sys.stderr)
             if args.lm:
                 print("(with LM)",file=sys.stderr)
-                makebaseline(ttable, args.output + '.output.xml', data, lm, args.tmweight, args.lmweight)
+                makebaseline(ttable, args.output + '.output.xml', data, sourceclassencoder, targetclassdecoder, lm, args.tmweight, args.lmweight)
             elif args.baseline:
-                makebaseline(ttable, args.output + '.output.xml', data)
+                makebaseline(ttable, args.output + '.output.xml', data, sourceclassencoder, targetclassdecoder)
 
 
         else:
