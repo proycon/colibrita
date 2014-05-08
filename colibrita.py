@@ -698,6 +698,7 @@ class ClassifierExperts:
             besttranslation = "" # best translation WITHOUT LM (only for statistical purposes)
             for targetpattern, scores in sorted(ttable[inputfragment_p].items(),key=lambda x: -1* x[1][2]):
                 targetpattern_s = targetpattern.tostring(targetdecoder)
+                score = scores[2]
                 assert score >= 0 and score <= 1
                 tscore = math.log(score) #base-e log (LM is converted to base-e upon load)
                 translation = tuple(targetpattern.split())
