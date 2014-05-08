@@ -812,18 +812,19 @@ class ClassifierExperts:
         if stats:
             self.writestats(stats, outputfile.replace('.xml','') + '.stats')
 
-    def writestats(self, stats):
-        totalfragments =  stats['untranslated'] + stats['fallback'] + stats['classifier']
-        print("Total fragments:                         " + str(totalfragments) ,file=sys.stderr)
-        if totalfragments > 0:
-            print("Untranslated:                            " + str(stats['untranslated']) + " " + str(stats['untranslated'] / totalfragments) ,file=sys.stderr)
-            print("Translated by classifier:                " + str(stats['classifier']) + " " + str(stats['classifier'] / totalfragments) ,file=sys.stderr)
-            print("Translated by phrasetable:               " + str(stats['fallback']) + " " + str(stats['fallback'] / totalfragments) ,file=sys.stderr)
-            print("Classifier made a difference:            " + str(len(stats['classifierdifferent'])) + " " + str(len(stats['classifierdifferent']) / totalfragments) ,file=sys.stderr)
-            if len(stats['classifierdistlength']) > 0:
-                print("Mean length of classifier distribution:  " + str(sum(stats['classifierdistlength']) / len(stats['classifierdistlength']) ) ,file=sys.stderr)
-            if len(stats['distlength']) > 0:
-                print("Mean length of phrasetable distribution: " + str(sum(stats['distlength']) / len(stats['distlength']) ) ,file=sys.stderr)
+    def writestats(self, stats, outputfile):
+        with open(outputfile,'w',encoding='utf-8') as f:
+            totalfragments =  stats['untranslated'] + stats['fallback'] + stats['classifier']
+            print("Total fragments:                         " + str(totalfragments) ,file=f)
+            if totalfragments > 0:
+                print("Untranslated:                            " + str(stats['untranslated']) + " " + str(stats['untranslated'] / totalfragments) ,file=f)
+                print("Translated by classifier:                " + str(stats['classifier']) + " " + str(stats['classifier'] / totalfragments) ,file=f)
+                print("Translated by phrasetable:               " + str(stats['fallback']) + " " + str(stats['fallback'] / totalfragments) ,file=f)
+                print("Classifier made a difference:            " + str(len(stats['classifierdifferent'])) + " " + str(len(stats['classifierdifferent']) / totalfragments) ,file=f)
+                if len(stats['classifierdistlength']) > 0:
+                    print("Mean length of classifier distribution:  " + str(sum(stats['classifierdistlength']) / len(stats['classifierdistlength']) ) ,file=f)
+                if len(stats['distlength']) > 0:
+                    print("Mean length of phrasetable distribution: " + str(sum(stats['distlength']) / len(stats['distlength']) ) ,file=f)
 
 
 
