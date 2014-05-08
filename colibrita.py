@@ -746,6 +746,8 @@ class ClassifierExperts:
                 stats['distlength'].append(len(ttable[inputfragment_p]))
             print("\tPhrasetable translation " + str(inputfragment) + " -> " + str(outputfragment) + "\t(out of " + str(len(ttable[inputfragment_p])) +")" , file=sys.stderr)
 
+        return outputfragment
+
 
 
     def processsentence(self, sentencepair, ttable, sourceclassencoder, targetclassdecoder, generalleftcontext, generalrightcontext, generaldokeywords, timbloptions, lm=None,tweight=1,lmweight=1, stats = None, dofragmentdecode=True):
