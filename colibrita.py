@@ -1209,8 +1209,6 @@ def main():
         else:
             print("Don't know what to do! Specify some classifier options or -T with --lm or --baseline", file=sys.stderr)
 
-    else:
-        print("Nothing to do, shouldn't happen", file=sys.stderr)
     #elif args.settype == 'run' or args.settype == 'server':
 
     #    if args.settype == 'server':
