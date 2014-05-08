@@ -689,60 +689,62 @@ class ClassifierExperts:
         return outputfragment
 
     def phrasetablelookup(self, inputfragment, sentencepair, targetdecoder, lm, tweight, lmweight, stats):
-        print("\tPhrasetable translation prior to LM: " + str(inputfragment) + " -> [ DISTRIBUTION:" + str(repr(distribution))+" ]", file=sys.stderr)
-        candidatesentences = []
-        bestlmscore = -999999999
-        besttscore = -999999999
-        besttranslation = "" # best translation WITHOUT LM (only for statistical purposes)
-        for targetpattern, scores in sorted(ttable[inputfragment_p].items(),key=lambda x: -1* x[1][2]):
-            targetpattern_s = targetpattern.tostring(targetdecoder)
-            assert score >= 0 and score <= 1
-            tscore = math.log(score) #base-e log (LM is converted to base-e upon load)
-            translation = tuple(targetpattern.split())
-            outputfragment = Fragment(translation, inputfragment.id, score)
-            candidatesentence = sentencepair.replacefragment(inputfragment, outputfragment, sentencepair.output)
-            lminput = " ".join(sentencepair._str(candidatesentence)).split(" ") #joining and splitting deliberately to ensure each word is one item
-            lmscore = lm.score(lminput)
-            assert lmscore <= 0
-            if lmscore > bestlmscore:
-                bestlmscore = lmscore
-            if tscore > besttscore:
-                besttscore = tscore
-                besttranslation = translation
-            candidatesentences.append( ( candidatesentence, outputfragment, tscore, lmscore ) )
+        print("\tPhrasetable lookup for '" + str(inputfragment) + "' ...", file=sys.stderr)
+        if lm:
+            print("\tPhrasetable translation prior to LM: " + str(inputfragment) + " -> [ DISTRIBUTION:" + str(repr(distribution))+" ]", file=sys.stderr)
+            candidatesentences = []
+            bestlmscore = -999999999
+            besttscore = -999999999
+            besttranslation = "" # best translation WITHOUT LM (only for statistical purposes)
+            for targetpattern, scores in sorted(ttable[inputfragment_p].items(),key=lambda x: -1* x[1][2]):
+                targetpattern_s = targetpattern.tostring(targetdecoder)
+                assert score >= 0 and score <= 1
+                tscore = math.log(score) #base-e log (LM is converted to base-e upon load)
+                translation = tuple(targetpattern.split())
+                outputfragment = Fragment(translation, inputfragment.id, score)
+                candidatesentence = sentencepair.replacefragment(inputfragment, outputfragment, sentencepair.output)
+                lminput = " ".join(sentencepair._str(candidatesentence)).split(" ") #joining and splitting deliberately to ensure each word is one item
+                lmscore = lm.score(lminput)
+                assert lmscore <= 0
+                if lmscore > bestlmscore:
+                    bestlmscore = lmscore
+                if tscore > besttscore:
+                    besttscore = tscore
+                    besttranslation = translation
+                candidatesentences.append( ( candidatesentence, outputfragment, tscore, lmscore ) )
 
-        if not stats is None:
-            stats['distlength'].append(len(ttable[inputfragment_p]))
+            if not stats is None:
+                stats['distlength'].append(len(ttable[inputfragment_p]))
 
-        #get the strongest sentence
-        maxscore = -9999999999
-        for candidatesentence, targetpattern, tscore, lmscore in candidatesentences:
-            tscore = tweight * (tscore-besttscore)
-            lmscore = lmweight * (lmscore-bestlmscore)
-            score = tscore + lmscore
-            print("\t LM candidate " + str(inputfragment) + " -> " + str(targetpattern) + "   score=tscore+lmscore=" + str(tscore) + "+" + str(lmscore) + "=" + str(score), file=sys.stderr)
-            if score > maxscore:
-                maxscore = score
-                outputfragment = targetpattern  #Fragment(targetpattern, inputfragment.id)
-                outputfragment.confidence = score
+            #get the strongest sentence
+            maxscore = -9999999999
+            for candidatesentence, targetpattern, tscore, lmscore in candidatesentences:
+                tscore = tweight * (tscore-besttscore)
+                lmscore = lmweight * (lmscore-bestlmscore)
+                score = tscore + lmscore
+                print("\t LM candidate " + str(inputfragment) + " -> " + str(targetpattern) + "   score=tscore+lmscore=" + str(tscore) + "+" + str(lmscore) + "=" + str(score), file=sys.stderr)
+                if score > maxscore:
+                    maxscore = score
+                    outputfragment = targetpattern  #Fragment(targetpattern, inputfragment.id)
+                    outputfragment.confidence = score
 
-        if str(outputfragment) != besttranslation:
-            stats['lmdifferent'].append( (str(outputfragment), besttranslation) )
+            if str(outputfragment) != besttranslation:
+                stats['lmdifferent'].append( (str(outputfragment), besttranslation) )
 
-        for candidatesentence, targetpattern, tscore, lmscore in candidatesentences:
-            if targetpattern != outputfragment:
-                outputfragment.alternatives.append( Alternative( tuple(str(targetpattern).split()), tweight* (tscore-besttscore) + lmweight * (lmscore-bestlmscore) )  )
-        print("\tPhrasetable translation after LM: " + str(inputfragment) + " -> " + str(outputfragment) + " score= " + str(score), file=sys.stderr)
+            for candidatesentence, targetpattern, tscore, lmscore in candidatesentences:
+                if targetpattern != outputfragment:
+                    outputfragment.alternatives.append( Alternative( tuple(str(targetpattern).split()), tweight* (tscore-besttscore) + lmweight * (lmscore-bestlmscore) )  )
+            print("\tPhrasetable translation after LM: " + str(inputfragment) + " -> " + str(outputfragment) + " score= " + str(score), file=sys.stderr)
 
-    else:
-        for targetpattern, scores in sorted(ttable[inputfragment_p].items(),key=lambda x: -1* x[1][2]):
-            targetpattern_s = targetpattern.tostring(targetclassdecoder)
-            outputfragment = Fragment(tuple( targetpattern_s.split(' ') ), inputfragment.id )
-            break
+        else:
+            for targetpattern, scores in sorted(ttable[inputfragment_p].items(),key=lambda x: -1* x[1][2]):
+                targetpattern_s = targetpattern.tostring(targetclassdecoder)
+                outputfragment = Fragment(tuple( targetpattern_s.split(' ') ), inputfragment.id )
+                break
 
-        if not stats is None:
-            stats['distlength'].append(len(ttable[inputfragment_p]))
-        print("\tPhrasetable translation " + str(inputfragment) + " -> " + str(outputfragment) + "\t(out of " + str(len(ttable[inputfragment_p])) +")" , file=sys.stderr)
+            if not stats is None:
+                stats['distlength'].append(len(ttable[inputfragment_p]))
+            print("\tPhrasetable translation " + str(inputfragment) + " -> " + str(outputfragment) + "\t(out of " + str(len(ttable[inputfragment_p])) +")" , file=sys.stderr)
 
 
 
