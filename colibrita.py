@@ -822,6 +822,8 @@ class ClassifierExperts:
                 print("Translated by classifier:                " + str(stats['classifier']) + " " + str(stats['classifier'] / totalfragments) ,file=f)
                 print("Translated by phrasetable:               " + str(stats['fallback']) + " " + str(stats['fallback'] / totalfragments) ,file=f)
                 print("Classifier made a difference:            " + str(len(stats['classifierdifferent'])) + " " + str(len(stats['classifierdifferent']) / totalfragments) ,file=f)
+                if stats['lmdifferent']:
+                    print("LM made a difference:                    " + str(len(stats['lmdifferent'])) + " " + str(len(stats['lmdifferent']) / totalfragments) ,file=f)
                 if len(stats['classifierdistlength']) > 0:
                     print("Mean length of classifier distribution:  " + str(sum(stats['classifierdistlength']) / len(stats['classifierdistlength']) ) ,file=f)
                 if len(stats['distlength']) > 0:
