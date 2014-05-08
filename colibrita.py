@@ -688,7 +688,7 @@ class ClassifierExperts:
 
         return outputfragment
 
-    def phrasetablelookup(self, inputfragment, sentencepair, targetdecoder, lm, tweight, lmweight, stats):
+    def phrasetablelookup(self, inputfragment, sentencepair, targetdecoder, ttable, lm, tweight, lmweight, stats):
         print("\tPhrasetable lookup for '" + str(inputfragment) + "' ...", file=sys.stderr)
         if lm:
             print("\tPhrasetable translation prior to LM: " + str(inputfragment) + " -> [ DISTRIBUTION:" + str(repr(distribution))+" ]", file=sys.stderr)
@@ -773,7 +773,7 @@ class ClassifierExperts:
                 if str(outputfragment) != targetpattern_s:
                     if stats: stats['classifierdifferent'].append( (str(outputfragment), targetpattern_s) )
             elif ttable and inputfragment_p and inputfragment_p in ttable:
-                outputfragment = self.phrasetablelookup(inputfragment, sentencepair, targetclassdecoder, lm, tweight, lmweight, stats)
+                outputfragment = self.phrasetablelookup(inputfragment, sentencepair, targetclassdecoder, ttable, lm, tweight, lmweight, stats)
                 if stats: stats['fallback'] += 1
                 if outputfragment is None:
                     raise Exception("No outputfragment found in phrasetable!!! Shouldn't happen")
