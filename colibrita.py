@@ -738,7 +738,7 @@ class ClassifierExperts:
 
         else:
             for targetpattern, scores in sorted(ttable[inputfragment_p].items(),key=lambda x: -1* x[1][2]):
-                targetpattern_s = targetpattern.tostring(targetclassdecoder)
+                targetpattern_s = targetpattern.tostring(targetdecoder)
                 outputfragment = Fragment(tuple( targetpattern_s.split(' ') ), inputfragment.id )
                 break
 
