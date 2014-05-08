@@ -701,7 +701,7 @@ class ClassifierExperts:
                 score = scores[2]
                 assert score >= 0 and score <= 1
                 tscore = math.log(score) #base-e log (LM is converted to base-e upon load)
-                translation = tuple(targetpattern.split())
+                translation = tuple(targetpattern_s.split())
                 outputfragment = Fragment(translation, inputfragment.id, score)
                 candidatesentence = sentencepair.replacefragment(inputfragment, outputfragment, sentencepair.output)
                 lminput = " ".join(sentencepair._str(candidatesentence)).split(" ") #joining and splitting deliberately to ensure each word is one item
