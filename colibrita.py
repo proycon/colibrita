@@ -683,7 +683,7 @@ class ClassifierExperts:
                 if targetpattern != classlabel:
                     outputfragment.alternatives.append( Alternative( tuple(targetpattern.split()), score) )
             if not stats is None:
-                stats['distlength'].append(len(distribution))
+                stats['classifierdistlength'].append(len(distribution))
             print("\tClassifier translation " + str(inputfragment) + " -> " + str(outputfragment) + "\t[ DISTRIBUTION:" + str(repr(distribution))+" ]", file=sys.stderr)
 
         return outputfragment
@@ -712,7 +712,7 @@ class ClassifierExperts:
             candidatesentences.append( ( candidatesentence, outputfragment, tscore, lmscore ) )
 
         if not stats is None:
-            stats['distlength'].append(len(distribution))
+            stats['distlength'].append(len(ttable[inputfragment_p]))
 
         #get the strongest sentence
         maxscore = -9999999999
@@ -735,18 +735,13 @@ class ClassifierExperts:
         print("\tPhrasetable translation after LM: " + str(inputfragment) + " -> " + str(outputfragment) + " score= " + str(score), file=sys.stderr)
 
     else:
-
-        outputfragment = Fragment(tuple(classlabel.split()), inputfragment.id, max(distribution.values()))
-        for targetpattern, score in distribution.items():
-            if targetpattern != classlabel:
-                outputfragment.alternatives.append( Alternative( tuple(targetpattern.split()), score) )
-        if not stats is None:
-            stats['distlength'].append(len(distribution))
-
         for targetpattern, scores in sorted(ttable[inputfragment_p].items(),key=lambda x: -1* x[1][2]):
             targetpattern_s = targetpattern.tostring(targetclassdecoder)
             outputfragment = Fragment(tuple( targetpattern_s.split(' ') ), inputfragment.id )
             break
+
+        if not stats is None:
+            stats['distlength'].append(len(ttable[inputfragment_p]))
         print("\tPhrasetable translation " + str(inputfragment) + " -> " + str(outputfragment) + "\t(out of " + str(len(ttable[inputfragment_p])) +")" , file=sys.stderr)
 
 
@@ -776,28 +771,10 @@ class ClassifierExperts:
                 if str(outputfragment) != targetpattern_s:
                     if stats: stats['classifierdifferent'].append( (str(outputfragment), targetpattern_s) )
             elif ttable and inputfragment_p and inputfragment_p in ttable:
-                #TODO: LANGUAGE MODEL!!!
-                outputfragment = None
-                for targetpattern, scores in sorted(ttable[inputfragment_p].items(),key=lambda x: -1* x[1][2]):
-                    targetpattern_s = targetpattern.tostring(targetclassdecoder)
-                    outputfragment = Fragment(tuple( targetpattern_s.split(' ') ), inputfragment.id )
-                    print("\tFallback translation from phrasetable" + str(inputfragment) + " -> " + str(outputfragment), file=sys.stderr)
-                    break
+                outputfragment = self.phrasetablelookup(inputfragment, sentencepair, targetclassdecoder, lm, tweight, lmweight, stats)
                 if stats: stats['fallback'] += 1
                 if outputfragment is None:
                     raise Exception("No outputfragment found in phrasetable!!! Shouldn't happen")
-            #elif dofragmentdecode and len(inputfragment) > 1:
-                #print("\tFragment not directly translatable: " + str(inputfragment), file=sys.stderr)
-                #solutions = []
-                #for fragmentation in self.decodefragments(inputfragment, dttable):
-                #    translatedfragmentation = []
-                #    for fragment in fragmentation:
-                #        if fragment in dttable:
-                #            translatedfragmentation.append(dttable[fragment])
-                #        elif fragment in self.classifiers:
-                #            translatedfragmentation.append( self.classify( left + tuple(translatedfragmentation), tuple(['{UNKNOWN}'] * 10), sentencepair, dttable, generalleftcontext, generalrightcontext, generaldokeywords, timbloptions, lm,tweight,lmweight) )
-                #    solutions.append(translatedfragmentation)
-                pass
             else:
                 #no translation found
                 outputfragment = Fragment(None, inputfragment.id)
@@ -816,6 +793,7 @@ class ClassifierExperts:
         stats['classifier'] = 0
         stats['classifierdifferent'] = []
         stats['lmdifferent'] = []
+        stats['classifierdistlength'] = []
         stats['distlength'] = []
         return stats
 
@@ -832,13 +810,16 @@ class ClassifierExperts:
 
     def writestats(self, stats):
         totalfragments =  stats['untranslated'] + stats['fallback'] + stats['classifier']
-        print("Total fragments:                        " + str(totalfragments) ,file=sys.stderr)
+        print("Total fragments:                         " + str(totalfragments) ,file=sys.stderr)
         if totalfragments > 0:
-            print("Untranslated:                           " + str(stats['untranslated']) + " " + str(stats['untranslated'] / totalfragments) ,file=sys.stderr)
-            print("Translated by classifier:               " + str(stats['classifier']) + " " + str(stats['classifier'] / totalfragments) ,file=sys.stderr)
-            print("Translated by phrasetable:              " + str(stats['fallback']) + " " + str(stats['fallback'] / totalfragments) ,file=sys.stderr)
-            print("Classifier made a difference:           " + str(len(stats['classifierdifferent'])) + " " + str(len(stats['classifierdifferent']) / totalfragments) ,file=sys.stderr)
-            print("Mean length of classifier distribution: " + str(sum(stats['distlength']) / len(stats['distlength']) ) ,file=sys.stderr)
+            print("Untranslated:                            " + str(stats['untranslated']) + " " + str(stats['untranslated'] / totalfragments) ,file=sys.stderr)
+            print("Translated by classifier:                " + str(stats['classifier']) + " " + str(stats['classifier'] / totalfragments) ,file=sys.stderr)
+            print("Translated by phrasetable:               " + str(stats['fallback']) + " " + str(stats['fallback'] / totalfragments) ,file=sys.stderr)
+            print("Classifier made a difference:            " + str(len(stats['classifierdifferent'])) + " " + str(len(stats['classifierdifferent']) / totalfragments) ,file=sys.stderr)
+            if len(stats['classifierdistlength']) > 0:
+                print("Mean length of classifier distribution:  " + str(sum(stats['classifierdistlength']) / len(stats['classifierdistlength']) ) ,file=sys.stderr)
+            if len(stats['distlength']) > 0:
+                print("Mean length of phrasetable distribution: " + str(sum(stats['distlength']) / len(stats['distlength']) ) ,file=sys.stderr)
 
 
 
