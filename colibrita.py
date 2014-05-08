@@ -691,7 +691,7 @@ class ClassifierExperts:
     def phrasetablelookup(self, inputfragment, inputfragment_p, sentencepair, targetdecoder, ttable, lm, tweight, lmweight, stats):
         print("\tPhrasetable lookup for '" + str(inputfragment) + "' ...", file=sys.stderr)
         if lm:
-            print("\tPhrasetable translation prior to LM: " + str(inputfragment) + " -> [ DISTRIBUTION:" + str(repr(distribution))+" ]", file=sys.stderr)
+            print("\tPhrasetable translation prior to LM: " + str(inputfragment), file=sys.stderr)
             candidatesentences = []
             bestlmscore = -999999999
             besttscore = -999999999
