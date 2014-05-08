@@ -769,7 +769,7 @@ class ClassifierExperts:
                 outputfragment =  self.classify(inputfragment, left, right, sentencepair, generalleftcontext, generalrightcontext, generaldokeywords, timbloptions, lm,tweight,lmweight, stats)
                 for targetpattern, scores in sorted(ttable[inputfragment_p].items(),key=lambda x: -1* x[1][2]):
                     targetpattern_s = targetpattern.tostring(targetclassdecoder)
-                    print("\t(Comparison with best from phrasetable (no LM): " + str(outputfragment) + ": " + " ".join(scores) + ")", file=sys.stderr)
+                    print("\t(Comparison with best from phrasetable (no LM): " + str(outputfragment) + ": " + " ".join([str(x) for x in scores]) + ")", file=sys.stderr)
                     break
                 if stats: stats['classifier'] += 1
                 if str(outputfragment) != targetpattern_s:
