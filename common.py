@@ -4,6 +4,7 @@ from colibrita.format import SentencePair, Fragment, Writer, Reader
 from pynlpl.formats.moses import PhraseTable
 from pynlpl.formats.giza import GizaModel
 from pynlpl.textprocessors import Tokenizer
+from pynlpl.algorithms import sum_to_n
 from colibricore import ClassDecoder, ClassEncoder, PatternModelOptions, IndexedPatternModel
 from colibrimt.alignmentmodel import AlignmentModel
 
@@ -375,3 +376,14 @@ def runcmd(cmd, name, *outputfiles, **kwargs):
     if not execheader(name,*outputfiles, cmd=cmd): return True
     r = subprocess.call(cmd, shell=True)
     return execfooter(name, r, *outputfiles,**kwargs)
+
+def getfragmentationlengths(fragment): #(list of lengths)
+    n = len(fragment)
+    for i in range(2,n): #up to but not including l
+        for fragmentation in sum_to_n(n, i):
+            yield fragmentation #list of lengths
+
+
+
+
+

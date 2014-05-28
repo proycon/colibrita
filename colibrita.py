@@ -17,6 +17,7 @@ from copy import copy
 
 from colibrita.format import Writer, Reader, Fragment, Alternative
 from colibrita.baseline import makebaseline
+from colibrita.common import getfragmentationlengths
 from colibricore import ClassEncoder, ClassDecoder, PatternSetModel
 from colibrimt.alignmentmodel import AlignmentModel
 from pynlpl.lm.lm import ARPALanguageModel
@@ -749,19 +750,43 @@ class ClassifierExperts:
 
         return outputfragment
 
-    def getfragmentations(inputfragment, ttable):
-        pass #TODO
+    def getfragmentations(self, inputfragment, ttable):
+        for fragmentation_lengths in getfragmentationlengths(inputfragment):
+            begin = 0
+            fragmentation = []
+            valid = True
+            for fragmentlength in fragmentation_lengths:
+                fragment = inputfragment[begin:begin+fragmentlength]
+                if not fragment in ttable:
+                    valid = False
+                    break
+                begin += fragmentlength
+            if valid:
+                yield tuple(fragmentation)
 
     def decode(self, inputfragment, inputfragment_p, sentencepair, targetdecoder, ttable, lm, tweight, lmweight, stats):
         #TODO
         translations = []
         #split the original pattern in all possible fragmentations
         for fragmentation in self.getfragmentations(inputfragment_p, ttable):
+
             #decode the fragmentation
+
             for translation,scores in self.decode(fragmentation, ttable):
                 translations.append(translation, scores)
         outputfragment = sorted(translations, key=lambda x: -1 * x[1])[0]
         if self.lm: self.weighinlm(translation)
+
+
+    def translatefragments(self, fragmentation, inputtable, ttable):
+        MAXDIVERGENCEFROMBEST = 0.8
+        for fragment in fragmentation:
+            bestscore = -1
+            for targetpattern, scores in sorted(ttable[inputfragment_p].items(),key=lambda x: -1* x[1][2]):
+                if bestscore == -1:
+                    bestscore = scores[2]
+
+
 
     def processsentence(self, sentencepair, ttable, sourceclassencoder, targetclassdecoder, generalleftcontext, generalrightcontext, generaldokeywords, timbloptions, lm=None,tweight=1,lmweight=1, stats = None, dofragmentdecode=True):
         print("Processing sentence " + str(sentencepair.id),file=sys.stderr)
