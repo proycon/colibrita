@@ -749,7 +749,19 @@ class ClassifierExperts:
 
         return outputfragment
 
+    def getfragmentations(inputfragment, ttable):
+        pass #TODO
 
+    def decode(self, inputfragment, inputfragment_p, sentencepair, targetdecoder, ttable, lm, tweight, lmweight, stats):
+        #TODO
+        translations = []
+        #split the original pattern in all possible fragmentations
+        for fragmentation in self.getfragmentations(inputfragment_p, ttable):
+            #decode the fragmentation
+            for translation,scores in self.decode(fragmentation, ttable):
+                translations.append(translation, scores)
+        outputfragment = sorted(translations, key=lambda x: -1 * x[1])[0]
+        if self.lm: self.weighinlm(translation)
 
     def processsentence(self, sentencepair, ttable, sourceclassencoder, targetclassdecoder, generalleftcontext, generalrightcontext, generaldokeywords, timbloptions, lm=None,tweight=1,lmweight=1, stats = None, dofragmentdecode=True):
         print("Processing sentence " + str(sentencepair.id),file=sys.stderr)
@@ -780,6 +792,15 @@ class ClassifierExperts:
                 if stats: stats['fallback'] += 1
                 if outputfragment is None:
                     raise Exception("No outputfragment found in phrasetable!!! Shouldn't happen")
+            elif dofragmentdecode:
+                outputfragment = self.decode(inputfragment, inputfragment_p, sentencepair, targetclassdecoder, ttable, lm, tweight, lmweight, stats)
+                if outputfragment is None:
+                    #no translation found
+                    outputfragment = Fragment(None, inputfragment.id)
+                    print("\tNo translation for " + inputfragment_s, file=sys.stderr)
+                    if stats: stats['untranslated'] += 1
+                else:
+                    if stats: stats['fallbackfragmented'] += 1
             else:
                 #no translation found
                 outputfragment = Fragment(None, inputfragment.id)
@@ -787,6 +808,8 @@ class ClassifierExperts:
                 if stats: stats['untranslated'] += 1
             sentencepair.output = sentencepair.replacefragment(inputfragment, outputfragment, sentencepair.output)
         return sentencepair
+
+
 
     def loaddttable(self):
         return loaddttable(self.workdir + '/directtranslation.table')
@@ -896,7 +919,7 @@ def main():
 
     parser.add_argument('--maxlength',type=int,help="Maximum length of phrases", action='store',default=10)
     parser.add_argument('-k','--keywords',help="Add global keywords in context", action='store_true',default=False)
-    parser.add_argument('-F','--decodefragments',help="Attempt to decode long unknown fragments by breaking it up into smaller parts (not implemented yet!)", action='store_true',default=False)
+    parser.add_argument('-F','--decodefragments',help="Attempt to decode long unknown fragments by breaking them up into smaller parts and checking these directly against the phrase table", action='store_true',default=False)
     parser.add_argument("--kt",dest="bow_absolute_threshold", help="Keyword needs to occur at least this many times in the context (absolute number)", type=int, action='store',default=3)
     parser.add_argument("--kp",dest="bow_prob_threshold", help="minimal P(translation|keyword)", type=int, action='store',default=0.001)
     parser.add_argument("--kg",dest="bow_filter_threshold", help="Keyword needs to occur at least this many times globally in the entire corpus (absolute number)", type=int, action='store',default=20)
