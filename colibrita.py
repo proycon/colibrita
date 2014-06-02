@@ -757,7 +757,7 @@ class ClassifierExperts:
 
     def mosesdecode(self, mosesclient, inputfragment, sentencepair, lm, tweight, lmweight, stats):
         print("\tRunning moses decoder for '" + str(inputfragment) + "' ...", file=sys.stderr)
-        params = {"text":inputfragment, "align":"true", "report-all-factors":"true"}
+        params = {"text":inputfragment, "align":"false", "report-all-factors":"false"}
         mosesresponse = mosesclient.translate(params)
 
         if lm:
