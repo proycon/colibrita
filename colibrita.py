@@ -11,16 +11,19 @@ import math
 import timbl
 import datetime
 import pickle
+import subprocess
+import time
 from collections import defaultdict
 from urllib.parse import quote_plus, unquote_plus
 from copy import copy
 
 from colibrita.format import Writer, Reader, Fragment, Alternative
 from colibrita.baseline import makebaseline
-from colibrita.common import getfragmentationlengths
 from colibricore import ClassEncoder, ClassDecoder, PatternSetModel
 from colibrimt.alignmentmodel import AlignmentModel
 from pynlpl.lm.lm import ARPALanguageModel
+import xmlrpc.client
+
 
 try:
     from twisted.web import server, resource
@@ -750,45 +753,62 @@ class ClassifierExperts:
 
         return outputfragment
 
-    def getfragmentations(self, inputfragment, ttable):
-        for fragmentation_lengths in getfragmentationlengths(inputfragment):
-            begin = 0
-            fragmentation = []
-            valid = True
-            for fragmentlength in fragmentation_lengths:
-                fragment = inputfragment[begin:begin+fragmentlength]
-                if not fragment in ttable:
-                    valid = False
-                    break
-                begin += fragmentlength
-            if valid:
-                yield tuple(fragmentation)
-
-    def decode(self, inputfragment, inputfragment_p, sentencepair, targetdecoder, ttable, lm, tweight, lmweight, stats):
-        #TODO
-        translations = []
-        #split the original pattern in all possible fragmentations
-        for fragmentation in self.getfragmentations(inputfragment_p, ttable):
-
-            #decode the fragmentation
-
-            for translation,scores in self.decode(fragmentation, ttable):
-                translations.append(translation, scores)
-        outputfragment = sorted(translations, key=lambda x: -1 * x[1])[0]
-        if self.lm: self.weighinlm(translation)
 
 
-    def translatefragments(self, fragmentation, inputtable, ttable):
-        MAXDIVERGENCEFROMBEST = 0.8
-        for fragment in fragmentation:
-            bestscore = -1
-            for targetpattern, scores in sorted(ttable[inputfragment_p].items(),key=lambda x: -1* x[1][2]):
-                if bestscore == -1:
-                    bestscore = scores[2]
+    def mosesdecode(self, mosesclient, inputfragment, sentencepair, lm, tweight, lmweight, stats):
+        print("\tRunning moses decoder for '" + str(inputfragment) + "' ...", file=sys.stderr)
+        mosesresponse = mosesclient.translate(inputfragment)
+        if lm:
+            candidatesentences = []
+            bestlmscore = -999999999
+            besttscore = -999999999
+
+            #TODO: investigate moses XML-RPC output for nbest and adapt
+            for targetpattern_s, scores in mosesresponse['nbest']:
+                score = scores[2]
+                assert score >= 0 and score <= 1
+                tscore = math.log(score) #base-e log (LM is converted to base-e upon load)
+                translation = tuple(targetpattern_s.split())
+                outputfragment = Fragment(translation, inputfragment.id, score)
+                candidatesentence = sentencepair.replacefragment(inputfragment, outputfragment, sentencepair.output)
+                lminput = " ".join(sentencepair._str(candidatesentence)).split(" ") #joining and splitting deliberately to ensure each word is one item
+                lmscore = lm.score(lminput)
+                assert lmscore <= 0
+                if lmscore > bestlmscore:
+                    bestlmscore = lmscore
+                if tscore > besttscore:
+                    besttscore = tscore
+                candidatesentences.append( ( candidatesentence, outputfragment, tscore, lmscore ) )
 
 
+            #get the strongest sentence
+            maxscore = -9999999999
+            for candidatesentence, targetpattern, tscore, lmscore in candidatesentences:
+                tscore = tweight * (tscore-besttscore)
+                lmscore = lmweight * (lmscore-bestlmscore)
+                score = tscore + lmscore
+                print("\t LM candidate " + str(inputfragment) + " -> " + str(targetpattern) + "   score=tscore+lmscore=" + str(tscore) + "+" + str(lmscore) + "=" + str(score), file=sys.stderr)
+                if score > maxscore:
+                    maxscore = score
+                    outputfragment = targetpattern  #Fragment(targetpattern, inputfragment.id)
+                    outputfragment.confidence = score
 
-    def processsentence(self, sentencepair, ttable, sourceclassencoder, targetclassdecoder, generalleftcontext, generalrightcontext, generaldokeywords, timbloptions, lm=None,tweight=1,lmweight=1, stats = None, dofragmentdecode=True):
+
+            for candidatesentence, targetpattern, tscore, lmscore in candidatesentences:
+                if targetpattern != outputfragment:
+                    outputfragment.alternatives.append( Alternative( tuple(str(targetpattern).split()), tweight* (tscore-besttscore) + lmweight * (lmscore-bestlmscore) )  )
+            print("\tPhrasetable translation after LM: " + str(inputfragment) + " -> " + str(outputfragment) + " score= " + str(score), file=sys.stderr)
+
+        else:
+            targetpattern_s = mosesresponse['text']
+            outputfragment = Fragment(tuple( targetpattern_s.split(' ') ), inputfragment.id )
+            break
+
+            print("\tMoses translation " + str(inputfragment) + " -> " + str(outputfragment) , file=sys.stderr)
+
+        return outputfragment
+
+    def processsentence(self, sentencepair, ttable, sourceclassencoder, targetclassdecoder, generalleftcontext, generalrightcontext, generaldokeywords, timbloptions, lm=None,tweight=1,lmweight=1, stats = None, mosesclient=None):
         print("Processing sentence " + str(sentencepair.id),file=sys.stderr)
         sentencepair.ref = None
         sentencepair.output = copy(sentencepair.input)
@@ -817,15 +837,16 @@ class ClassifierExperts:
                 if stats: stats['fallback'] += 1
                 if outputfragment is None:
                     raise Exception("No outputfragment found in phrasetable!!! Shouldn't happen")
-            elif dofragmentdecode:
-                outputfragment = self.decode(inputfragment, inputfragment_p, sentencepair, targetclassdecoder, ttable, lm, tweight, lmweight, stats)
+            elif mosesclient:
+                #fall back to moses
+                outputfragment = self.mosesdecode(mosesclient, inputfragment_s, sentencepair, lm, tweight, lmweight, stats)
                 if outputfragment is None:
                     #no translation found
                     outputfragment = Fragment(None, inputfragment.id)
                     print("\tNo translation for " + inputfragment_s, file=sys.stderr)
                     if stats: stats['untranslated'] += 1
                 else:
-                    if stats: stats['fallbackfragmented'] += 1
+                    if stats: stats['fallbackmoses'] += 1
             else:
                 #no translation found
                 outputfragment = Fragment(None, inputfragment.id)
@@ -851,11 +872,11 @@ class ClassifierExperts:
         return stats
 
 
-    def test(self, data, outputfile, ttable, sourceclassencoder, targetclassdecoder, leftcontext, rightcontext, dokeywords, timbloptions, lm=None,tweight=1,lmweight=1, dofragmentdecode=True):
+    def test(self, data, outputfile, ttable, sourceclassencoder, targetclassdecoder, leftcontext, rightcontext, dokeywords, timbloptions, lm=None,tweight=1,lmweight=1, mosesclient=None):
         stats = self.initstats()
         writer = Writer(outputfile)
         for sentencepair in data:
-            sentencepair = self.processsentence(sentencepair, ttable, sourceclassencoder, targetclassdecoder, leftcontext, rightcontext, dokeywords, timbloptions, lm, tweight, lmweight, stats, dofragmentdecode)
+            sentencepair = self.processsentence(sentencepair, ttable, sourceclassencoder, targetclassdecoder, leftcontext, rightcontext, dokeywords, timbloptions, lm, tweight, lmweight, stats, mosesclient)
             writer.write(sentencepair)
         writer.close()
         if stats:
@@ -881,28 +902,6 @@ class ClassifierExperts:
 
 
 
-    def decodefragments(self, inputfragment, dttable):
-        assert isinstance(inputfragment, tuple)
-        results = 0
-        for i in reversed(range(1,len(inputfragment))):
-            subfragment = " ".join(inputfragment[0:i])
-            if subfragment in self.classifiers or subfragment in dttable:
-                fragmentation = [subfragment]
-                if i == len(inputfragment) - 1:
-                    yield fragmentation
-                    results += 1
-                else:
-                    #recursion
-                    for fragmentation in self.decodefragments(inputfragment[i+1:],dttable):
-                        yield subfragment + fragmentation
-
-
-#class MosesModel:
-#    def __init__(self, workdir, ttable):
-#        self.workdir = workdir
-#        self.ttable = ttable
-
-
 
 
 def loaddttable(filename):
@@ -924,6 +923,66 @@ def getlimit(testset):
 
 
 
+def setupmosesserver(ttable, sourceclassdecoder, targetclassdecoder, args):
+    mosesserverpid = 0
+    mosesclient = None
+    if args.fallback:
+        print("Writing " + args.outputdir + "/fallback.phrase-table",file=sys.stderr)
+        ttable.savemosesphrasetable(args.outputdir + "/fallback.phrase-table", sourceclassdecoder, targetclassdecoder)
+
+        print("Writing " + args.outputdir + "/fallback.moses.ini",file=sys.stderr)
+
+        tweights = " ".join([ str(x) for x in args.mosestweight])
+        lentweights = len(args.tweight)
+
+        #write moses.ini
+        f = open(args.outputdir + '/fallback.moses.ini','w',encoding='utf-8')
+        f.write("""
+#Moses INI, produced by colibrita.py
+[input-factors]
+0
+
+[mapping]
+0 T 0
+
+[distortion-limit]
+6
+
+[feature]
+UnknownWordPenalty
+WordPenalty
+PhrasePenalty
+PhraseDictionaryMemory name=TranslationModel0 num-features={lentweights} path={phrasetable} input-factor=0 output-factor=0 table-limit=20
+Distortion
+SRILM name=LM0 factor=0 path={lm} order={lmorder}
+
+[weight]
+UnknownWordPenalty0= 1
+WordPenalty0= {wweight}
+PhrasePenalty0= {pweight}
+LM0= {lmweight}
+TranslationModel0= {tweights}
+Distortion0= {dweight}
+""".format(phrasetable=args.outputdir + "/fallback.phrase-table", lm=args.lm, lmorder=args.lmorder, lmweight = args.moseslmweight, dweight = args.mosesdweight, tweights=tweights, lentweights=lentweights, wweight=args.moseswweight, pweight = args.mosespweight))
+
+        print("Starting Moses Server",file=sys.stderr)
+        if args.mosesdir:
+            cmd = args.mosesdir + '/bin/mosesserver'
+        else:
+            cmd = 'mosesserver'
+        cmd += ' -f ' + args.output + '.moses.ini -n-best ' + str(args.n)
+        print("Calling moses: " + cmd,file=sys.stderr)
+        p = subprocess.Popen(cmd)
+        mosesserverpid = p.pid
+
+        print("Waiting 30 secs to allow moses server to start",file=sys.stderr)
+        time.sleep(30)
+
+        print("Connecting to Moses Server",file=sys.stderr)
+        mosesclient = xmlrpc.client.ServerProxy("http://localhost:" + str(args.mosesport) + "/RPC2")
+
+    return mosesserverpid, mosesclient
+
 def main():
     parser = argparse.ArgumentParser(description="Colibrita - Translation Assistance", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--trainfromset',type=str,help="Training mode using pregenerated training set (use with -f)", action='store',default="")
@@ -944,7 +1003,7 @@ def main():
 
     parser.add_argument('--maxlength',type=int,help="Maximum length of phrases", action='store',default=10)
     parser.add_argument('-k','--keywords',help="Add global keywords in context", action='store_true',default=False)
-    parser.add_argument('-F','--decodefragments',help="Attempt to decode long unknown fragments by breaking them up into smaller parts and checking these directly against the phrase table", action='store_true',default=False)
+    parser.add_argument('-F','--fallback',help="Attempt to decode unknown fragments using moses (will start a moses server)", action='store_true',default=False)
     parser.add_argument("--kt",dest="bow_absolute_threshold", help="Keyword needs to occur at least this many times in the context (absolute number)", type=int, action='store',default=3)
     parser.add_argument("--kp",dest="bow_prob_threshold", help="minimal P(translation|keyword)", type=int, action='store',default=0.001)
     parser.add_argument("--kg",dest="bow_filter_threshold", help="Keyword needs to occur at least this many times globally in the entire corpus (absolute number)", type=int, action='store',default=20)
@@ -955,10 +1014,16 @@ def main():
     parser.add_argument('-o','--output',type=str,help="Output prefix", required = True)
     #parser.add_argument('--moses', help="Use Moses as Translation Model, no classifiers will be used, use with -T", action='store_true',default=False)
     parser.add_argument('--lm',type=str, help="Use language model in testing (file in ARPA format, as produced by for instance SRILM)", action='store',default="")
-    parser.add_argument('--lmweight',type=float, help="Language model weight (when --lm is used)", action='store',default=1)
-    parser.add_argument('--tmweight',type=float, help="Translation model weight (when --lm is used)", action='store',default=1)
+    parser.add_argument('--lmorder', type=int, help="Language Model order", action="store", default=3, required=False)
+    parser.add_argument('--lmweight',type=float, help="Language model weight (when --lm is used, not for moses)", action='store',default=1)
+    parser.add_argument('--tmweight',type=float, help="Translation model weight (when --lm is used, not for moses)", action='store',default=1)
+    parser.add_argument('--moseslmweight', type=float, help="Language Model weight for Moses fallback (-F)", action="store", default=0.5, required=False)
+    parser.add_argument('--mosesdweight', type=float, help="Distortion Model weight for Moses fallback (-F)", action="store", default=0.3, required=False)
+    parser.add_argument('--moseswweight', type=float, help="Word penalty weight for Moses fallback (-F)", action="store", default=-1, required=False)
+    parser.add_argument('--mosestweight', type=float, help="Translation Model weight for Moses fallback (-F) (may be specified multiple times for each score making up the translation model)", action="append", required=False)
+    parser.add_argument('--mosespweight', type=float, help="Phrase penalty for Moses fallback (-F)", default=0.2, action="store", required=False)
     parser.add_argument('--port',type=int, help="Server port (use with --server)", action='store',default=7893)
-    parser.add_argument('--folds',type=int, help="Number of folds to use in for cross-validatio (used with -a)", action='store',default=10)
+    parser.add_argument('--folds',type=int, help="Number of folds to use for cross-validation (used with -a)", action='store',default=10)
     parser.add_argument('-T','--ttable', type=str,help="Phrase translation table (file) to use, must be a Colibri alignment model (use colibri-mosesphrasetable2alignmodel). Will be tried as a fallback when no classifiers are made, also required when testing with --lm and without classifier training, and when using --trainfromscratch", action='store',default="")
 
     #setgen options
@@ -966,6 +1031,7 @@ def main():
     parser.add_argument('-D', dest='divergencefrombestthreshold', help="Used with --trainfromscratch: Maximum divergence from best translation option. If set to 0.8, the only alternatives considered are those that have a joined probability of equal or above 0.8 of the best translation option", type=float,action='store',default=0)
 
     parser.add_argument('--mosesdir',type=str, help="Path to moses (for --trainfromscratch)",action='store',default="")
+    parser.add_argument('--mosesport',type=int, help="Port for Moses server (will be started for you), if -F is enabled",action='store',default=8372)
     parser.add_argument('--bindir',type=str, help="Path to external bin dir (path where moses bins are installed, for --trainfromscratch)",action='store',default="/usr/local/bin")
 
     args = parser.parse_args()
@@ -1184,6 +1250,17 @@ def main():
             print("Training stage done", file=sys.stderr)
 
 
+    #if args.fallback:
+    #    mosesserver = xmlrpc.client.ServerProxy("http://localhost:" + str(args.mosesport) + "/RPC2")
+    #else:
+    #    mosesserver = None
+
+
+
+    if args.fallback and args.test and not args.baseline and not args.leftcontext and not args.righcontext:
+        # --test -F without any context  is the same as --baseline -F
+        args.test = False
+        args.baseline = True
 
     if args.baseline:
         print("Loading configuration", file=sys.stderr)
@@ -1199,6 +1276,9 @@ def main():
         print("Loading translation table",file=sys.stderr)
         ttable = AlignmentModel(args.output + "/colibri.alignmodel");
 
+        mosesserverpid, mosesclient = setupmosesserver(ttable, ClassDecoder(sourceclassfile), targetclassdecoder, args)
+
+        #TODO: integrate fallback to mosesserver
 
         data = Reader(args.baseline)
         print("Making baseline",file=sys.stderr)
@@ -1207,6 +1287,9 @@ def main():
             makebaseline(ttable, args.output + '.output.xml', data, sourceclassencoder, targetclassdecoder, lm, args.tmweight, args.lmweight)
         else:
             makebaseline(ttable, args.output + '.output.xml', data, sourceclassencoder, targetclassdecoder)
+
+        if mosesserverpid: os.kill(mosesserverpid)
+
 
     elif args.test:
 
@@ -1249,11 +1332,13 @@ def main():
             print("Loading translation table (colibri alignment model)",file=sys.stderr)
             ttable = AlignmentModel(args.output + "/colibri.alignmodel");
 
+            mosesserverpid, mosesclient = setupmosesserver(ttable, ClassDecoder(sourceclassfile), targetclassdecoder, args)
 
             print("Running...",file=sys.stderr)
             data = Reader(args.test)
-            experts.test(data, args.output + '.output.xml', ttable, sourceclassencoder,targetclassdecoder, args.leftcontext, args.rightcontext, args.keywords, timbloptions , lm,  args.tmweight, args.lmweight, args.decodefragments)
+            experts.test(data, args.output + '.output.xml', ttable, sourceclassencoder,targetclassdecoder, args.leftcontext, args.rightcontext, args.keywords, timbloptions , lm,  args.tmweight, args.lmweight, mosesclient)
 
+            cmd = 'mosesserver -f ' + args.output + '.moses.ini -n-best ' + str(args.n)
         else:
             print("Don't know what to do! Specify some classifier options or -T with --lm or --baseline", file=sys.stderr)
 
