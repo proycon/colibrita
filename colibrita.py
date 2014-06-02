@@ -757,7 +757,9 @@ class ClassifierExperts:
 
     def mosesdecode(self, mosesclient, inputfragment, sentencepair, lm, tweight, lmweight, stats):
         print("\tRunning moses decoder for '" + str(inputfragment) + "' ...", file=sys.stderr)
-        mosesresponse = mosesclient.translate(inputfragment)
+        params = {"text":inputfragment, "align":"true", "report-all-factors":"true"}
+        mosesresponse = mosesclient.translate(params)
+
         if lm:
             candidatesentences = []
             bestlmscore = -999999999
