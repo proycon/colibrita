@@ -757,7 +757,7 @@ class ClassifierExperts:
 
     def mosesdecode(self, mosesclient, inputfragment, sentencepair, lm, tweight, lmweight, stats):
         print("\tRunning moses decoder for '" + str(inputfragment) + "' ...", file=sys.stderr)
-        params = {"text":inputfragment, "align":"false", "report-all-factors":"false"}
+        params = {"text":inputfragment, "align":"false", "report-all-factors":"false", 'nbest':25}
         mosesresponse = mosesclient.translate(params)
 
         if lm:
@@ -972,7 +972,7 @@ Distortion0= {dweight}
             cmd = args.mosesdir + '/bin/mosesserver'
         else:
             cmd = 'mosesserver'
-        cmd += ' -f ' + args.output + '.moses.ini -n-best ' + str(args.n)
+        cmd += ' -f ' + args.output + '.moses.ini -n-best-list ' + args.outputdir+"/nbest.txt " + str(args.n)
         print("Calling moses: " + cmd,file=sys.stderr)
         p = subprocess.Popen(cmd)
         mosesserverpid = p.pid
