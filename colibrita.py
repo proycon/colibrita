@@ -764,12 +764,15 @@ class ClassifierExperts:
             candidatesentences = []
             bestlmscore = -999999999
             besttscore = -999999999
+            ceiling = 0
 
             #TODO: investigate moses XML-RPC output for nbest and adapt
-            for targetpattern_s, scores in mosesresponse['nbest']:
-                score = scores[2]
-                assert score >= 0 and score <= 1
-                tscore = math.log(score) #base-e log (LM is converted to base-e upon load)
+            for nbestitem in mosesresponse['nbest']:
+                targetpattern_s = nbestitem['hyp'].strip()
+                score = nbestitem['totalScore']
+                if not ceiling:
+                    ceiling = score
+                tscore = math.log(score / ceiling) #base-e log (LM is converted to base-e upon load)
                 translation = tuple(targetpattern_s.split())
                 outputfragment = Fragment(translation, inputfragment.id, score)
                 candidatesentence = sentencepair.replacefragment(inputfragment, outputfragment, sentencepair.output)
