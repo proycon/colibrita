@@ -986,10 +986,9 @@ def makebaseline(ttable, outputfile, testset,sourceencoder, targetdecoder, moses
                 sentencepair.output = sentencepair.replacefragment(inputfragment, outputfragment, sentencepair.output)
             elif mosesclient:
                 #fall back to moses
-
+                outputfragment = mosesdecode(mosesclient, inputfragment, sentencepair, lm, tweight, lmweight)
+                sentencepair.output = sentencepair.replacefragment(inputfragment, outputfragment, sentencepair.output)
             else:
-
-
                 outputfragment = Fragment(None, inputfragment.id)
                 print("\t" + inputfragment_s + " -> NO TRANSLATION", file=sys.stderr)
                 sentencepair.output = sentencepair.replacefragment(inputfragment, outputfragment, sentencepair.output)
@@ -997,7 +996,7 @@ def makebaseline(ttable, outputfile, testset,sourceencoder, targetdecoder, moses
     testset.close()
     output.close()
 
-def mosesdecode(mosesclient, inputfragment, sentencepair, lm, tweight, lmweight, stats):
+def mosesdecode(mosesclient, inputfragment, sentencepair, lm, tweight, lmweight, stats=None):
     print("\tRunning moses decoder for '" + str(inputfragment) + "' ...", file=sys.stderr)
     params = {"text":inputfragment, "align":"false", "report-all-factors":"false", 'nbest':25}
     mosesresponse = mosesclient.translate(params)
