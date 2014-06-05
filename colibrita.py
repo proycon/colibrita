@@ -18,7 +18,6 @@ from urllib.parse import quote_plus, unquote_plus
 from copy import copy
 
 from colibrita.format import Writer, Reader, Fragment, Alternative
-from colibrita.baseline import makebaseline
 from colibricore import ClassEncoder, ClassDecoder, PatternSetModel
 from colibrimt.alignmentmodel import AlignmentModel
 from pynlpl.lm.lm import ARPALanguageModel
@@ -930,6 +929,73 @@ Distortion0= {dweight}
         mosesclient = xmlrpc.client.ServerProxy("http://localhost:" + str(args.mosesport) + "/RPC2")
 
     return mosesserverpid, mosesclient
+
+def makebaseline(ttable, outputfile, testset,sourceencoder, targetdecoder, mosesclient=None, lm=None,tweight=1, lmweight=1):
+    output = Writer(outputfile)
+    for sentencepair in testset:
+        print("Sentence #" + str(sentencepair.id),file=sys.stderr)
+        sentencepair.ref = None
+        sentencepair.output = copy(sentencepair.input)
+        for left, inputfragment, right in sentencepair.inputfragments():
+            inputfragment_s = str(inputfragment)
+            print("\tFragment: ", inputfragment_s, file=sys.stderr)
+            try:
+                inputfragment_p = sourceencoder.buildpattern(inputfragment_s)
+            except IOError:
+                print("\tNOTICE: One or more words in '" + inputfragment_s + "' were not seen during training",file=sys.stderr)
+                inputfragment_p = None
+
+            translation = None
+            if inputfragment_p in ttable:
+                if lm:
+                    candidatesentences = []
+                    bestlmscore = -999999999
+                    besttscore = -999999999
+                    for targetpattern, scores in ttable[inputfragment_p].items():
+                        assert scores[2] >= 0 and scores[2] <= 1
+                        tscore = math.log(scores[2]) #convert to base-e log (LM is converted to base-e upon load)
+                        targetpattern_s = targetpattern.tostring(targetdecoder)
+                        outputfragment = Fragment(tuple( targetpattern_s.split(' ') ), inputfragment.id )
+                        candidatesentence = sentencepair.replacefragment(inputfragment, outputfragment, sentencepair.output)
+                        lminput = " ".join(sentencepair._str(candidatesentence)).split(" ") #joining and splitting deliberately to ensure each word is one item
+                        lmscore = lm.score(lminput)
+                        assert lmscore <= 0
+                        if lmscore > bestlmscore:
+                            bestlmscore = lmscore
+                        if tscore > besttscore:
+                            besttscore = tscore
+                        candidatesentences.append( ( candidatesentence, targetpattern, tscore, lmscore ) )
+                    #get the strongest sentence
+                    maxscore = -9999999999
+                    for candidatesentence, targetpattern, tscore, lmscore in candidatesentences:
+                        tscore = tweight * (tscore-besttscore)
+                        lmscore = lmweight * (lmscore-bestlmscore)
+                        score = tscore + lmscore
+                        if score > maxscore:
+                            maxscore = score
+                            translation = targetpattern
+                else:
+                    maxscore = 0
+                    for targetpattern, scores in ttable[inputfragment_p].items():
+                        targetpattern_s = targetpattern.tostring(targetdecoder)
+                        if scores[2] > maxscore:
+                            maxscore = scores[2]
+                            translation = targetpattern_s
+                outputfragment = Fragment(tuple( translation.split(' ') ), inputfragment.id )
+                print("\t" + inputfragment_s + " -> " + str(outputfragment), file=sys.stderr)
+                sentencepair.output = sentencepair.replacefragment(inputfragment, outputfragment, sentencepair.output)
+            elif mosesclient:
+                #fall back to moses
+
+            else:
+
+
+                outputfragment = Fragment(None, inputfragment.id)
+                print("\t" + inputfragment_s + " -> NO TRANSLATION", file=sys.stderr)
+                sentencepair.output = sentencepair.replacefragment(inputfragment, outputfragment, sentencepair.output)
+        output.write(sentencepair)
+    testset.close()
+    output.close()
 
 def mosesdecode(mosesclient, inputfragment, sentencepair, lm, tweight, lmweight, stats):
     print("\tRunning moses decoder for '" + str(inputfragment) + "' ...", file=sys.stderr)
