@@ -33,7 +33,6 @@ setup(
         'console_scripts': [
             'colibrita-setgen = colibrita.setgen:main',
             'colibrita-evaluate = colibrita.evaluation:main',
-            'colibrita-baseline = colibrita.baseline:main',
             'colibrita-datastats = colibrita.datastats:main',
             'colibrita-moses = colibrita.moses:main',
             'colibrita-setdiff = colibrita.setdiff:main',
