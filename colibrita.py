@@ -755,63 +755,6 @@ class ClassifierExperts:
 
 
 
-    def mosesdecode(self, mosesclient, inputfragment, sentencepair, lm, tweight, lmweight, stats):
-        print("\tRunning moses decoder for '" + str(inputfragment) + "' ...", file=sys.stderr)
-        params = {"text":inputfragment, "align":"false", "report-all-factors":"false", 'nbest':25}
-        mosesresponse = mosesclient.translate(params)
-
-        if lm:
-            candidatesentences = []
-            bestlmscore = -999999999
-            besttscore = -999999999
-            ceiling = 0
-
-            #TODO: investigate moses XML-RPC output for nbest and adapt
-            for nbestitem in mosesresponse['nbest']:
-                targetpattern_s = nbestitem['hyp'].strip()
-                score = nbestitem['totalScore']
-                if not ceiling:
-                    ceiling = score
-                tscore = math.log(score / ceiling) #base-e log (LM is converted to base-e upon load)
-                translation = tuple(targetpattern_s.split())
-                outputfragment = Fragment(translation, inputfragment.id, score)
-                candidatesentence = sentencepair.replacefragment(inputfragment, outputfragment, sentencepair.output)
-                lminput = " ".join(sentencepair._str(candidatesentence)).split(" ") #joining and splitting deliberately to ensure each word is one item
-                lmscore = lm.score(lminput)
-                assert lmscore <= 0
-                if lmscore > bestlmscore:
-                    bestlmscore = lmscore
-                if tscore > besttscore:
-                    besttscore = tscore
-                candidatesentences.append( ( candidatesentence, outputfragment, tscore, lmscore ) )
-
-
-            #get the strongest sentence
-            maxscore = -9999999999
-            for candidatesentence, targetpattern, tscore, lmscore in candidatesentences:
-                tscore = tweight * (tscore-besttscore)
-                lmscore = lmweight * (lmscore-bestlmscore)
-                score = tscore + lmscore
-                print("\t LM candidate " + str(inputfragment) + " -> " + str(targetpattern) + "   score=tscore+lmscore=" + str(tscore) + "+" + str(lmscore) + "=" + str(score), file=sys.stderr)
-                if score > maxscore:
-                    maxscore = score
-                    outputfragment = targetpattern  #Fragment(targetpattern, inputfragment.id)
-                    outputfragment.confidence = score
-
-
-            for candidatesentence, targetpattern, tscore, lmscore in candidatesentences:
-                if targetpattern != outputfragment:
-                    outputfragment.alternatives.append( Alternative( tuple(str(targetpattern).split()), tweight* (tscore-besttscore) + lmweight * (lmscore-bestlmscore) )  )
-            print("\tPhrasetable translation after LM: " + str(inputfragment) + " -> " + str(outputfragment) + " score= " + str(score), file=sys.stderr)
-
-        else:
-            targetpattern_s = mosesresponse['text']
-            outputfragment = Fragment(tuple( targetpattern_s.split(' ') ), inputfragment.id )
-            break
-
-            print("\tMoses translation " + str(inputfragment) + " -> " + str(outputfragment) , file=sys.stderr)
-
-        return outputfragment
 
     def processsentence(self, sentencepair, ttable, sourceclassencoder, targetclassdecoder, generalleftcontext, generalrightcontext, generaldokeywords, timbloptions, lm=None,tweight=1,lmweight=1, stats = None, mosesclient=None):
         print("Processing sentence " + str(sentencepair.id),file=sys.stderr)
@@ -844,7 +787,7 @@ class ClassifierExperts:
                     raise Exception("No outputfragment found in phrasetable!!! Shouldn't happen")
             elif mosesclient:
                 #fall back to moses
-                outputfragment = self.mosesdecode(mosesclient, inputfragment_s, sentencepair, lm, tweight, lmweight, stats)
+                outputfragment = mosesdecode(mosesclient, inputfragment_s, sentencepair, lm, tweight, lmweight, stats)
                 if outputfragment is None:
                     #no translation found
                     outputfragment = Fragment(None, inputfragment.id)
@@ -987,6 +930,64 @@ Distortion0= {dweight}
         mosesclient = xmlrpc.client.ServerProxy("http://localhost:" + str(args.mosesport) + "/RPC2")
 
     return mosesserverpid, mosesclient
+
+def mosesdecode(mosesclient, inputfragment, sentencepair, lm, tweight, lmweight, stats):
+    print("\tRunning moses decoder for '" + str(inputfragment) + "' ...", file=sys.stderr)
+    params = {"text":inputfragment, "align":"false", "report-all-factors":"false", 'nbest':25}
+    mosesresponse = mosesclient.translate(params)
+
+    if lm:
+        candidatesentences = []
+        bestlmscore = -999999999
+        besttscore = -999999999
+        ceiling = 0
+
+        #TODO: investigate moses XML-RPC output for nbest and adapt
+        for nbestitem in mosesresponse['nbest']:
+            targetpattern_s = nbestitem['hyp'].strip()
+            score = nbestitem['totalScore']
+            if not ceiling:
+                ceiling = score
+            tscore = math.log(score / ceiling) #base-e log (LM is converted to base-e upon load)
+            translation = tuple(targetpattern_s.split())
+            outputfragment = Fragment(translation, inputfragment.id, score)
+            candidatesentence = sentencepair.replacefragment(inputfragment, outputfragment, sentencepair.output)
+            lminput = " ".join(sentencepair._str(candidatesentence)).split(" ") #joining and splitting deliberately to ensure each word is one item
+            lmscore = lm.score(lminput)
+            assert lmscore <= 0
+            if lmscore > bestlmscore:
+                bestlmscore = lmscore
+            if tscore > besttscore:
+                besttscore = tscore
+            candidatesentences.append( ( candidatesentence, outputfragment, tscore, lmscore ) )
+
+
+        #get the strongest sentence
+        maxscore = -9999999999
+        for candidatesentence, targetpattern, tscore, lmscore in candidatesentences:
+            tscore = tweight * (tscore-besttscore)
+            lmscore = lmweight * (lmscore-bestlmscore)
+            score = tscore + lmscore
+            print("\t LM candidate " + str(inputfragment) + " -> " + str(targetpattern) + "   score=tscore+lmscore=" + str(tscore) + "+" + str(lmscore) + "=" + str(score), file=sys.stderr)
+            if score > maxscore:
+                maxscore = score
+                outputfragment = targetpattern  #Fragment(targetpattern, inputfragment.id)
+                outputfragment.confidence = score
+
+
+        for candidatesentence, targetpattern, tscore, lmscore in candidatesentences:
+            if targetpattern != outputfragment:
+                outputfragment.alternatives.append( Alternative( tuple(str(targetpattern).split()), tweight* (tscore-besttscore) + lmweight * (lmscore-bestlmscore) )  )
+        print("\tPhrasetable translation after LM: " + str(inputfragment) + " -> " + str(outputfragment) + " score= " + str(score), file=sys.stderr)
+
+    else:
+        targetpattern_s = mosesresponse['text']
+        outputfragment = Fragment(tuple( targetpattern_s.split(' ') ), inputfragment.id )
+        break
+
+        print("\tMoses translation " + str(inputfragment) + " -> " + str(outputfragment) , file=sys.stderr)
+
+    return outputfragment
 
 def main():
     parser = argparse.ArgumentParser(description="Colibrita - Translation Assistance", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -1283,15 +1284,13 @@ def main():
 
         mosesserverpid, mosesclient = setupmosesserver(ttable, ClassDecoder(sourceclassfile), targetclassdecoder, args)
 
-        #TODO: integrate fallback to mosesserver
-
         data = Reader(args.baseline)
         print("Making baseline",file=sys.stderr)
         if args.lm:
             print("(with LM)",file=sys.stderr)
-            makebaseline(ttable, args.output + '.output.xml', data, sourceclassencoder, targetclassdecoder, lm, args.tmweight, args.lmweight)
+            makebaseline(ttable, args.output + '.output.xml', data, sourceclassencoder, targetclassdecoder, mosesclient, lm, args.tmweight, args.lmweight)
         else:
-            makebaseline(ttable, args.output + '.output.xml', data, sourceclassencoder, targetclassdecoder)
+            makebaseline(ttable, args.output + '.output.xml', data, sourceclassencoder, targetclassdecoder, mosesclient)
 
         if mosesserverpid: os.kill(mosesserverpid)
 

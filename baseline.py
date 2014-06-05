@@ -14,7 +14,7 @@ from colibrita.format import Reader, Writer, Fragment
 from colibrita.common import extractpairs, makesentencepair, runcmd, makeset
 
 
-def makebaseline(ttable, outputfile, testset,sourceencoder, targetdecoder, lm=None,tweight=1, lmweight=1):
+def makebaseline(ttable, outputfile, testset,sourceencoder, targetdecoder, mosesclient=None, lm=None,tweight=1, lmweight=1):
     output = Writer(outputfile)
     for sentencepair in testset:
         print("Sentence #" + str(sentencepair.id),file=sys.stderr)
@@ -68,7 +68,12 @@ def makebaseline(ttable, outputfile, testset,sourceencoder, targetdecoder, lm=No
                 outputfragment = Fragment(tuple( translation.split(' ') ), inputfragment.id )
                 print("\t" + inputfragment_s + " -> " + str(outputfragment), file=sys.stderr)
                 sentencepair.output = sentencepair.replacefragment(inputfragment, outputfragment, sentencepair.output)
+            elif mosesclient:
+                #fall back to moses
+
             else:
+
+
                 outputfragment = Fragment(None, inputfragment.id)
                 print("\t" + inputfragment_s + " -> NO TRANSLATION", file=sys.stderr)
                 sentencepair.output = sentencepair.replacefragment(inputfragment, outputfragment, sentencepair.output)
