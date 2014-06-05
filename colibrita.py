@@ -1326,6 +1326,11 @@ def main():
     #else:
     #    mosesserver = None
 
+    if args.lm:
+        print("Loading Language model", file=sys.stderr)
+        lm = ARPALanguageModel(args.lm)
+    else:
+        lm = None
 
 
     if args.fallback and args.test and not args.baseline and not args.leftcontext and not args.righcontext:
@@ -1366,11 +1371,6 @@ def main():
         print("Parameters: ", repr(args), file=sys.stderr)
 
 
-        if args.lm:
-            print("Loading Language model", file=sys.stderr)
-            lm = ARPALanguageModel(args.lm)
-        else:
-            lm = None
 
         if (args.leftcontext or args.rightcontext or args.keywords): # and not args.moses:
             if not os.path.isdir(args.output):
