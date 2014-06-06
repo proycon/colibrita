@@ -886,6 +886,13 @@ def setupmosesserver(ttable, sourceclassdecoder, targetclassdecoder, args):
             tweights = " ".join([ str(x) for x in (0.2,0.2,0.2,0.2)])
             lentweights = 4
 
+        if not args.moseslm and not args.lm:
+            raise Exception("You must specify --moseslm or --lm if you use Moses fallback (-F)!")
+        elif args.lm:
+            lm = args.lm
+        elif args.moseslm:
+            lm = args.moseslm
+
         #write moses.ini
         f = open(args.output + '/fallback.moses.ini','w',encoding='utf-8')
         f.write("""
@@ -914,7 +921,7 @@ PhrasePenalty0= {pweight}
 LM0= {lmweight}
 TranslationModel0= {tweights}
 Distortion0= {dweight}
-""".format(phrasetable=args.output + "/fallback.phrase-table", lm=args.lm, lmorder=args.lmorder, lmweight = args.moseslmweight, dweight = args.mosesdweight, tweights=tweights, lentweights=lentweights, wweight=args.moseswweight, pweight = args.mosespweight))
+""".format(phrasetable=args.output + "/fallback.phrase-table", lm=lm, lmorder=args.lmorder, lmweight = args.moseslmweight, dweight = args.mosesdweight, tweights=tweights, lentweights=lentweights, wweight=args.moseswweight, pweight = args.mosespweight))
 
         print("Starting Moses Server",file=sys.stderr)
         if args.mosesdir:
@@ -1077,7 +1084,7 @@ def main():
 
     parser.add_argument('--maxlength',type=int,help="Maximum length of phrases", action='store',default=10)
     parser.add_argument('-k','--keywords',help="Add global keywords in context", action='store_true',default=False)
-    parser.add_argument('-F','--fallback',help="Attempt to decode unknown fragments using moses (will start a moses server)", action='store_true',default=False)
+    parser.add_argument('-F','--fallback',help="Attempt to decode unknown fragments using moses (will start a moses server, requires --moseslm or --lm)", action='store_true',default=False)
     parser.add_argument("--kt",dest="bow_absolute_threshold", help="Keyword needs to occur at least this many times in the context (absolute number)", type=int, action='store',default=3)
     parser.add_argument("--kp",dest="bow_prob_threshold", help="minimal P(translation|keyword)", type=int, action='store',default=0.001)
     parser.add_argument("--kg",dest="bow_filter_threshold", help="Keyword needs to occur at least this many times globally in the entire corpus (absolute number)", type=int, action='store',default=20)
@@ -1104,6 +1111,7 @@ def main():
     parser.add_argument('-p', dest='joinedprobabilitythreshold', help="Used with --trainfromscratch: Joined probabiity threshold for inclusion of fragments from phrase translation-table: min(P(s|t) * P(t|s))", type=float,action='store',default=0)
     parser.add_argument('-D', dest='divergencefrombestthreshold', help="Used with --trainfromscratch: Maximum divergence from best translation option. If set to 0.8, the only alternatives considered are those that have a joined probability of equal or above 0.8 of the best translation option", type=float,action='store',default=0)
 
+    parser.add_argument('--moseslm',type=str, help="Use language model for moses fallback (or issue --lm to use more widely)", action='store',default="")
     parser.add_argument('--mosesdir',type=str, help="Path to moses (for --trainfromscratch)",action='store',default="")
     parser.add_argument('--mosesport',type=int, help="Port for Moses server (will be started for you), if -F is enabled",action='store',default=8372)
     parser.add_argument('--bindir',type=str, help="Path to external bin dir (path where moses bins are installed, for --trainfromscratch)",action='store',default="/usr/local/bin")
