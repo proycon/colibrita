@@ -920,12 +920,12 @@ Distortion0= {dweight}
             cmd = args.mosesdir + '/bin/mosesserver'
         else:
             cmd = 'mosesserver'
-        cmd += ' -f ' + args.output + '.moses.ini -n-best-list ' + args.output+"/nbest.txt 25"
+        cmd += ' -f ' + args.output + '/fallback.moses.ini -n-best-list ' + args.output+"/nbest.txt 25"
         print("Calling moses: " + cmd,file=sys.stderr)
         p = subprocess.Popen(cmd,shell=True)
         mosesserverpid = p.pid
 
-        print("Waiting 30 secs to allow moses server to start",file=sys.stderr)
+        print("Waiting 30 secs to allow moses server to start (PID " + str(mosesserverpid)+")",file=sys.stderr)
         time.sleep(30)
 
         print("Connecting to Moses Server",file=sys.stderr)
