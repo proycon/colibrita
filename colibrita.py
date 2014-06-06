@@ -940,8 +940,8 @@ def setupmosesserver(ttable, sourceclassdecoder, targetclassdecoder, args):
                 s = socket.socket()
                 s.connect( ("localhost", args.mosesport) )
                 break
-            except:
-                print("Waiting for Moses server....",file=sys.stderr)
+            except Exception as e:
+                print("Waiting for Moses server....", e, file=sys.stderr)
 
         print("Connecting to Moses Server",file=sys.stderr)
         mosesclient = xmlrpc.client.ServerProxy("http://localhost:" + str(args.mosesport) + "/RPC2")
@@ -1120,7 +1120,7 @@ def main():
 
     parser.add_argument('--moseslm',type=str, help="Use language model for moses fallback (or issue --lm to use more widely)", action='store',default="")
     parser.add_argument('--mosesdir',type=str, help="Path to moses (for --trainfromscratch)",action='store',default="")
-    parser.add_argument('--mosesport',type=int, help="Port for Moses server (will be started for you), if -F is enabled",action='store',default=8372)
+    parser.add_argument('--mosesport',type=int, help="Port for Moses server (will be started for you), if -F is enabled",action='store',default=8080)
     parser.add_argument('--bindir',type=str, help="Path to external bin dir (path where moses bins are installed, for --trainfromscratch)",action='store',default="/usr/local/bin")
 
     args = parser.parse_args()
