@@ -881,9 +881,10 @@ def setupmosesserver(ttable, sourceclassdecoder, targetclassdecoder, args):
 
         if args.mosestweight:
             tweights = " ".join([ str(x) for x in args.mosestweight])
+            lentweights = len(args.mosestweight)
         else:
             tweights = " ".join([ str(x) for x in (0.2,0.2,0.2,0.2)])
-        lentweights = len(tweights)
+            lentweights = 4
 
         #write moses.ini
         f = open(args.output + '/fallback.moses.ini','w',encoding='utf-8')
