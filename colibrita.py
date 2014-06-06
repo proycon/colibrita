@@ -874,16 +874,16 @@ def setupmosesserver(ttable, sourceclassdecoder, targetclassdecoder, args):
     mosesserverpid = 0
     mosesclient = None
     if args.fallback:
-        print("Writing " + args.outputdir + "/fallback.phrase-table",file=sys.stderr)
-        ttable.savemosesphrasetable(args.outputdir + "/fallback.phrase-table", sourceclassdecoder, targetclassdecoder)
+        print("Writing " + args.output + "/fallback.phrase-table",file=sys.stderr)
+        ttable.savemosesphrasetable(args.output + "/fallback.phrase-table", sourceclassdecoder, targetclassdecoder)
 
-        print("Writing " + args.outputdir + "/fallback.moses.ini",file=sys.stderr)
+        print("Writing " + args.output + "/fallback.moses.ini",file=sys.stderr)
 
         tweights = " ".join([ str(x) for x in args.mosestweight])
         lentweights = len(args.tweight)
 
         #write moses.ini
-        f = open(args.outputdir + '/fallback.moses.ini','w',encoding='utf-8')
+        f = open(args.output + '/fallback.moses.ini','w',encoding='utf-8')
         f.write("""
 #Moses INI, produced by colibrita.py
 [input-factors]
@@ -910,7 +910,7 @@ PhrasePenalty0= {pweight}
 LM0= {lmweight}
 TranslationModel0= {tweights}
 Distortion0= {dweight}
-""".format(phrasetable=args.outputdir + "/fallback.phrase-table", lm=args.lm, lmorder=args.lmorder, lmweight = args.moseslmweight, dweight = args.mosesdweight, tweights=tweights, lentweights=lentweights, wweight=args.moseswweight, pweight = args.mosespweight))
+""".format(phrasetable=args.output + "/fallback.phrase-table", lm=args.lm, lmorder=args.lmorder, lmweight = args.moseslmweight, dweight = args.mosesdweight, tweights=tweights, lentweights=lentweights, wweight=args.moseswweight, pweight = args.mosespweight))
 
         print("Starting Moses Server",file=sys.stderr)
         if args.mosesdir:
