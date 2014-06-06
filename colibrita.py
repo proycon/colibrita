@@ -1048,7 +1048,6 @@ def mosesdecode(mosesclient, inputfragment, sentencepair, lm, tweight, lmweight,
     else:
         targetpattern_s = mosesresponse['text']
         outputfragment = Fragment(tuple( targetpattern_s.split(' ') ), inputfragment.id )
-        break
 
         print("\tMoses translation " + str(inputfragment) + " -> " + str(outputfragment) , file=sys.stderr)
 
