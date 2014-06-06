@@ -13,6 +13,7 @@ import datetime
 import pickle
 import subprocess
 import time
+import socket
 from collections import defaultdict
 from urllib.parse import quote_plus, unquote_plus
 from copy import copy
@@ -933,8 +934,14 @@ def setupmosesserver(ttable, sourceclassdecoder, targetclassdecoder, args):
         p = subprocess.Popen(cmd,shell=True)
         mosesserverpid = p.pid
 
-        print("Waiting 30 secs to allow moses server to start (PID " + str(mosesserverpid)+")",file=sys.stderr)
-        time.sleep(30)
+        while True:
+            time.sleep(5)
+            try:
+                s = socket.socket()
+                s.connect(socket.getaddrinfo("localhost", args.mosesport, proto=socket.SOL_TCP))
+                break
+            except:
+                print("Waiting for Moses server....",file=sys.stderr)
 
         print("Connecting to Moses Server",file=sys.stderr)
         mosesclient = xmlrpc.client.ServerProxy("http://localhost:" + str(args.mosesport) + "/RPC2")
