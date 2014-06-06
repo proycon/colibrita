@@ -894,34 +894,34 @@ def setupmosesserver(ttable, sourceclassdecoder, targetclassdecoder, args):
             lm = args.moseslm
 
         #write moses.ini
-        f = open(args.output + '/fallback.moses.ini','w',encoding='utf-8')
-        f.write("""
-#Moses INI, produced by colibrita.py
-[input-factors]
-0
+        with open(args.output + '/fallback.moses.ini','w',encoding='utf-8') as f:
+            f.write("""
+    #Moses INI, produced by colibrita.py
+    [input-factors]
+    0
 
-[mapping]
-0 T 0
+    [mapping]
+    0 T 0
 
-[distortion-limit]
-6
+    [distortion-limit]
+    6
 
-[feature]
-UnknownWordPenalty
-WordPenalty
-PhrasePenalty
-PhraseDictionaryMemory name=TranslationModel0 num-features={lentweights} path={phrasetable} input-factor=0 output-factor=0 table-limit=20
-Distortion
-SRILM name=LM0 factor=0 path={lm} order={lmorder}
+    [feature]
+    UnknownWordPenalty
+    WordPenalty
+    PhrasePenalty
+    PhraseDictionaryMemory name=TranslationModel0 num-features={lentweights} path={phrasetable} input-factor=0 output-factor=0 table-limit=20
+    Distortion
+    SRILM name=LM0 factor=0 path={lm} order={lmorder}
 
-[weight]
-UnknownWordPenalty0= 1
-WordPenalty0= {wweight}
-PhrasePenalty0= {pweight}
-LM0= {lmweight}
-TranslationModel0= {tweights}
-Distortion0= {dweight}
-""".format(phrasetable=args.output + "/fallback.phrase-table", lm=lm, lmorder=args.lmorder, lmweight = args.moseslmweight, dweight = args.mosesdweight, tweights=tweights, lentweights=lentweights, wweight=args.moseswweight, pweight = args.mosespweight))
+    [weight]
+    UnknownWordPenalty0= 1
+    WordPenalty0= {wweight}
+    PhrasePenalty0= {pweight}
+    LM0= {lmweight}
+    TranslationModel0= {tweights}
+    Distortion0= {dweight}
+    """.format(phrasetable=args.output + "/fallback.phrase-table", lm=lm, lmorder=args.lmorder, lmweight = args.moseslmweight, dweight = args.mosesdweight, tweights=tweights, lentweights=lentweights, wweight=args.moseswweight, pweight = args.mosespweight))
 
         print("Starting Moses Server",file=sys.stderr)
         if args.mosesdir:
