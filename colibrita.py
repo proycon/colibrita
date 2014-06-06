@@ -879,7 +879,7 @@ def setupmosesserver(ttable, sourceclassdecoder, targetclassdecoder, args):
 
         print("Writing " + args.output + "/fallback.moses.ini",file=sys.stderr)
 
-        if args.mosesweight:
+        if args.mosestweight:
             tweights = " ".join([ str(x) for x in args.mosestweight])
         else:
             tweights = " ".join([ str(x) for x in (0.2,0.2,0.2,0.2)])
