@@ -922,7 +922,7 @@ Distortion0= {dweight}
             cmd = 'mosesserver'
         cmd += ' -f ' + args.output + '.moses.ini -n-best-list ' + args.output+"/nbest.txt 25"
         print("Calling moses: " + cmd,file=sys.stderr)
-        p = subprocess.Popen(cmd)
+        p = subprocess.Popen(cmd,shell=True)
         mosesserverpid = p.pid
 
         print("Waiting 30 secs to allow moses server to start",file=sys.stderr)
