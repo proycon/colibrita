@@ -817,6 +817,7 @@ class ClassifierExperts:
         stats['lmdifferent'] = []
         stats['classifierdistlength'] = []
         stats['distlength'] = []
+        stats['fallbackmoses'] = 0
         return stats
 
 
