@@ -1034,7 +1034,7 @@ def mosesdecode(mosesclient, inputfragment, sentencepair, lm, tweight, lmweight,
                 ceiling = score
             tscore = math.log(score / ceiling) #base-e log (LM is converted to base-e upon load)
             translation = tuple(targetpattern_s.split())
-            outputfragment = Fragment(translation, inputfragment.id, score)
+            outputfragment = Fragment(translation, 1, score)
             candidatesentence = sentencepair.replacefragment(inputfragment, outputfragment, sentencepair.output)
             lminput = " ".join(sentencepair._str(candidatesentence)).split(" ") #joining and splitting deliberately to ensure each word is one item
             lmscore = lm.score(lminput)
