@@ -938,7 +938,7 @@ def setupmosesserver(ttable, sourceclassdecoder, targetclassdecoder, args):
             time.sleep(5)
             try:
                 s = socket.socket()
-                s.connect(socket.getaddrinfo("localhost", args.mosesport, proto=socket.SOL_TCP))
+                s.connect( ("localhost", args.mosesport) )
                 break
             except:
                 print("Waiting for Moses server....",file=sys.stderr)
