@@ -1426,7 +1426,6 @@ def main():
             data = Reader(args.test)
             experts.test(data, args.output + '.output.xml', ttable, sourceclassencoder,targetclassdecoder, args.leftcontext, args.rightcontext, args.keywords, timbloptions , lm,  args.tmweight, args.lmweight, mosesclient)
 
-            cmd = 'mosesserver -f ' + args.output + '.moses.ini -n-best ' + str(args.n)
         else:
             print("Don't know what to do! Specify some classifier options or -T with --lm or --baseline", file=sys.stderr)
 
