@@ -920,7 +920,7 @@ Distortion0= {dweight}
             cmd = args.mosesdir + '/bin/mosesserver'
         else:
             cmd = 'mosesserver'
-        cmd += ' -f ' + args.output + '.moses.ini -n-best-list ' + args.outputdir+"/nbest.txt " + str(args.n)
+        cmd += ' -f ' + args.output + '.moses.ini -n-best-list ' + args.output+"/nbest.txt " + str(args.n)
         print("Calling moses: " + cmd,file=sys.stderr)
         p = subprocess.Popen(cmd)
         mosesserverpid = p.pid
