@@ -1352,7 +1352,7 @@ def main():
         lm = None
 
 
-    if args.fallback and args.test and not args.baseline and not args.leftcontext and not args.righcontext:
+    if args.fallback and args.test and not args.baseline and not args.leftcontext and not args.rightcontext:
         # --test -F without any context  is the same as --baseline -F
         args.test = False
         args.baseline = True
