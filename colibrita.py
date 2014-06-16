@@ -993,6 +993,7 @@ def makebaseline(ttable, outputfile, testset,sourceencoder, targetdecoder, moses
                         if score > maxscore:
                             maxscore = score
                             translation = targetpattern
+                    translation = translation.tostring(targetdecoder)
                 else:
                     maxscore = 0
                     for targetpattern, scores in ttable[inputfragment_p].items():
