@@ -1427,6 +1427,7 @@ def main():
             data = Reader(args.test)
             experts.test(data, args.output + '.output.xml', ttable, sourceclassencoder,targetclassdecoder, args.leftcontext, args.rightcontext, args.keywords, timbloptions , lm,  args.tmweight, args.lmweight, mosesclient)
 
+            if mosesserverpid: os.kill(mosesserverpid)
         else:
             print("Don't know what to do! Specify some classifier options or -T with --lm or --baseline", file=sys.stderr)
 
