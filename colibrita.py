@@ -14,14 +14,17 @@ import pickle
 import subprocess
 import time
 import socket
+import lxml.etree
 from collections import defaultdict
 from urllib.parse import quote_plus, unquote_plus
 from copy import copy
 
 from colibrita.format import Writer, Reader, Fragment, Alternative
+from colibrita.common import plaintext2sentencepair
 from colibricore import ClassEncoder, ClassDecoder, PatternSetModel
 from colibrimt.alignmentmodel import AlignmentModel
 from pynlpl.lm.lm import ARPALanguageModel
+
 import xmlrpc.client
 
 
@@ -33,49 +36,49 @@ try:
         isLeaf = True
         numberRequests = 0
 
-        def __init__(self, experts, dttable, ttable, lm, args, timbloptions):
+        def __init__(self, experts, ttable,sourceclassencoder, targetclassdecoder, lm, args, timbloptions, mosesclient):
             self.experts = experts
-            self.dttable = dttable
             self.ttable = ttable
             self.lm = lm
             self.args = args
             self.timbloptions = timbloptions
+            self.mosesclient = mosesclient
+            self.sourceclassencoder = sourceclassencoder
+            self.targetclassdecoder = targetclassdecoder
 
-        #def render_GET(self, request):
-        #    self.numberRequests += 1
-        #    if b'input' in request.args:
-        #        request.setHeader(b"content-type", b"application/xml")
-        #        print("Server input: ", request.args[b'input'][0], file=sys.stderr)
-        #        line = str(request.args[b'input'][0],'utf-8')
-        #        sentencepair = plaintext2sentencepair(line)
-        #        if self.experts:
-        #            sentencepair = self.experts.processsentence(sentencepair, self.dttable, self.args.leftcontext, self.args.rightcontext, self.args.keywords, self.timbloptions, self.lm, self.args.tmweight, self.args.lmweight)
-        #        elif self.ttable:
-        #            pass #TODO
-        #        return lxml.etree.tostring(sentencepair.xml(), encoding='utf-8',xml_declaration=False, pretty_print=True)
-        #    else:
-        #        request.setHeader(b"content-type", b"text/html")
-        #        return b"""<?xml version="1.0" encoding="utf-8"?>
-#<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-#<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
-#<html>
-#  <head>
-#        <meta http-equiv="content-type" content="application/xhtml+xml; charset=utf-8"/>
-#        <title>Colibrita &cdot; Translation Assistant</title>
-#  </head>
-#  <body>
-#      Enter text in target language, enclose fall-back language content in asteriskes (*):<br />
-#      <form action="/" method="get">
-#          <input name="input" /><br />
-#          <input type="submit">
-#      </form>
-#  </body>
-#</html>"""
+        def render_GET(self, request):
+            self.numberRequests += 1
+            if b'input' in request.args:
+                request.setHeader(b"content-type", b"application/xml")
+                print("Server input: ", request.args[b'input'][0], file=sys.stderr)
+                line = str(request.args[b'input'][0],'utf-8')
+                sentencepair = plaintext2sentencepair(line)
+                if self.experts:
+                    sentencepair = self.experts.processsentence(sentencepair, self.ttable, self.sourceclassencoder, self.targetclassdecoder, self.args.leftcontext, self.args.rightcontext, self.args.keywords, self.timbloptions, self.lm, self.args.tmweight, self.args.lmweight, None, self.mosesclient)
+                return lxml.etree.tostring(sentencepair.xml(), encoding='utf-8',xml_declaration=False, pretty_print=True)
+            else:
+                request.setHeader(b"content-type", b"text/html")
+                return b"""<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<html>
+  <head>
+        <meta http-equiv="content-type" content="application/xhtml+xml; charset=utf-8"/>
+        <title>Colibrita &cdot; Translation Assistant</title>
+  </head>
+  <body>
+      Enter text in target language, enclose fall-back language content in asteriskes (*):<br />
+      <form action="/" method="get">
+          <input name="input" /><br />
+          <input type="submit">
+      </form>
+  </body>
+</html>"""
 
     class ColibritaServer:
-        def __init__(self, port, experts, dttable, ttable, lm, args, timbloptions):
+        def __init__(self, port, experts,ttable, sourceclassencoder, targetclassdecoder, lm, args, timbloptions,mosesclient ):
             assert isinstance(port, int)
-            reactor.listenTCP(port, server.Site(ColibritaProcessorResource(experts,dttable, ttable,lm, args, timbloptions)))
+            reactor.listenTCP(port, server.Site(ColibritaProcessorResource(experts,ttable ,sourceclassencoder, targetclassdecoder,lm, args, timbloptions, mosesclient)))
             reactor.run()
 
 except ImportError:
@@ -1358,7 +1361,17 @@ def main():
         args.baseline = args.test
         args.test = ""
 
-    if args.baseline:
+    if args.baseline or args.test or args.server or args.run:
+        if not os.path.isdir(args.output):
+            print("Output directory " + args.output + " does not exist, did you forget to train the system first?", file=sys.stderr)
+            sys.exit(2)
+        if not os.path.exists(args.output + "/colibri.alignmodel"):
+            print("Alignment model in output directory " + args.output + " does not exist, did you forget to train the system first?", file=sys.stderr)
+            sys.exit(2)
+        if not os.path.exists(args.output+'/colibrita.conf'):
+            print("No colibrita.conf found in specified directory (-o). Has the system been trained?", file=sys.stderr)
+            sys.exit(2)
+
         print("Loading configuration", file=sys.stderr)
         conf = pickle.load(open(args.output + '/colibrita.conf','rb'))
         sourceclassfile = conf['sourceclassfile']
@@ -1373,6 +1386,10 @@ def main():
         ttable = AlignmentModel(args.output + "/colibri.alignmodel");
 
         mosesserverpid, mosesclient = setupmosesserver(ttable, ClassDecoder(sourceclassfile), targetclassdecoder, args)
+    else:
+        mosesserverpid = 0
+
+    if args.baseline:
 
         data = Reader(args.baseline)
         print("Making baseline",file=sys.stderr)
@@ -1382,111 +1399,38 @@ def main():
         else:
             makebaseline(ttable, args.output + '.output.xml', data, sourceclassencoder, targetclassdecoder, mosesclient)
 
-        if mosesserverpid: os.kill(mosesserverpid)
-
-
     elif args.test:
-
-
         print("Parameters: ", repr(args), file=sys.stderr)
 
-
-
         if (args.leftcontext or args.rightcontext or args.keywords): # and not args.moses:
-            if not os.path.isdir(args.output):
-                print("Output directory " + args.output + " does not exist, did you forget to train the system first?", file=sys.stderr)
-                sys.exit(2)
-            if not os.path.exists(args.output + "/colibri.alignmodel"):
-                print("Alignment model in output directory " + args.output + " does not exist, did you forget to train the system first?", file=sys.stderr)
-                sys.exit(2)
-            if not os.path.exists(args.output+'/colibrita.conf'):
-                print("No colibrita.conf found in specified directory (-o). Has the system been trained?", file=sys.stderr)
-                sys.exit(2)
-
-            print("Loading configuration", file=sys.stderr)
-            conf = pickle.load(open(args.output + '/colibrita.conf','rb'))
-            sourceclassfile = conf['sourceclassfile']
-            targetclassfile = conf['targetclassfile']
-
-            print("Loading source class encoder", file=sys.stderr)
-            sourceclassencoder = ClassEncoder(sourceclassfile)
-            print("Loading target class decoder", file=sys.stderr)
-            targetclassdecoder = ClassDecoder(targetclassfile)
-
-
-            experts = ClassifierExperts(args.output)
-            print("Loading classifiers",file=sys.stderr)
-            experts.load(timbloptions, args.leftcontext, args.rightcontext, args.keywords, None, args.autoconf)
-
-            print("Loading translation table (colibri alignment model)",file=sys.stderr)
-            ttable = AlignmentModel(args.output + "/colibri.alignmodel");
-
-            mosesserverpid, mosesclient = setupmosesserver(ttable, ClassDecoder(sourceclassfile), targetclassdecoder, args)
 
             print("Running...",file=sys.stderr)
             data = Reader(args.test)
             experts.test(data, args.output + '.output.xml', ttable, sourceclassencoder,targetclassdecoder, args.leftcontext, args.rightcontext, args.keywords, timbloptions , lm,  args.tmweight, args.lmweight, mosesclient)
 
-            if mosesserverpid: os.kill(mosesserverpid)
         else:
             print("Don't know what to do! Specify some classifier options or -T with --lm or --baseline", file=sys.stderr)
 
-    #elif args.settype == 'run' or args.settype == 'server':
+    elif args.server:
+        print("Starting Colibrita server on port " + str(args.port),file=sys.stderr)
+        ColibritaServer(args.port, experts, ttable, sourceclassencoder, targetclassdecoder, lm, args, timbloptions, mosesclient)
 
-    #    if args.settype == 'server':
-    #        try:
-    #            ColibritaServer
-    #        except:
-    #            print("Server not available, twisted not loaded...", file=sys.stderr)
-    #            sys.exit(2)
+    elif args.run:
+        print("Reading from standard input, enclose words/phrases in fallback language in asteriskes (*), type q<enter> to quit",file=sys.stderr)
+        for line in sys.stdin:
+            line = line.strip()
+            if line == "q":
+                break
+            else:
+                sentencepair = plaintext2sentencepair(line)
+                if experts:
+                    sentencepair = experts.processsentence(sentencepair, ttable, sourceclassencoder, targetclassdecoder, args.leftcontext, args.rightcontext, args.keywords, timbloptions, lm, args.tmweight, args.lmweight, None, mosesclient)
+                print(str(lxml.etree.tostring(sentencepair.xml(), encoding='utf-8',xml_declaration=False, pretty_print=True),'utf-8'), file=sys.stderr)
+                print(sentencepair.outputstr())
+    else:
+        print("Don't know what to do!", file=sys.stderr)
 
-    #    print("Parameters: ", repr(args), file=sys.stderr)
-    #    if args.lm:
-    #        print("Loading Language model", file=sys.stderr)
-    #        lm = ARPALanguageModel(args.lm)
-    #    else:
-    #        lm = None
-
-    #    if args.autoconf:
-    #        print("Warning: Autoconf specified at testing time, has no effect. Has to be specified at training time", file=sys.stderr)
-
-    #    experts = None
-    #    dttable = {}
-    #    ttable = None
-    #    if args.leftcontext or args.rightcontext or args.keywords:
-    #        if not os.path.exists(args.output + '/directtranslation.table'):
-    #            print("Direct translation table does not exist, did you forget to train the system first?", file=sys.stderr)
-    #            sys.exit(2)
-    #        else:
-    #            print("Loading direct translation table", file=sys.stderr)
-    #            dttable = loaddttable(args.output + '/directtranslation.table')
-    #        experts = ClassifierExperts(args.output)
-    #        print("Loading classifiers",file=sys.stderr)
-    #        experts.load(timbloptions, args.leftcontext, args.rightcontext, args.keywords)
-    #    elif args.ttable:
-    #        print("Loading translation table",file=sys.stderr)
-    #        ttable = AlignmentModel()
-    #        ttable.load(args.ttable)
-            #ttable = PhraseTable(args.ttable,False, False, "|||", 3, 0,None, None)
-
-        #if args.settype == 'run':
-        #    print("Reading from standard input, enclose words/phrases in fallback language in asteriskes (*), type q<enter> to quit",file=sys.stderr)
-        #    for line in sys.stdin:
-        #        line = line.strip()
-        #        if line == "q":
-        #            break
-        #        else:
-        #            sentencepair = plaintext2sentencepair(line)
-        #            if experts:
-        #                sentencepair = experts.processsentence(sentencepair, ttable, args.leftcontext, args.rightcontext, args.keywords, timbloptions, lm, ttable, args.tmweight, args.lmweight, args.decodefragments)
-        #            elif args.ttable:
-        #                pass #TODO
-        #            print(str(lxml.etree.tostring(sentencepair.xml(), encoding='utf-8',xml_declaration=False, pretty_print=True),'utf-8'), file=sys.stderr)
-        #            print(sentencepair.outputstr())
-        #elif args.settype == 'server':
-        #    print("Starting Colibrita server on port " + str(args.port),file=sys.stderr)
-        #    ColibritaServer(args.port, experts, dttable, ttable, lm, args, timbloptions)
-
+    if mosesserverpid: os.kill(mosesserverpid)
     print("All done.", file=sys.stderr)
 
 
