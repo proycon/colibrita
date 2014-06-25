@@ -1023,7 +1023,7 @@ def mosesdecode(mosesclient, inputfragment, sentencepair, lm, tweight, lmweight,
     print("\tRunning moses decoder for '" + str(inputfragment) + "' ...", file=sys.stderr)
     if not inputfragment:
         raise ValueError("No inputfragment specified!")
-    params = {"text":inputfragment, "align":"false", "report-all-factors":"false", 'nbest':25}
+    params = {"text":str(inputfragment), "align":"false", "report-all-factors":"false", 'nbest':25}
     mosesresponse = mosesclient.translate(params)
 
     if lm:
