@@ -1021,6 +1021,8 @@ def makebaseline(ttable, outputfile, testset,sourceencoder, targetdecoder, moses
 
 def mosesdecode(mosesclient, inputfragment, sentencepair, lm, tweight, lmweight, stats=None):
     print("\tRunning moses decoder for '" + str(inputfragment) + "' ...", file=sys.stderr)
+    if not inputfragment:
+        raise ValueError("No inputfragment specified!")
     params = {"text":inputfragment, "align":"false", "report-all-factors":"false", 'nbest':25}
     mosesresponse = mosesclient.translate(params)
 
