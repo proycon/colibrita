@@ -1031,22 +1031,23 @@ def mosesonlyfullsentence(outputfile, testset, mosesclient=None):
 
         print("\tRunning moses decoder (full sentence) for '" + sentencepair.inputstr('*') + "' ...", file=sys.stderr)
 
-        inputsentence_raw = sentencepair.inputstr("&").strip() + ' ' #trailing space to simplify algorithm below:
+        inputsentence_raw = sentencepair.inputstr("&").strip()
         inputsentence_xml = ""
         leadwords = 0
         tailwords = 0
         havefragment = False
         for word in inputsentence_raw.split(' '):
-            if word[0] == '&' and word[-1] == '&':
-                word = word[1:-1]
-                havefragment = True
-                inputsentence_xml += word[1:-1] + "<wall/>"
-            else:
-                inputsentence_xml += "<w translation=\"" + word.replace("\"","&quot;") + "\">" + word + "</w><wall/> "
-                if havefragment:
-                    tailwords += 1
+            if word:
+                if word[0] == '&' and word[-1] == '&':
+                    word = word[1:-1]
+                    havefragment = True
+                    inputsentence_xml += word[1:-1] + "<wall/>"
                 else:
-                    leadwords += 1
+                    inputsentence_xml += "<w translation=\"" + word.replace("\"","&quot;") + "\">" + word + "</w><wall/> "
+                    if havefragment:
+                        tailwords += 1
+                    else:
+                        leadwords += 1
 
         params = {"text":inputsentence_xml.strip(), "align":"false", "report-all-factors":"false", 'nbest':25}
         mosesresponse = mosesclient.translate(params)
