@@ -15,6 +15,7 @@ import subprocess
 import time
 import socket
 import lxml.etree
+import signal
 from collections import defaultdict
 from urllib.parse import quote_plus, unquote_plus
 from copy import copy
@@ -878,7 +879,7 @@ def getlimit(testset):
 def setupmosesserver(ttable, sourceclassdecoder, targetclassdecoder, args):
     mosesserverpid = 0
     mosesclient = None
-    if args.fallback:
+    if args.fallback or args.mosesxml:
         print("Writing " + args.output + "/fallback.phrase-table",file=sys.stderr)
         ttable.savemosesphrasetable(args.output + "/fallback.phrase-table", sourceclassdecoder, targetclassdecoder)
 
@@ -933,6 +934,8 @@ def setupmosesserver(ttable, sourceclassdecoder, targetclassdecoder, args):
             cmd = args.mosesdir + '/bin/mosesserver'
         else:
             cmd = 'mosesserver'
+        if args.mosesxml:
+            cmd += " -xml-input exclusive"
         cmd += ' -f ' + args.output + '/fallback.moses.ini -n-best-list ' + args.output+"/nbest.txt 25"
         print("Calling moses: " + cmd,file=sys.stderr)
         p = subprocess.Popen(cmd,shell=True)
@@ -1099,6 +1102,7 @@ def main():
     parser.add_argument('--maxlength',type=int,help="Maximum length of phrases", action='store',default=10)
     parser.add_argument('-k','--keywords',help="Add global keywords in context", action='store_true',default=False)
     parser.add_argument('-F','--fallback',help="Attempt to decode unknown fragments using moses (will start a moses server, requires --moseslm or --lm)", action='store_true',default=False)
+    parser.add_argument('--mosesxml',help="Pass full sentence as XML to Moses server (will start a moses server, requires --moseslm or --lm)", action='store_true',default=False)
     parser.add_argument("--kt",dest="bow_absolute_threshold", help="Keyword needs to occur at least this many times in the context (absolute number)", type=int, action='store',default=3)
     parser.add_argument("--kp",dest="bow_prob_threshold", help="minimal P(translation|keyword)", type=int, action='store',default=0.001)
     parser.add_argument("--kg",dest="bow_filter_threshold", help="Keyword needs to occur at least this many times globally in the entire corpus (absolute number)", type=int, action='store',default=20)
@@ -1358,7 +1362,7 @@ def main():
         lm = None
 
 
-    if args.fallback and args.test and not args.baseline and not args.leftcontext and not args.rightcontext:
+    if (args.fallback or args.mosesxml) and args.test and not args.baseline and not args.leftcontext and not args.rightcontext:
         # --test -F without any context  is the same as --baseline -F
         args.baseline = args.test
         args.test = ""
@@ -1432,7 +1436,7 @@ def main():
     else:
         print("Don't know what to do!", file=sys.stderr)
 
-    if mosesserverpid: os.kill(mosesserverpid)
+    if mosesserverpid: os.kill(mosesserverpid, signal.CTRL_C_EVENT)
     print("All done.", file=sys.stderr)
 
 
