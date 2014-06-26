@@ -1153,7 +1153,7 @@ def main():
     parser.add_argument('--maxlength',type=int,help="Maximum length of phrases", action='store',default=10)
     parser.add_argument('-k','--keywords',help="Add global keywords in context", action='store_true',default=False)
     parser.add_argument('-F','--fallback',help="Attempt to decode unknown fragments using moses (will start a moses server, requires --moseslm or --lm)", action='store_true',default=False)
-    parser.add_argument('--mosesonly',help="Similar to -F, but pass L1 fragment in full L2 sentence to Moses server using XML input (will start a moses server, requires --moseslm), colibrita won't do much extra", action='store_true',default=False)
+    parser.add_argument('-Z','--mosesonly',help="Similar to -F, but pass L1 fragment in full L2 sentence to Moses server using XML input (will start a moses server, requires --moseslm), colibrita won't do much extra", action='store_true',default=False)
     parser.add_argument("--kt",dest="bow_absolute_threshold", help="Keyword needs to occur at least this many times in the context (absolute number)", type=int, action='store',default=3)
     parser.add_argument("--kp",dest="bow_prob_threshold", help="minimal P(translation|keyword)", type=int, action='store',default=0.001)
     parser.add_argument("--kg",dest="bow_filter_threshold", help="Keyword needs to occur at least this many times globally in the entire corpus (absolute number)", type=int, action='store',default=20)
