@@ -1087,7 +1087,6 @@ def mosesdecode(mosesclient, inputfragment, sentencepair, lm, tweight, lmweight,
         besttscore = -999999999
         ceiling = 0
 
-        #TODO: investigate moses XML-RPC output for nbest and adapt
         for nbestitem in mosesresponse['nbest']:
             targetpattern_s = nbestitem['hyp'].strip()
             score = nbestitem['totalScore']
