@@ -1043,7 +1043,7 @@ def mosesonlyfullsentence(outputfile, testset, mosesclient=None):
                 begin = i + 1
                 word = inputsentence_raw[begin:i].strip()
                 if word:
-                    inputsentence_xml += "<w translation=\"" + word.replace("\"","&quot;") + "\">" + word + "</w><wall /> "
+                    inputsentence_xml += "<w translation=\"" + word.replace("\"","&quot;") + "\">" + word + "</w><wall/> "
                     if havefragment:
                         tailwords += 1
                     else:
