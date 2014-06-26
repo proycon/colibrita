@@ -1031,33 +1031,22 @@ def mosesonlyfullsentence(outputfile, testset, mosesclient=None):
 
         print("\tRunning moses decoder (full sentence) for '" + sentencepair.inputstr('*') + "' ...", file=sys.stderr)
 
-        inputsentence_raw = sentencepair.inputstr("{MARK}").strip() + ' ' #trailing space to simplify algorithm below:
+        inputsentence_raw = sentencepair.inputstr("&").strip() + ' ' #trailing space to simplify algorithm below:
         inputsentence_xml = ""
-        begin = 0
         leadwords = 0
         tailwords = 0
-        mark = False
         havefragment = False
-        for i in range(0,  len(inputsentence_raw)):
-            if inputsentence_raw[i] == ' ' and not mark:
-                begin = i + 1
-                word = inputsentence_raw[begin:i].strip()
-                if word:
-                    inputsentence_xml += "<w translation=\"" + word.replace("\"","&quot;") + "\">" + word + "</w><wall/> "
-                    if havefragment:
-                        tailwords += 1
-                    else:
-                        leadwords += 1
-            elif inputsentence_raw[i:i+6] == "{MARK}":
-                if mark:
-                    word = inputsentence_raw[begin:i]
-                    inputsentence_xml += word + "<wall/> "
-                    mark = False
-                    havefragment = True
+        for word in inputsentence_raw.split(' '):
+            if word[0] == '&' and word[-1] == '&':
+                word = word[1:-1]
+                havefragment = True
+                inputsentence_xml += word[1:-1] + "<wall/>"
+            else:
+                inputsentence_xml += "<w translation=\"" + word.replace("\"","&quot;") + "\">" + word + "</w><wall/> "
+                if havefragment:
+                    tailwords += 1
                 else:
-                    mark = True
-                begin = i+6
-
+                    leadwords += 1
 
         params = {"text":inputsentence_xml.strip(), "align":"false", "report-all-factors":"false", 'nbest':25}
         mosesresponse = mosesclient.translate(params)
