@@ -1052,7 +1052,7 @@ def mosesonlyfullsentence(outputfile, testset, mosesclient=None):
         params = {"text":inputsentence_xml.strip(), "align":"false", "report-all-factors":"false", 'nbest':25}
         mosesresponse = mosesclient.translate(params)
 
-        outputsentence = mosesresponse['text'].strip()
+        outputsentence = ' '.join([ x.strip() for x in mosesresponse['text'].split(' ') if x.strip() ])
         print("\tMoses response: " + outputsentence + " [leadwords="+str(leadwords) + ":tailwords=" + str(tailwords) +"]")
         outputfragment = Fragment( outputsentence.split(' ')[leadwords:-tailwords] , 1 )
 
