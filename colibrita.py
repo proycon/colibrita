@@ -1031,14 +1031,14 @@ def mosesonlyfullsentence(outputfile, testset, mosesclient=None):
 
         print("\tRunning moses decoder (full sentence) for '" + sentencepair.inputstr('*') + "' ...", file=sys.stderr)
 
-        inputsentence_raw = sentencepair.inputstr("&").strip()
+        inputsentence_raw = sentencepair.inputstr("*").strip()
         inputsentence_xml = ""
         leadwords = 0
         tailwords = 0
         havefragment = False
         for word in inputsentence_raw.split(' '):
             if word:
-                if word[0] == '&' and word[-1] == '&':
+                if word[0] == '*' and word[-1] == '*':
                     word = word[1:-1]
                     havefragment = True
                     inputsentence_xml += word[1:-1] + "<wall/>"
