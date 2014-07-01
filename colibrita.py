@@ -1041,7 +1041,7 @@ def mosesonlyfullsentence(outputfile, testset, mosesclient=None):
                 if word[0] == '*' and word[-1] == '*':
                     word = word[1:-1]
                     havefragment = True
-                    inputsentence_xml += word[1:-1] + "<wall/>"
+                    inputsentence_xml += word + "<wall/>"
                 else:
                     inputsentence_xml += "<w translation=\"" + word.replace("\"","&quot;") + "\">" + word + "</w><wall/> "
                     if havefragment:
