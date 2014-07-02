@@ -809,14 +809,14 @@ class ClassifierExperts:
 
 
 
-    def loaddttable(self):
-        return loaddttable(self.workdir + '/directtranslation.table')
+        def loaddttable(self):
+            return loaddttable(self.workdir + '/directtranslation.table')
 
-    def initstats(self):
-        stats = {}
-        stats['untranslated'] = 0
-        stats['fallback'] = 0
-        stats['classifier'] = 0
+        def initstats(self):
+            stats = {}
+            stats['untranslated'] = 0
+            stats['fallback'] = 0
+            stats['classifier'] = 0
         stats['classifierdifferent'] = []
         stats['lmdifferent'] = []
         stats['classifierdistlength'] = []
@@ -825,11 +825,11 @@ class ClassifierExperts:
         return stats
 
 
-    def test(self, data, outputfile, ttable, sourceclassencoder, targetclassdecoder, leftcontext, rightcontext, dokeywords, timbloptions, lm=None,tweight=1,lmweight=1, mosesclient=None):
+    def test(self, data, outputfile, ttable, sourceclassencoder, targetclassdecoder, leftcontext, rightcontext, dokeywords, timbloptions, lm=None,tweight=1,lmweight=1, mosesclient=None,moses=False):
         stats = self.initstats()
         writer = Writer(outputfile)
         for sentencepair in data:
-            sentencepair = self.processsentence(sentencepair, ttable, sourceclassencoder, targetclassdecoder, leftcontext, rightcontext, dokeywords, timbloptions, lm, tweight, lmweight, stats, mosesclient)
+            sentencepair = self.processsentence(sentencepair, ttable, sourceclassencoder, targetclassdecoder, leftcontext, rightcontext, dokeywords, timbloptions, lm, tweight, lmweight, stats, mosesclient,moses)
             writer.write(sentencepair)
         writer.close()
         if stats:
@@ -879,7 +879,7 @@ def getlimit(testset):
 def setupmosesserver(ttable, sourceclassdecoder, targetclassdecoder, args):
     mosesserverpid = 0
     mosesclient = None
-    if args.fallback or args.mosesonly:
+    if args.fallback or args.moses:
         print("Writing " + args.output + "/fallback.phrase-table",file=sys.stderr)
         ttable.savemosesphrasetable(args.output + "/fallback.phrase-table", sourceclassdecoder, targetclassdecoder)
 
@@ -893,7 +893,7 @@ def setupmosesserver(ttable, sourceclassdecoder, targetclassdecoder, args):
             lentweights = 4
 
         if not args.moseslm and not args.lm:
-            raise Exception("You must specify --moseslm or --lm if you use Moses fallback (-F) or --mosesonly!")
+            raise Exception("You must specify --moseslm or --lm if you use Moses fallback (-F) or --moses!")
         elif args.lm:
             lm = args.lm
         elif args.moseslm:
@@ -934,8 +934,11 @@ def setupmosesserver(ttable, sourceclassdecoder, targetclassdecoder, args):
             cmd = args.mosesdir + '/bin/mosesserver'
         else:
             cmd = 'mosesserver'
-        if args.mosesonly:
-            cmd += " -xml-input exclusive"
+        if args.moses:
+            if args.leftcontextsize or args.rightcontextsize:
+                cmd += " -xml-input inclusive" #compete with phrase-table
+            else:
+                cmd += " -xml-input exclusive" #only used for passing verbatim L2
         cmd += ' -f ' + args.output + '/fallback.moses.ini -n-best-list ' + args.output+"/nbest.txt 25"
         print("Calling moses: " + cmd,file=sys.stderr)
         p = subprocess.Popen(cmd,shell=True)
@@ -1022,7 +1025,7 @@ def makebaseline(ttable, outputfile, testset,sourceencoder, targetdecoder, moses
     testset.close()
     output.close()
 
-def mosesonlyfullsentence(outputfile, testset, mosesclient=None):
+def mosesfullsentence(outputfile, testset, mosesclient=None,experts = None,leftcontextsize=0,rightcontextsize=0,timbloptions=""):
     output = Writer(outputfile)
     for sentencepair in testset:
         print("Sentence #" + str(sentencepair.id),file=sys.stderr)
@@ -1030,6 +1033,16 @@ def mosesonlyfullsentence(outputfile, testset, mosesclient=None):
         sentencepair.output = copy(sentencepair.input)
 
         print("\tRunning moses decoder (full sentence) for '" + sentencepair.inputstr('*') + "' ...", file=sys.stderr)
+
+        left, inputfragment, right = list(sentencepair.inputfragments())[0] #assume only one inputfragment per sentence
+        left = tuple(left.split())
+        right = tuple(right.split())
+        classifiedfragment = None
+        if experts:
+            inputfragment_s = str(inputfragment)
+            if inputfragment_s in experts.classifiers:
+                classifiedfragment =  experts.classify(inputfragment, left, right, sentencepair, leftcontextsize, rightcontextsize, False, timbloptions)
+
 
         inputsentence_raw = sentencepair.inputstr("*").strip()
         inputsentence_xml = ""
@@ -1039,15 +1052,34 @@ def mosesonlyfullsentence(outputfile, testset, mosesclient=None):
         for word in inputsentence_raw.split(' '):
             if word:
                 if word[0] == '*' and word[-1] == '*':
-                    word = word[1:-1]
-                    havefragment = True
-                    inputsentence_xml += word + "<wall/>"
+                    if classifiedfragment:
+                        if havefragment:
+                            #already done
+                            pass
+                        else:
+                            translations = [ " ".join(classifiedfragment.value)]
+                            probs = [ classifiedfragment.confidence ]
+                            for alternative in classifiedfragment.alternatives:
+                                translations.append(" ".join(alternative.value))
+                                probs.append(alternative.confidence)
+
+                            #Moses XML syntax for multiple options (ugly XML-abuse but okay)
+                            translations = "||".join(translations)
+                            probs = "||".join(probs)
+
+                            inputsentence_xml += "<f translation=\"" + translations + "\" prob=\"" + probs + "\">" + inputfragment_s + "</f><wall/>"
+                            havefragment = True
+                    else:
+                        word = word[1:-1]
+                        havefragment = True
+                        inputsentence_xml += word + "<wall/>"
                 else:
                     inputsentence_xml += "<w translation=\"" + word.replace("\"","&quot;") + "\">" + word + "</w><wall/>"
                     if havefragment:
                         tailwords += 1
                     else:
                         leadwords += 1
+
 
         params = {"text":inputsentence_xml.strip(), "align":"false", "report-all-factors":"false", 'nbest':25}
         mosesresponse = mosesclient.translate(params)
@@ -1056,7 +1088,6 @@ def mosesonlyfullsentence(outputfile, testset, mosesclient=None):
         print("\tMoses response: " + outputsentence + " [leadwords="+str(leadwords) + ":tailwords=" + str(tailwords) +"]")
         outputfragment = Fragment( tuple(outputsentence.split(' ')[leadwords:-tailwords]) , 1 )
 
-        inputfragment = list(sentencepair.inputfragments())[0][1]
         print("\tMoses translation (via full sentence)" + str(inputfragment) + " -> " + str(outputfragment) , file=sys.stderr)
 
         sentencepair.output = sentencepair.replacefragment(inputfragment, outputfragment, sentencepair.output)
@@ -1143,8 +1174,8 @@ def main():
 
     parser.add_argument('--maxlength',type=int,help="Maximum length of phrases", action='store',default=10)
     parser.add_argument('-k','--keywords',help="Add global keywords in context", action='store_true',default=False)
-    parser.add_argument('-F','--fallback',help="Attempt to decode unknown fragments using moses (will start a moses server, requires --moseslm or --lm)", action='store_true',default=False)
-    parser.add_argument('-Z','--mosesonly',help="Similar to -F, but pass L1 fragment in full L2 sentence to Moses server using XML input (will start a moses server, requires --moseslm), colibrita won't do much extra", action='store_true',default=False)
+    parser.add_argument('-Z','--moses',help="Pass full sentences through through Moses server using XML input (will start a moses server, requires --moseslm). Relies fully on Moses for LM, optional classifier output (if -l,-r) is passed to Moses and competes with phrase-table", action='store_true',default=False)
+    parser.add_argument('-F','--fallback',help="Attempt to decode unknown fragments using moses (will start a moses server, requires --moseslm or --lm). This is a more constrained version of falling back to Moses only for unknown fragments", action='store_true',default=False)
     parser.add_argument("--kt",dest="bow_absolute_threshold", help="Keyword needs to occur at least this many times in the context (absolute number)", type=int, action='store',default=3)
     parser.add_argument("--kp",dest="bow_prob_threshold", help="minimal P(translation|keyword)", type=int, action='store',default=0.001)
     parser.add_argument("--kg",dest="bow_filter_threshold", help="Keyword needs to occur at least this many times globally in the entire corpus (absolute number)", type=int, action='store',default=20)
@@ -1397,14 +1428,14 @@ def main():
     #else:
     #    mosesserver = None
 
-    if args.lm and not args.mosesonly:
+    if args.lm and not args.moses:
         print("Loading Language model", file=sys.stderr)
         lm = ARPALanguageModel(args.lm)
     else:
         lm = None
 
 
-    if (args.fallback or args.mosesonly) and args.test and not args.baseline and not args.leftcontext and not args.rightcontext:
+    if (args.fallback or args.moses) and args.test and not args.baseline and not args.leftcontext and not args.rightcontext:
         # --test -F without any context  is the same as --baseline -F
         args.baseline = args.test
         args.test = ""
@@ -1441,9 +1472,9 @@ def main():
 
         data = Reader(args.baseline)
         print("Making baseline",file=sys.stderr)
-        if args.mosesonly:
+        if args.moses:
             print("(Moses only, passing full sentence)",file=sys.stderr)
-            mosesonlyfullsentence(args.output + '.output.xml', data, mosesclient)
+            mosesfullsentence(args.output + '.output.xml', data, mosesclient)
         else:
             if args.lm:
                 print("(with LM)",file=sys.stderr)
@@ -1456,9 +1487,13 @@ def main():
 
         if (args.leftcontext or args.rightcontext or args.keywords): # and not args.moses:
 
-            print("Running...",file=sys.stderr)
             data = Reader(args.test)
-            experts.test(data, args.output + '.output.xml', ttable, sourceclassencoder,targetclassdecoder, args.leftcontext, args.rightcontext, args.keywords, timbloptions , lm,  args.tmweight, args.lmweight, mosesclient)
+            if args.moses:
+                print("(Moses after classifiers, passing full sentence)",file=sys.stderr)
+                mosesfullsentence(args.output + '.output.xml', data, mosesclient, experts, args.leftcontext, args.rightcontext, timbloptions)
+            else:
+                print("Running...",file=sys.stderr)
+                experts.test(data, args.output + '.output.xml', ttable, sourceclassencoder,targetclassdecoder, args.leftcontext, args.rightcontext, args.keywords, timbloptions , lm,  args.tmweight, args.lmweight, mosesclient, args.moses)
 
         else:
             print("Don't know what to do! Specify some classifier options or -T with --lm or --baseline", file=sys.stderr)
