@@ -1058,10 +1058,10 @@ def mosesfullsentence(outputfile, testset, mosesclient=None,experts = None,leftc
                             pass
                         else:
                             translations = [ " ".join(classifiedfragment.value)]
-                            probs = [ classifiedfragment.confidence ]
+                            probs = [ str(classifiedfragment.confidence) ]
                             for alternative in classifiedfragment.alternatives:
                                 translations.append(" ".join(alternative.value))
-                                probs.append(alternative.confidence)
+                                probs.append(str(alternative.confidence))
 
                             #Moses XML syntax for multiple options (ugly XML-abuse but okay)
                             translations = "||".join(translations)
