@@ -1064,7 +1064,7 @@ def mosesfullsentence(outputfile, testset, mosesclient=None,experts = None,leftc
                                 probs.append(str(alternative.confidence))
 
                             #Moses XML syntax for multiple options (ugly XML-abuse but okay)
-                            translations = "||".join(translations)
+                            translations = "||".join(translations).replace("\"","&quot")
                             probs = "||".join(probs)
 
                             inputsentence_xml += "<f translation=\"" + translations + "\" prob=\"" + probs + "\">" + inputfragment_s + "</f><wall/>"
