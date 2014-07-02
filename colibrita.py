@@ -935,7 +935,7 @@ def setupmosesserver(ttable, sourceclassdecoder, targetclassdecoder, args):
         else:
             cmd = 'mosesserver'
         if args.moses:
-            if args.leftcontextsize or args.rightcontextsize:
+            if args.leftcontext or args.rightcontext:
                 cmd += " -xml-input inclusive" #compete with phrase-table
             else:
                 cmd += " -xml-input exclusive" #only used for passing verbatim L2
