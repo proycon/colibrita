@@ -1461,8 +1461,9 @@ def main():
         print("Loading target class decoder", file=sys.stderr)
         targetclassdecoder = ClassDecoder(targetclassfile)
 
-        print("Loading translation table",file=sys.stderr)
-        ttable = AlignmentModel(args.output + "/colibri.alignmodel");
+        if not args.moses:
+            print("Loading translation table",file=sys.stderr)
+            ttable = AlignmentModel(args.output + "/colibri.alignmodel");
 
         mosesserverpid, mosesclient = setupmosesserver(ttable, ClassDecoder(sourceclassfile), targetclassdecoder, args)
     else:
@@ -1486,6 +1487,11 @@ def main():
         print("Parameters: ", repr(args), file=sys.stderr)
 
         if (args.leftcontext or args.rightcontext or args.keywords): # and not args.moses:
+
+            experts = ClassifierExperts(args.output)
+            print("Loading classifiers",file=sys.stderr)
+            experts.load(timbloptions, args.leftcontext, args.rightcontext, args.keywords, None, args.autoconf)
+
 
             data = Reader(args.test)
             if args.moses:
