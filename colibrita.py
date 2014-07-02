@@ -1461,9 +1461,8 @@ def main():
         print("Loading target class decoder", file=sys.stderr)
         targetclassdecoder = ClassDecoder(targetclassfile)
 
-        if not args.moses:
-            print("Loading translation table",file=sys.stderr)
-            ttable = AlignmentModel(args.output + "/colibri.alignmodel");
+        print("Loading translation table",file=sys.stderr)
+        ttable = AlignmentModel(args.output + "/colibri.alignmodel"); #we still use this for --moses mode too, as we save it to moses-style phrasetable ourselves (bit unnecessary, but ok)
 
         mosesserverpid, mosesclient = setupmosesserver(ttable, ClassDecoder(sourceclassfile), targetclassdecoder, args)
     else:
