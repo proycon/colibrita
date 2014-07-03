@@ -938,7 +938,7 @@ def setupmosesserver(ttable, sourceclassdecoder, targetclassdecoder, args):
             if args.leftcontext or args.rightcontext:
                 cmd += " -xml-input inclusive" #compete with phrase-table
             else:
-                cmd += " -xml-input exclusive" #only used for passing verbatim L2
+                cmd += " -xml-input inclusive" #only used for passing verbatim L2
         cmd += ' -f ' + args.output + '/fallback.moses.ini -n-best-list ' + args.output+"/nbest.txt 25"
         print("Calling moses: " + cmd,file=sys.stderr)
         p = subprocess.Popen(cmd,shell=True)
