@@ -1085,7 +1085,7 @@ def mosesfullsentence(outputfile, testset, mosesclient=None,experts = None,leftc
         mosesresponse = mosesclient.translate(params)
 
         outputsentence = ' '.join([ x.strip() for x in mosesresponse['text'].split(' ') if x.strip() ])
-        print("\tMoses response: " + outputsentence + " [leadwords="+str(leadwords) + ":tailwords=" + str(tailwords) +"]")
+        print("\tMoses response: " + outputsentence + " [leadwords="+str(leadwords) + ":tailwords=" + str(tailwords) +"]", file=sys.stderr)
         outputfragment = Fragment( tuple(outputsentence.split(' ')[leadwords:-tailwords]) , 1 )
 
         print("\tMoses translation (via full sentence)" + str(inputfragment) + " -> " + str(outputfragment) , file=sys.stderr)
