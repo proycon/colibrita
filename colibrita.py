@@ -641,7 +641,8 @@ class ClassifierExperts:
         classlabel, distribution, distance =  classifier.classify(features)
         classlabel = classlabel.replace(r'\_',' ')
         if lm and len(distribution) > 1:
-            print("\tClassifier translation prior to LM: " + str(inputfragment) + " -> [ DISTRIBUTION:" + str(repr(distribution))+" ]", file=sys.stderr)
+            dist_s = " ".join( ( k + ": " + str(v) for k,v in distribution.items()  ) )
+            print("\tClassifier translation prior to LM: " + str(inputfragment) + " -> [ DISTRIBUTION:" + dist_s+" ]", file=sys.stderr)
             candidatesentences = []
             bestlmscore = -999999999
             besttscore = -999999999
@@ -692,7 +693,8 @@ class ClassifierExperts:
                     outputfragment.alternatives.append( Alternative( tuple(targetpattern.split()), score) )
             if not stats is None:
                 stats['classifierdistlength'].append(len(distribution))
-            print("\tClassifier translation " + str(inputfragment) + " -> " + str(outputfragment) + "\t[ DISTRIBUTION:" + str(repr(distribution))+" ]", file=sys.stderr)
+            dist_s = " ".join( ( k + ": " + str(v) for k,v in distribution.items()  ) )
+            print("\tClassifier translation " + str(inputfragment) + " -> " + str(outputfragment) + "\t[ DISTRIBUTION:" + dist_s+" ]", file=sys.stderr)
 
         return outputfragment
 
