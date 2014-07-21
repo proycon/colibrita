@@ -1027,7 +1027,7 @@ def makebaseline(ttable, outputfile, testset,sourceencoder, targetdecoder, moses
     testset.close()
     output.close()
 
-def mosesfullsentence(outputfile, testset, mosesclient=None,experts = None,leftcontextsize=0,rightcontextsize=0,timbloptions=""):
+def mosesfullsentence(outputfile, testset, mosesclient=None,experts = None,leftcontextsize=0,rightcontextsize=0,timbloptions="", ttable=None, sourceclassencoder=None,targetclassdecoder=None, tmweights=None):
     output = Writer(outputfile)
     for sentencepair in testset:
         print("Sentence #" + str(sentencepair.id),file=sys.stderr)
@@ -1056,14 +1056,48 @@ def mosesfullsentence(outputfile, testset, mosesclient=None,experts = None,leftc
                 if word[0] == '*' and word[-1] == '*':
                     if classifiedfragment:
                         if havefragment:
-                            #already done
+                            #already done, ignore remaining words (code only runs on the first encountered word of the fragment!)
                             pass
                         else:
-                            translations = [ " ".join(classifiedfragment.value)]
-                            probs = [ str(classifiedfragment.confidence) ]
+                            #first word of fragment, insertion point is here
+
+
+                            if ttable:
+                                try:
+                                    inputfragment_p = sourceclassencoder.buildpattern(inputfragment_s)
+                                except IOError:
+                                    print("\tNOTICE: One or more words in '" + inputfragment_s + "' were not seen during training",file=sys.stderr)
+                                    inputfragment_p = None
+                                #TODO: integrate probs using replace method!
+                                pass
+
+
+                            translation = " ".join(classifierfragment.value)
+                            translations = [ translation ]
+                            if ttable and inputfragment_p in ttable:
+                                #lookup score in phrasetable, replace p(t|s) with classifier score, and compute log linear combination
+
+                                scores = None
+                                for targetpattern, tmpscores in sorted(ttable[inputfragment_p].items(),key=lambda x: -1* x[1][2]):
+                                    targetpattern_s = targetpattern.tostring(targetclassdecoder)
+                                    if targetpattern_s == translation: #bit cumbersome and inefficient but we don't need an encoder this way
+                                        scores = tmpscores
+
+                                if scores:
+                                    #TODO: we don't have logs at this point! reform
+                                    score = tmweight[0] * scores[0] + tmweight[1] * scores[1] + tmweight[2] * classifiedfragment.confidence + tmweight[3] * scores[3]
+
+
+                                probs = [ str(classifiedfragment.confidence) ]
+                            else:
+                                raise Exception("Fragment not found in phrasetable, shouldn't happen at this point: " + inputfragment_s)
+                                #probs = [ str(classifiedfragment.confidence) ]
+
                             for alternative in classifiedfragment.alternatives:
                                 translations.append(" ".join(alternative.value))
+                                #TODO: repeat phrasetable lookup and score replace process for alternatives
                                 probs.append(str(alternative.confidence))
+
 
                             #Moses XML syntax for multiple options (ugly XML-abuse but okay)
                             translations = "||".join(translations).replace("\"","&quot")
@@ -1176,7 +1210,8 @@ def main():
 
     parser.add_argument('--maxlength',type=int,help="Maximum length of phrases", action='store',default=10)
     parser.add_argument('-k','--keywords',help="Add global keywords in context", action='store_true',default=False)
-    parser.add_argument('-Z','--moses',help="Pass full sentences through through Moses server using XML input (will start a moses server, requires --moseslm). Relies fully on Moses for LM, optional classifier output (if -l,-r) is passed to Moses and competes with phrase-table", action='store_true',default=False)
+    parser.add_argument('-Z','--moses',help="Pass full sentences through through Moses server using XML input (will start a moses server, requires --moseslm). Relies fully on Moses for LM, optional classifier output (if -l,-r) is passed to Moses and competes with phrase-table. Classifier score is the sole score used.", action='store_true',default=False)
+    parser.add_argument('-X','--moses2',help="Pass full sentences through through Moses server using XML input (will start a moses server, requires --moseslm). Relies fully on Moses for LM, optional classifier output (if -l,-r) is passed to Moses and competes with phrase-table. Classifier score is integrated in phrasetable using replace method is used for scoring, --mosestweights for weights", action='store_true',default=False)
     parser.add_argument('-F','--fallback',help="Attempt to decode unknown fragments using moses (will start a moses server, requires --moseslm or --lm). This is a more constrained version of falling back to Moses only for unknown fragments", action='store_true',default=False)
     parser.add_argument("--kt",dest="bow_absolute_threshold", help="Keyword needs to occur at least this many times in the context (absolute number)", type=int, action='store',default=3)
     parser.add_argument("--kp",dest="bow_prob_threshold", help="minimal P(translation|keyword)", type=int, action='store',default=0.001)
@@ -1430,14 +1465,14 @@ def main():
     #else:
     #    mosesserver = None
 
-    if args.lm and not args.moses:
+    if args.lm and not args.moses and not args.moses2:
         print("Loading Language model", file=sys.stderr)
         lm = ARPALanguageModel(args.lm)
     else:
         lm = None
 
 
-    if (args.fallback or args.moses) and args.test and not args.baseline and not args.leftcontext and not args.rightcontext:
+    if (args.fallback or args.moses or args.moses2) and args.test and not args.baseline and not args.leftcontext and not args.rightcontext:
         # --test -F without any context  is the same as --baseline -F
         args.baseline = args.test
         args.test = ""
@@ -1474,7 +1509,7 @@ def main():
 
         data = Reader(args.baseline)
         print("Making baseline",file=sys.stderr)
-        if args.moses:
+        if args.moses or args.moses2:
             print("(Moses only, passing full sentence)",file=sys.stderr)
             mosesfullsentence(args.output + '.output.xml', data, mosesclient)
         else:
@@ -1498,9 +1533,12 @@ def main():
             if args.moses:
                 print("(Moses after classifiers, passing full sentence)",file=sys.stderr)
                 mosesfullsentence(args.output + '.output.xml', data, mosesclient, experts, args.leftcontext, args.rightcontext, timbloptions)
+            elif args.moses2:
+                print("(Moses after classifiers, passing full sentence)",file=sys.stderr)
+                mosesfullsentence(args.output + '.output.xml', data, mosesclient, experts, args.leftcontext, args.rightcontext, timbloptions, ttable, sourceclassencoder, targetclassdecoder, args.mosestweight)
             else:
                 print("Running...",file=sys.stderr)
-                experts.test(data, args.output + '.output.xml', ttable, sourceclassencoder,targetclassdecoder, args.leftcontext, args.rightcontext, args.keywords, timbloptions , lm,  args.tmweight, args.lmweight, mosesclient, args.moses)
+                experts.test(data, args.output + '.output.xml', ttable, sourceclassencoder,targetclassdecoder, args.leftcontext, args.rightcontext, args.keywords, timbloptions , lm,  args.tmweight, args.lmweight, mosesclient, args.fallback)
 
         else:
             print("Don't know what to do! Specify some classifier options or -T with --lm or --baseline", file=sys.stderr)
