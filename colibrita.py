@@ -1096,7 +1096,8 @@ def mosesfullsentence(outputfile, testset, mosesclient=None,experts = None,leftc
                                         score = -999
                                     score = math.e ** score
                                 else:
-                                    raise Exception("Target fragment not found in phrasetable, shouldn't happen at this point: source=" + inputfragment_s + ", target=" + targetpattern_s)
+                                    score = math.e ** -999
+                                    print("**** ERROR ***** Target fragment not found in phrasetable, skipping and ignoring!!! source=" + inputfragment_s + ", target=" + targetpattern_s, file=sys.stderr)
 
                                 probs = [ str(score) ]
                             else:
@@ -1125,7 +1126,8 @@ def mosesfullsentence(outputfile, testset, mosesclient=None,experts = None,leftc
                                             score = -999
                                         score = math.e ** score
                                     else:
-                                        raise Exception("Target fragment not found in phrasetable, shouldn't happen at this point: source=" + inputfragment_s + ", target=" + targetpattern_s)
+                                        score = math.e ** -999
+                                        print("**** ERROR ***** Target fragment not found in phrasetable, skipping and ignoring!!! source=" + inputfragment_s + ", target=" + targetpattern_s, file=sys.stderr)
 
                                     probs.append(str(score))
                                 else:
