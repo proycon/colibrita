@@ -936,7 +936,7 @@ def setupmosesserver(ttable, sourceclassdecoder, targetclassdecoder, args):
             cmd = args.mosesdir + '/bin/mosesserver'
         else:
             cmd = 'mosesserver'
-        if args.moses:
+        if args.moses or args.moses2:
             if args.leftcontext or args.rightcontext:
                 cmd += " -xml-input inclusive" #compete with phrase-table
             else:
