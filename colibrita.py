@@ -881,7 +881,7 @@ def getlimit(testset):
 def setupmosesserver(ttable, sourceclassdecoder, targetclassdecoder, args):
     mosesserverpid = 0
     mosesclient = None
-    if args.fallback or args.moses:
+    if args.fallback or args.moses or args.moses2:
         print("Writing " + args.output + "/fallback.phrase-table",file=sys.stderr)
         ttable.savemosesphrasetable(args.output + "/fallback.phrase-table", sourceclassdecoder, targetclassdecoder)
 
