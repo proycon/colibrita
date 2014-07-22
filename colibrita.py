@@ -1029,6 +1029,9 @@ def makebaseline(ttable, outputfile, testset,sourceencoder, targetdecoder, moses
 
 def mosesfullsentence(outputfile, testset, mosesclient=None,experts = None,leftcontextsize=0,rightcontextsize=0,timbloptions="", ttable=None, sourceclassencoder=None,targetclassdecoder=None, tmweights=None):
     output = Writer(outputfile)
+    if not tmweights:
+        tmweights = (0.2,0.2,0.2,0.2)
+
     for sentencepair in testset:
         print("Sentence #" + str(sentencepair.id),file=sys.stderr)
         sentencepair.ref = None
