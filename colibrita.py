@@ -1072,7 +1072,7 @@ def mosesfullsentence(outputfile, testset, mosesclient=None,experts = None,leftc
                                 pass
 
 
-                            translation = " ".join(classifierfragment.value)
+                            translation = " ".join(classifiedfragment.value)
                             translations = [ translation ]
                             if ttable and inputfragment_p in ttable:
                                 #lookup score in phrasetable, replace p(t|s) with classifier score, and compute log linear combination
@@ -1084,19 +1084,37 @@ def mosesfullsentence(outputfile, testset, mosesclient=None,experts = None,leftc
                                         scores = tmpscores
 
                                 if scores:
-                                    #TODO: we don't have logs at this point! reform
-                                    score = tmweight[0] * scores[0] + tmweight[1] * scores[1] + tmweight[2] * classifiedfragment.confidence + tmweight[3] * scores[3]
+                                    score = tmweights[0] * math.log(scores[0]) + tmweights[1] * math.log(scores[1]) + tmweights[2] * math.log(classifiedfragment.confidence) + tmweights[3] * math.log(scores[3])
+                                    score = math.e ** score
+                                else:
+                                    raise Exception("Taret fragment not found in phrasetable, shouldn't happen at this point: source=" + inputfragment_s + ", target=" + targetpattern_s)
 
-
-                                probs = [ str(classifiedfragment.confidence) ]
+                                probs = [ score ]
                             else:
-                                raise Exception("Fragment not found in phrasetable, shouldn't happen at this point: " + inputfragment_s)
+                                raise Exception("Source fragment not found in phrasetable, shouldn't happen at this point: " + inputfragment_s)
                                 #probs = [ str(classifiedfragment.confidence) ]
 
                             for alternative in classifiedfragment.alternatives:
-                                translations.append(" ".join(alternative.value))
-                                #TODO: repeat phrasetable lookup and score replace process for alternatives
-                                probs.append(str(alternative.confidence))
+                                translation = " ".join(alternative.value)
+                                translations.append( translation )
+                                if ttable and inputfragment_p in ttable:
+                                    #lookup score in phrasetable, replace p(t|s) with classifier score, and compute log linear combination
+
+                                    scores = None
+                                    for targetpattern, tmpscores in sorted(ttable[inputfragment_p].items(),key=lambda x: -1* x[1][2]):
+                                        targetpattern_s = targetpattern.tostring(targetclassdecoder)
+                                        if targetpattern_s == translation: #bit cumbersome and inefficient but we don't need an encoder this way
+                                            scores = tmpscores
+
+                                    if scores:
+                                        score = tmweights[0] * math.log(scores[0]) + tmweights[1] * math.log(scores[1]) + tmweights[2] * math.log(classifiedfragment.confidence) + tmweights[3] * math.log(scores[3])
+                                        score = math.e ** score
+                                    else:
+                                        raise Exception("Taret fragment not found in phrasetable, shouldn't happen at this point: source=" + inputfragment_s + ", target=" + targetpattern_s)
+
+                                    probs.append(score)
+                                else:
+                                    raise Exception("Source fragment not found in phrasetable, shouldn't happen at this point: " + inputfragment_s)
 
 
                             #Moses XML syntax for multiple options (ugly XML-abuse but okay)
