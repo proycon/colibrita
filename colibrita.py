@@ -1092,7 +1092,7 @@ def mosesfullsentence(outputfile, testset, mosesclient=None,experts = None,leftc
                                 else:
                                     raise Exception("Taret fragment not found in phrasetable, shouldn't happen at this point: source=" + inputfragment_s + ", target=" + targetpattern_s)
 
-                                probs = [ score ]
+                                probs = [ str(score) ]
                             else:
                                 raise Exception("Source fragment not found in phrasetable, shouldn't happen at this point: " + inputfragment_s)
                                 #probs = [ str(classifiedfragment.confidence) ]
@@ -1115,7 +1115,7 @@ def mosesfullsentence(outputfile, testset, mosesclient=None,experts = None,leftc
                                     else:
                                         raise Exception("Taret fragment not found in phrasetable, shouldn't happen at this point: source=" + inputfragment_s + ", target=" + targetpattern_s)
 
-                                    probs.append(score)
+                                    probs.append(str(score))
                                 else:
                                     raise Exception("Source fragment not found in phrasetable, shouldn't happen at this point: " + inputfragment_s)
 
