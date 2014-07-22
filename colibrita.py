@@ -1090,7 +1090,7 @@ def mosesfullsentence(outputfile, testset, mosesclient=None,experts = None,leftc
                                     score = tmweights[0] * math.log(scores[0]) + tmweights[1] * math.log(scores[1]) + tmweights[2] * math.log(classifiedfragment.confidence) + tmweights[3] * math.log(scores[3])
                                     score = math.e ** score
                                 else:
-                                    raise Exception("Taret fragment not found in phrasetable, shouldn't happen at this point: source=" + inputfragment_s + ", target=" + targetpattern_s)
+                                    raise Exception("Target fragment not found in phrasetable, shouldn't happen at this point: source=" + inputfragment_s + ", target=" + targetpattern_s)
 
                                 probs = [ str(score) ]
                             else:
@@ -1113,12 +1113,13 @@ def mosesfullsentence(outputfile, testset, mosesclient=None,experts = None,leftc
                                         try:
                                             score = tmweights[0] * math.log(scores[0]) + tmweights[1] * math.log(scores[1]) + tmweights[2] * math.log(alternative.confidence) + tmweights[3] * math.log(scores[3])
                                         except:
-                                            print(tmweights,file=sys.stderr)
-                                            print(scores,file=sys.stderr)
-                                            raise Exception
+                                            print("WARNING: One of the scores in score vector (or weights) is zero!!",file=sys.stderr)
+                                            print("weights: ", tmweights,file=sys.stderr)
+                                            print("original scores: ", scores,file=sys.stderr)
+                                            score = -999
                                         score = math.e ** score
                                     else:
-                                        raise Exception("Taret fragment not found in phrasetable, shouldn't happen at this point: source=" + inputfragment_s + ", target=" + targetpattern_s)
+                                        raise Exception("Target fragment not found in phrasetable, shouldn't happen at this point: source=" + inputfragment_s + ", target=" + targetpattern_s)
 
                                     probs.append(str(score))
                                 else:
