@@ -1087,7 +1087,13 @@ def mosesfullsentence(outputfile, testset, mosesclient=None,experts = None,leftc
                                         scores = tmpscores
 
                                 if scores:
-                                    score = tmweights[0] * math.log(scores[0]) + tmweights[1] * math.log(scores[1]) + tmweights[2] * math.log(classifiedfragment.confidence) + tmweights[3] * math.log(scores[3])
+                                    try:
+                                        score = tmweights[0] * math.log(scores[0]) + tmweights[1] * math.log(scores[1]) + tmweights[2] * math.log(classifiedfragment.confidence) + tmweights[3] * math.log(scores[3])
+                                    except ValueError: #math domain error
+                                        print("WARNING: One of the scores in score vector (or weights) is zero!!",file=sys.stderr)
+                                        print("weights: ", tmweights,file=sys.stderr)
+                                        print("original scores: ", scores,file=sys.stderr)
+                                        score = -999
                                     score = math.e ** score
                                 else:
                                     raise Exception("Target fragment not found in phrasetable, shouldn't happen at this point: source=" + inputfragment_s + ", target=" + targetpattern_s)
@@ -1112,7 +1118,7 @@ def mosesfullsentence(outputfile, testset, mosesclient=None,experts = None,leftc
                                     if scores:
                                         try:
                                             score = tmweights[0] * math.log(scores[0]) + tmweights[1] * math.log(scores[1]) + tmweights[2] * math.log(alternative.confidence) + tmweights[3] * math.log(scores[3])
-                                        except:
+                                        except ValueError:
                                             print("WARNING: One of the scores in score vector (or weights) is zero!!",file=sys.stderr)
                                             print("weights: ", tmweights,file=sys.stderr)
                                             print("original scores: ", scores,file=sys.stderr)
