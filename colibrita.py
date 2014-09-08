@@ -1108,31 +1108,32 @@ def mosesfullsentence(outputfile, testset, mosesclient=None,experts = None,leftc
                             for alternative in classifiedfragment.alternatives:
                                 translation = " ".join(alternative.value)
                                 translations.append( translation )
-                                if ttable and inputfragment_p in ttable:
-                                    #lookup score in phrasetable, replace p(t|s) with classifier score, and compute log linear combination
+                                if ttable:
+                                    if inputfragment_p in ttable:
+                                        #lookup score in phrasetable, replace p(t|s) with classifier score, and compute log linear combination
 
-                                    scores = None
-                                    for targetpattern, tmpscores in sorted(ttable[inputfragment_p].items(),key=lambda x: -1* x[1][2]):
-                                        targetpattern_s = targetpattern.tostring(targetclassdecoder)
-                                        if targetpattern_s == translation: #bit cumbersome and inefficient but we don't need an encoder this way
-                                            scores = tmpscores
+                                        scores = None
+                                        for targetpattern, tmpscores in sorted(ttable[inputfragment_p].items(),key=lambda x: -1* x[1][2]):
+                                            targetpattern_s = targetpattern.tostring(targetclassdecoder)
+                                            if targetpattern_s == translation: #bit cumbersome and inefficient but we don't need an encoder this way
+                                                scores = tmpscores
 
-                                    if scores:
-                                        try:
-                                            score = tmweights[0] * math.log(scores[0]) + tmweights[1] * math.log(scores[1]) + tmweights[2] * math.log(alternative.confidence) + tmweights[3] * math.log(scores[3])
-                                        except ValueError:
-                                            print("WARNING: One of the scores in score vector (or weights) is zero!!",file=sys.stderr)
-                                            print("weights: ", tmweights,file=sys.stderr)
-                                            print("original scores: ", scores,file=sys.stderr)
-                                            score = -999
-                                        score = math.e ** score
+                                        if scores:
+                                            try:
+                                                score = tmweights[0] * math.log(scores[0]) + tmweights[1] * math.log(scores[1]) + tmweights[2] * math.log(alternative.confidence) + tmweights[3] * math.log(scores[3])
+                                            except ValueError:
+                                                print("WARNING: One of the scores in score vector (or weights) is zero!!",file=sys.stderr)
+                                                print("weights: ", tmweights,file=sys.stderr)
+                                                print("original scores: ", scores,file=sys.stderr)
+                                                score = -999
+                                            score = math.e ** score
+                                        else:
+                                            score = math.e ** -999
+                                            print("**** ERROR ***** Target fragment not found in phrasetable, skipping and ignoring!!! source=" + inputfragment_s + ", target=" + targetpattern_s, file=sys.stderr)
+
+                                        probs.append(str(score))
                                     else:
-                                        score = math.e ** -999
-                                        print("**** ERROR ***** Target fragment not found in phrasetable, skipping and ignoring!!! source=" + inputfragment_s + ", target=" + targetpattern_s, file=sys.stderr)
-
-                                    probs.append(str(score))
-                                else:
-                                    raise Exception("Source fragment not found in phrasetable, shouldn't happen at this point: " + inputfragment_s)
+                                        raise Exception("Source fragment not found in phrasetable, shouldn't happen at this point: " + inputfragment_s)
 
 
                             #Moses XML syntax for multiple options (ugly XML-abuse but okay)
