@@ -1032,8 +1032,6 @@ def mosesfullsentence(outputfile, testset, mosesclient=None,experts = None,leftc
     if not tmweights:
         tmweights = (0.2,0.2,0.2,0.2)
 
-    if not ttable:
-        raise Exception("ERROR: Phrase table required for mosesfullsentence()")
 
 
     for sentencepair in testset:
@@ -1053,6 +1051,7 @@ def mosesfullsentence(outputfile, testset, mosesclient=None,experts = None,leftc
                 classifiedfragment =  experts.classify(inputfragment, left, right, sentencepair, leftcontextsize, rightcontextsize, False, timbloptions)
 
 
+
         inputsentence_raw = sentencepair.inputstr("*").strip()
         inputsentence_xml = ""
         leadwords = 0
@@ -1069,49 +1068,20 @@ def mosesfullsentence(outputfile, testset, mosesclient=None,experts = None,leftc
                             #first word of fragment, insertion point is here
 
 
-                            if ttable:
+                            if ttable: #(-X option)
                                 try:
                                     inputfragment_p = sourceclassencoder.buildpattern(inputfragment_s)
                                 except IOError:
                                     print("\tNOTICE: One or more words in '" + inputfragment_s + "' were not seen during training",file=sys.stderr)
                                     inputfragment_p = None
-                                #TODO: integrate probs using replace method!
                                 pass
 
 
                             translation = " ".join(classifiedfragment.value)
                             translations = [ translation ]
-                            if ttable and inputfragment_p in ttable:
-                                #lookup score in phrasetable, replace p(t|s) with classifier score, and compute log linear combination
-
-                                scores = None
-                                for targetpattern, tmpscores in sorted(ttable[inputfragment_p].items(),key=lambda x: -1* x[1][2]):
-                                    targetpattern_s = targetpattern.tostring(targetclassdecoder)
-                                    if targetpattern_s == translation: #bit cumbersome and inefficient but we don't need an encoder this way
-                                        scores = tmpscores
-
-                                if scores:
-                                    try:
-                                        score = tmweights[0] * math.log(scores[0]) + tmweights[1] * math.log(scores[1]) + tmweights[2] * math.log(classifiedfragment.confidence) + tmweights[3] * math.log(scores[3])
-                                    except ValueError: #math domain error
-                                        print("WARNING: One of the scores in score vector (or weights) is zero!!",file=sys.stderr)
-                                        print("weights: ", tmweights,file=sys.stderr)
-                                        print("original scores: ", scores,file=sys.stderr)
-                                        score = -999
-                                    score = math.e ** score
-                                else:
-                                    score = math.e ** -999
-                                    print("**** ERROR ***** Target fragment not found in phrasetable, skipping and ignoring!!! source=" + inputfragment_s + ", target=" + targetpattern_s, file=sys.stderr)
-
-                                probs = [ str(score) ]
-                            else:
-                                raise Exception("Source fragment not found in phrasetable, shouldn't happen at this point: '" + inputfragment_s + "'")
-                                #probs = [ str(classifiedfragment.confidence) ]
-
-                            for alternative in classifiedfragment.alternatives:
-                                translation = " ".join(alternative.value)
-                                translations.append( translation )
-                                if ttable and inputfragment_p in ttable:
+                            if ttable
+                                if inputfragment_p in ttable:
+                                    #(-X option, args.moses2)
                                     #lookup score in phrasetable, replace p(t|s) with classifier score, and compute log linear combination
 
                                     scores = None
@@ -1122,8 +1092,9 @@ def mosesfullsentence(outputfile, testset, mosesclient=None,experts = None,leftc
 
                                     if scores:
                                         try:
-                                            score = tmweights[0] * math.log(scores[0]) + tmweights[1] * math.log(scores[1]) + tmweights[2] * math.log(alternative.confidence) + tmweights[3] * math.log(scores[3])
-                                        except ValueError:
+                                            origscore = tmweights[0] * math.log(scores[0]) + tmweights[1] * math.log(scores[1]) + tmweights[2] * math.log(scores[2]) + tmweights[3] * math.log(scores[3])
+                                            score = tmweights[0] * math.log(scores[0]) + tmweights[1] * math.log(scores[1]) + tmweights[2] * math.log(classifiedfragment.confidence) + tmweights[3] * math.log(scores[3])
+                                        except ValueError: #math domain error
                                             print("WARNING: One of the scores in score vector (or weights) is zero!!",file=sys.stderr)
                                             print("weights: ", tmweights,file=sys.stderr)
                                             print("original scores: ", scores,file=sys.stderr)
@@ -1133,9 +1104,50 @@ def mosesfullsentence(outputfile, testset, mosesclient=None,experts = None,leftc
                                         score = math.e ** -999
                                         print("**** ERROR ***** Target fragment not found in phrasetable, skipping and ignoring!!! source=" + inputfragment_s + ", target=" + targetpattern_s, file=sys.stderr)
 
-                                    probs.append(str(score))
+                                    print("Score for winning target '" + targetpattern_s + "', classifier=" + str(classifier.confidence) + ", phrasetable(t|s)=" + str(scores[2]) + ", total(class)=" + str(score), ", total(orig)=" + str(origscore),file=sys.stderr)
+                                    probs = [ str(score) ]
                                 else:
                                     raise Exception("Source fragment not found in phrasetable, shouldn't happen at this point: " + inputfragment_s)
+                            else:
+                                #(-Z option, args.moses)
+                                probs = [ str(classifiedfragment.confidence) ]
+
+                            for alternative in classifiedfragment.alternatives:
+                                translation = " ".join(alternative.value)
+                                translations.append( translation )
+                                if ttable:
+                                    #(-X option, args.moses2)
+                                    if inputfragment_p in ttable:
+                                        #lookup score in phrasetable, replace p(t|s) with classifier score, and compute log linear combination
+
+                                        scores = None
+                                        for targetpattern, tmpscores in sorted(ttable[inputfragment_p].items(),key=lambda x: -1* x[1][2]):
+                                            targetpattern_s = targetpattern.tostring(targetclassdecoder)
+                                            if targetpattern_s == translation: #bit cumbersome and inefficient but we don't need an encoder this way
+                                                scores = tmpscores
+
+                                        if scores:
+                                            try:
+                                                origscore = tmweights[0] * math.log(scores[0]) + tmweights[1] * math.log(scores[1]) + tmweights[2] * math.log(scores[2]) + tmweights[3] * math.log(scores[3])
+                                                score = tmweights[0] * math.log(scores[0]) + tmweights[1] * math.log(scores[1]) + tmweights[2] * math.log(alternative.confidence) + tmweights[3] * math.log(scores[3])
+                                            except ValueError:
+                                                print("WARNING: One of the scores in score vector (or weights) is zero!!",file=sys.stderr)
+                                                print("weights: ", tmweights,file=sys.stderr)
+                                                print("original scores: ", scores,file=sys.stderr)
+                                                score = -999
+                                            score = math.e ** score
+                                        else:
+                                            score = math.e ** -999
+                                            print("**** ERROR ***** Target fragment not found in phrasetable, skipping and ignoring!!! source=" + inputfragment_s + ", target=" + targetpattern_s, file=sys.stderr)
+
+                                        print("Score for alternative target '" + targetpattern_s + "', classifier=" + str(classifier.confidence) + ", phrasetable(t|s)=" + str(scores[2]) + ", total(class)=" + str(score), ", total(orig)=" + str(origscore),file=sys.stderr)
+                                        probs.append(str(score))
+                                    else:
+                                        raise Exception("Source fragment not found in phrasetable, shouldn't happen at this point: " + inputfragment_s)
+
+                                else:
+                                    #(-Z option, args.moses)
+                                    probs.append( str(alternative.confidence) )
 
 
                             #Moses XML syntax for multiple options (ugly XML-abuse but okay)
