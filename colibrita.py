@@ -811,19 +811,20 @@ class ClassifierExperts:
 
 
 
-        def loaddttable(self):
-            return loaddttable(self.workdir + '/directtranslation.table')
+    def loaddttable(self):
+        return loaddttable(self.workdir + '/directtranslation.table')
 
-        def initstats(self):
-            stats = {}
-            stats['untranslated'] = 0
-            stats['fallback'] = 0
-            stats['classifier'] = 0
+    def initstats(self):
+        stats = {}
+        stats['untranslated'] = 0
+        stats['fallback'] = 0
+        stats['classifier'] = 0
         stats['classifierdifferent'] = []
         stats['lmdifferent'] = []
         stats['classifierdistlength'] = []
         stats['distlength'] = []
         stats['fallbackmoses'] = 0
+
         return stats
 
 
