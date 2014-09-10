@@ -1592,7 +1592,7 @@ def main():
                 mosesfullsentence(args.output + '.output.xml', data, mosesclient, experts, args.leftcontext, args.rightcontext, timbloptions, ttable, sourceclassencoder, targetclassdecoder, args.mosestweight)
             else:
                 print("Running...",file=sys.stderr)
-                experts.test(data, args.output + '.output.xml', ttable, sourceclassencoder,targetclassdecoder, args.leftcontext, args.rightcontext, args.keywords, timbloptions , lm,  args.tmweight, args.lmweight, mosesclient, args.fallback)
+                experts.test(data, args.output + '.output.xml', ttable, sourceclassencoder,targetclassdecoder, args.leftcontext, args.rightcontext, args.keywords, timbloptions , lm,  args.tmweight, args.lmweight, mosesclient)
 
         else:
             print("Don't know what to do! Specify some classifier options or -T with --lm or --baseline", file=sys.stderr)
