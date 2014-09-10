@@ -1079,7 +1079,7 @@ def mosesfullsentence(outputfile, testset, mosesclient=None,experts = None,leftc
 
                             translation = " ".join(classifiedfragment.value)
                             translations = [ translation ]
-                            if ttable
+                            if ttable:
                                 if inputfragment_p in ttable:
                                     #(-X option, args.moses2)
                                     #lookup score in phrasetable, replace p(t|s) with classifier score, and compute log linear combination
@@ -1104,7 +1104,7 @@ def mosesfullsentence(outputfile, testset, mosesclient=None,experts = None,leftc
                                         score = math.e ** -999
                                         print("**** ERROR ***** Target fragment not found in phrasetable, skipping and ignoring!!! source=" + inputfragment_s + ", target=" + targetpattern_s, file=sys.stderr)
 
-                                    print("Score for winning target '" + targetpattern_s + "', classifier=" + str(classifier.confidence) + ", phrasetable(t|s)=" + str(scores[2]) + ", total(class)=" + str(score), ", total(orig)=" + str(origscore),file=sys.stderr)
+                                    print("Score for winning target '" + targetpattern_s + "', classifier=" + str(classifiedfragment.confidence) + ", phrasetable(t|s)=" + str(scores[2]) + ", total(class)=" + str(score), ", total(orig)=" + str(origscore),file=sys.stderr)
                                     probs = [ str(score) ]
                                 else:
                                     raise Exception("Source fragment not found in phrasetable, shouldn't happen at this point: " + inputfragment_s)
@@ -1140,7 +1140,7 @@ def mosesfullsentence(outputfile, testset, mosesclient=None,experts = None,leftc
                                             score = math.e ** -999
                                             print("**** ERROR ***** Target fragment not found in phrasetable, skipping and ignoring!!! source=" + inputfragment_s + ", target=" + targetpattern_s, file=sys.stderr)
 
-                                        print("Score for alternative target '" + targetpattern_s + "', classifier=" + str(classifier.confidence) + ", phrasetable(t|s)=" + str(scores[2]) + ", total(class)=" + str(score), ", total(orig)=" + str(origscore),file=sys.stderr)
+                                        print("Score for alternative target '" + targetpattern_s + "', classifier=" + str(alternative.confidence) + ", phrasetable(t|s)=" + str(scores[2]) + ", total(class)=" + str(score), ", total(orig)=" + str(origscore),file=sys.stderr)
                                         probs.append(str(score))
                                     else:
                                         raise Exception("Source fragment not found in phrasetable, shouldn't happen at this point: " + inputfragment_s)
