@@ -1032,6 +1032,9 @@ def mosesfullsentence(outputfile, testset, mosesclient=None,experts = None,leftc
     if not tmweights:
         tmweights = (0.2,0.2,0.2,0.2)
 
+    if not ttable:
+        print("ERROR: Phrase table required for mosesfullsentence()",file=sys.stderr)
+
     for sentencepair in testset:
         print("Sentence #" + str(sentencepair.id),file=sys.stderr)
         sentencepair.ref = None
@@ -1101,7 +1104,7 @@ def mosesfullsentence(outputfile, testset, mosesclient=None,experts = None,leftc
 
                                 probs = [ str(score) ]
                             else:
-                                raise Exception("Source fragment not found in phrasetable, shouldn't happen at this point: " + inputfragment_s)
+                                raise Exception("Source fragment not found in phrasetable, shouldn't happen at this point: '" + inputfragment_s + "'")
                                 #probs = [ str(classifiedfragment.confidence) ]
 
                             for alternative in classifiedfragment.alternatives:
