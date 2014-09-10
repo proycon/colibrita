@@ -1033,7 +1033,8 @@ def mosesfullsentence(outputfile, testset, mosesclient=None,experts = None,leftc
         tmweights = (0.2,0.2,0.2,0.2)
 
     if not ttable:
-        print("ERROR: Phrase table required for mosesfullsentence()",file=sys.stderr)
+        raise Exception("ERROR: Phrase table required for mosesfullsentence()",file=sys.stderr)
+
 
     for sentencepair in testset:
         print("Sentence #" + str(sentencepair.id),file=sys.stderr)
