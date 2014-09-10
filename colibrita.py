@@ -938,7 +938,7 @@ def setupmosesserver(ttable, sourceclassdecoder, targetclassdecoder, args):
             cmd = 'mosesserver'
         if args.moses or args.moses2:
             if not args.moses2 and (args.leftcontext or args.rightcontext):
-                cmd += " -xml-input inclusive" #compete with phrase-table
+                cmd += " -xml-input inclusive" #compete with phrase-table (does make a difference for moses2 (-X) mode! exclusive mode performs a bit worse but makes more sense as we try to mimick part of the decoder's log-linear equation ourselves)
             else:
                 cmd += " -xml-input exclusive" #only used for passing verbatim L2 (tested whether it makes a difference with inclusive baseline on en-es data, it doesn't)
         cmd += ' -f ' + args.output + '/fallback.moses.ini -n-best-list ' + args.output+"/nbest.txt 25"
