@@ -1098,10 +1098,10 @@ def mosesfullsentence(outputfile, testset, mosesclient=None,experts = None,leftc
                                             print("WARNING: One of the scores in score vector (or weights) is zero!!",file=sys.stderr)
                                             print("weights: ", tmweights,file=sys.stderr)
                                             print("original scores: ", scores,file=sys.stderr)
-                                            score = -999
-                                        score = math.e ** score
+                                            score = origscore = -999
+                                        score = origscore =  math.e ** score
                                     else:
-                                        score = math.e ** -999
+                                        score = origscore = math.e ** -999
                                         print("**** ERROR ***** Target fragment not found in phrasetable, skipping and ignoring!!! source=" + inputfragment_s + ", target=" + targetpattern_s, file=sys.stderr)
 
                                     print("Score for winning target '" + targetpattern_s + "', classifier=" + str(classifiedfragment.confidence) + ", phrasetable(t|s)=" + str(scores[2]) + ", total(class)=" + str(score), ", total(orig)=" + str(origscore),file=sys.stderr)
@@ -1134,10 +1134,10 @@ def mosesfullsentence(outputfile, testset, mosesclient=None,experts = None,leftc
                                                 print("WARNING: One of the scores in score vector (or weights) is zero!!",file=sys.stderr)
                                                 print("weights: ", tmweights,file=sys.stderr)
                                                 print("original scores: ", scores,file=sys.stderr)
-                                                score = -999
-                                            score = math.e ** score
+                                                score = origscore = -999
+                                            score = origscore = math.e ** score
                                         else:
-                                            score = math.e ** -999
+                                            score = origscore = math.e ** -999
                                             print("**** ERROR ***** Target fragment not found in phrasetable, skipping and ignoring!!! source=" + inputfragment_s + ", target=" + targetpattern_s, file=sys.stderr)
 
                                         print("Score for alternative target '" + targetpattern_s + "', classifier=" + str(alternative.confidence) + ", phrasetable(t|s)=" + str(scores[2]) + ", total(class)=" + str(score), ", total(orig)=" + str(origscore),file=sys.stderr)
