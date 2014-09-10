@@ -1099,12 +1099,13 @@ def mosesfullsentence(outputfile, testset, mosesclient=None,experts = None,leftc
                                             print("weights: ", tmweights,file=sys.stderr)
                                             print("original scores: ", scores,file=sys.stderr)
                                             score = origscore = -999
-                                        score = origscore =  math.e ** score
+                                        score =  math.e ** score
+                                        origscore = math.e ** origscore
                                     else:
                                         score = origscore = math.e ** -999
                                         print("**** ERROR ***** Target fragment not found in phrasetable, skipping and ignoring!!! source=" + inputfragment_s + ", target=" + targetpattern_s, file=sys.stderr)
 
-                                    print("Score for winning target '" + targetpattern_s + "', classifier=" + str(classifiedfragment.confidence) + ", phrasetable(t|s)=" + str(scores[2]) + ", total(class)=" + str(score), ", total(orig)=" + str(origscore),file=sys.stderr)
+                                    print("Score for winning target '" + translation + "', classifier=" + str(classifiedfragment.confidence) + ", phrasetable(t|s)=" + str(scores[2]) + ", total(class)=" + str(score), ", total(orig)=" + str(origscore),file=sys.stderr)
                                     probs = [ str(score) ]
                                 else:
                                     raise Exception("Source fragment not found in phrasetable, shouldn't happen at this point: " + inputfragment_s)
@@ -1135,12 +1136,13 @@ def mosesfullsentence(outputfile, testset, mosesclient=None,experts = None,leftc
                                                 print("weights: ", tmweights,file=sys.stderr)
                                                 print("original scores: ", scores,file=sys.stderr)
                                                 score = origscore = -999
-                                            score = origscore = math.e ** score
+                                            score = math.e ** score
+                                            origscore = math.e ** origscore
                                         else:
                                             score = origscore = math.e ** -999
                                             print("**** ERROR ***** Target fragment not found in phrasetable, skipping and ignoring!!! source=" + inputfragment_s + ", target=" + targetpattern_s, file=sys.stderr)
 
-                                        print("Score for alternative target '" + targetpattern_s + "', classifier=" + str(alternative.confidence) + ", phrasetable(t|s)=" + str(scores[2]) + ", total(class)=" + str(score), ", total(orig)=" + str(origscore),file=sys.stderr)
+                                        print("Score for alternative target '" + translation + "', classifier=" + str(alternative.confidence) + ", phrasetable(t|s)=" + str(scores[2]) + ", total(class)=" + str(score), ", total(orig)=" + str(origscore),file=sys.stderr)
                                         probs.append(str(score))
                                     else:
                                         raise Exception("Source fragment not found in phrasetable, shouldn't happen at this point: " + inputfragment_s)
