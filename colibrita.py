@@ -1504,7 +1504,7 @@ def main():
     #    mosesserver = None
 
     if args.lm and not args.moses and not args.moses2:
-        print("Loading Language model", file=sys.stderr)
+        print("Loading Language model " + args.lm, file=sys.stderr)
         lm = ARPALanguageModel(args.lm)
     else:
         lm = None
@@ -1526,17 +1526,17 @@ def main():
             print("No colibrita.conf found in specified directory (-o). Has the system been trained?", file=sys.stderr)
             sys.exit(2)
 
-        print("Loading configuration", file=sys.stderr)
+        print("Loading configuration from " + args.output + "/colibrita.conf", file=sys.stderr)
         conf = pickle.load(open(args.output + '/colibrita.conf','rb'))
         sourceclassfile = conf['sourceclassfile']
         targetclassfile = conf['targetclassfile']
 
-        print("Loading source class encoder", file=sys.stderr)
+        print("Loading source class encoder " + sourceclassfile, file=sys.stderr)
         sourceclassencoder = ClassEncoder(sourceclassfile)
-        print("Loading target class decoder", file=sys.stderr)
+        print("Loading target class decoder " + targetclassfile, file=sys.stderr)
         targetclassdecoder = ClassDecoder(targetclassfile)
 
-        print("Loading translation table",file=sys.stderr)
+        print("Loading translation table " + args.output + "/colibri.alignmodel",file=sys.stderr)
         ttable = AlignmentModel(args.output + "/colibri.alignmodel"); #we still use this for --moses mode too, as we save it to moses-style phrasetable ourselves (bit unnecessary, but ok)
 
         mosesserverpid, mosesclient = setupmosesserver(ttable, ClassDecoder(sourceclassfile), targetclassdecoder, args)
