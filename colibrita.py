@@ -882,7 +882,7 @@ def getlimit(testset):
 def setupmosesserver(ttable, sourceclassdecoder, targetclassdecoder, args):
     mosesserverpid = 0
     mosesclient = None
-    if args.fallback or args.moses or args.mosesX or args.mosesY:
+    if args.fallback or args.moses or args.mosesX or args.mosesY or args.mosesW:
         print("Writing " + args.output + "/fallback.phrase-table",file=sys.stderr)
         ttable.savemosesphrasetable(args.output + "/fallback.phrase-table", sourceclassdecoder, targetclassdecoder)
 
@@ -938,10 +938,10 @@ def setupmosesserver(ttable, sourceclassdecoder, targetclassdecoder, args):
         else:
             cmd = 'mosesserver'
         if args.mosesX or args.mosesY:
-            #do not compete with phrasetable (makes no sense, we do our own weighing in -X)
+            #do not compete with phrasetable (-X/-Y)
             cmd += " -xml-input exclusive"
-        elif args.moses and (args.leftcontext or args.rightcontext):
-            #compete with phrasetable (-Z)
+        elif (args.moses or args.mosesW) and (args.leftcontext or args.rightcontext):
+            #compete with phrasetable (-Z/-W)
             cmd += " -xml-input inclusive"
             #inclusive/exclusive makes no difference on non-context informed data
         cmd += ' -f ' + args.output + '/fallback.moses.ini -n-best-list ' + args.output+"/nbest.txt 25"
@@ -1269,6 +1269,7 @@ def main():
     parser.add_argument('-Z','--moses',help="Pass full sentences through through Moses server using XML input (will start a moses server, requires --moseslm). Relies fully on Moses for LM, optional classifier output (if -l,-r) is passed to Moses and competes with phrase-table. Classifier score is the sole score used.", action='store_true',default=False)
     parser.add_argument('-Y','--mosesY',help="Pass full sentences through through Moses server using XML input (will start a moses server, requires --moseslm). Relies fully on Moses for LM, optional classifier output (if -l,-r) is passed to Moses and competes with phrase-table. Classifier score is the sole score used.", action='store_true',default=False)
     parser.add_argument('-X','--mosesX',help="Pass full sentences through through Moses server using XML input (will start a moses server, requires --moseslm). Relies fully on Moses for LM, optional classifier output (if -l,-r) is passed to Moses but does not compete with phrase-table. Classifier score is integrated in phrasetable using replace method is used for scoring, --mosestweights for weights", action='store_true',default=False)
+    parser.add_argument('-W','--mosesW',help="Pass full sentences through through Moses server using XML input (will start a moses server, requires --moseslm). Relies fully on Moses for LM, optional classifier output (if -l,-r) is passed to Moses and competes with phrase-table. Classifier score is integrated in phrasetable using replace method", action='store_true',default=False)
     parser.add_argument('-F','--fallback',help="Attempt to decode unknown fragments using moses (will start a moses server, requires --moseslm or --lm). This is a more constrained version of falling back to Moses only for unknown fragments", action='store_true',default=False)
     parser.add_argument("--kt",dest="bow_absolute_threshold", help="Keyword needs to occur at least this many times in the context (absolute number)", type=int, action='store',default=3)
     parser.add_argument("--kp",dest="bow_prob_threshold", help="minimal P(translation|keyword)", type=int, action='store',default=0.001)
@@ -1522,14 +1523,14 @@ def main():
     #else:
     #    mosesserver = None
 
-    if args.lm and not args.moses and not args.mosesX and not args.mosesY:
+    if args.lm and not args.moses and not args.mosesX and not args.mosesY and not args.mosesW:
         print("Loading Language model " + args.lm, file=sys.stderr)
         lm = ARPALanguageModel(args.lm)
     else:
         lm = None
 
 
-    if (args.fallback or args.moses or args.mosesX or args.mosesY) and args.test and not args.baseline and not args.leftcontext and not args.rightcontext:
+    if (args.fallback or args.moses or args.mosesX or args.mosesY or args.mosesW) and args.test and not args.baseline and not args.leftcontext and not args.rightcontext:
         # --test -F without any context  is the same as --baseline -F
         args.baseline = args.test
         args.test = ""
@@ -1566,7 +1567,7 @@ def main():
 
         data = Reader(args.baseline)
         print("Making baseline",file=sys.stderr)
-        if args.moses or args.mosesY or args.mosesX:
+        if args.moses or args.mosesY or args.mosesX or args.mosesW:
             print("(Moses only, passing full sentence)",file=sys.stderr)
             mosesfullsentence(args.output + '.output.xml', data, mosesclient)
         else:
@@ -1588,10 +1589,12 @@ def main():
 
             data = Reader(args.test)
             if args.moses or args.mosesY:
+                #classifier score
                 print("(Moses (-Z/-Y) after classifiers, passing full sentence)",file=sys.stderr)
                 mosesfullsentence(args.output + '.output.xml', data, mosesclient, experts, args.leftcontext, args.rightcontext, timbloptions)
-            elif args.mosesX:
-                print("(Moses (-X) after classifiers, passing full sentence)",file=sys.stderr)
+            elif args.mosesX or args.mosesW:
+                #weighted score
+                print("(Moses (-X/-W) after classifiers, passing full sentence)",file=sys.stderr)
                 mosesfullsentence(args.output + '.output.xml', data, mosesclient, experts, args.leftcontext, args.rightcontext, timbloptions, ttable, sourceclassencoder, targetclassdecoder, args.mosestweight)
             else:
                 print("Running...",file=sys.stderr)
