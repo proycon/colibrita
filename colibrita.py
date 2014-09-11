@@ -811,27 +811,28 @@ class ClassifierExperts:
 
 
 
-        def loaddttable(self):
-            return loaddttable(self.workdir + '/directtranslation.table')
+    def loaddttable(self):
+        return loaddttable(self.workdir + '/directtranslation.table')
 
-        def initstats(self):
-            stats = {}
-            stats['untranslated'] = 0
-            stats['fallback'] = 0
-            stats['classifier'] = 0
+    def initstats(self):
+        stats = {}
+        stats['untranslated'] = 0
+        stats['fallback'] = 0
+        stats['classifier'] = 0
         stats['classifierdifferent'] = []
         stats['lmdifferent'] = []
         stats['classifierdistlength'] = []
         stats['distlength'] = []
         stats['fallbackmoses'] = 0
+
         return stats
 
 
-    def test(self, data, outputfile, ttable, sourceclassencoder, targetclassdecoder, leftcontext, rightcontext, dokeywords, timbloptions, lm=None,tweight=1,lmweight=1, mosesclient=None,moses=False):
+    def test(self, data, outputfile, ttable, sourceclassencoder, targetclassdecoder, leftcontext, rightcontext, dokeywords, timbloptions, lm=None,tweight=1,lmweight=1, mosesclient=None):
         stats = self.initstats()
         writer = Writer(outputfile)
         for sentencepair in data:
-            sentencepair = self.processsentence(sentencepair, ttable, sourceclassencoder, targetclassdecoder, leftcontext, rightcontext, dokeywords, timbloptions, lm, tweight, lmweight, stats, mosesclient,moses)
+            sentencepair = self.processsentence(sentencepair, ttable, sourceclassencoder, targetclassdecoder, leftcontext, rightcontext, dokeywords, timbloptions, lm, tweight, lmweight, stats, mosesclient)
             writer.write(sentencepair)
         writer.close()
         if stats:
@@ -1594,7 +1595,7 @@ def main():
                 mosesfullsentence(args.output + '.output.xml', data, mosesclient, experts, args.leftcontext, args.rightcontext, timbloptions, ttable, sourceclassencoder, targetclassdecoder, args.mosestweight)
             else:
                 print("Running...",file=sys.stderr)
-                experts.test(data, args.output + '.output.xml', ttable, sourceclassencoder,targetclassdecoder, args.leftcontext, args.rightcontext, args.keywords, timbloptions , lm,  args.tmweight, args.lmweight, mosesclient, args.fallback)
+                experts.test(data, args.output + '.output.xml', ttable, sourceclassencoder,targetclassdecoder, args.leftcontext, args.rightcontext, args.keywords, timbloptions , lm,  args.tmweight, args.lmweight, mosesclient)
 
         else:
             print("Don't know what to do! Specify some classifier options or -T with --lm or --baseline", file=sys.stderr)
