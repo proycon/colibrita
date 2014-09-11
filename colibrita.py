@@ -940,7 +940,7 @@ def setupmosesserver(ttable, sourceclassdecoder, targetclassdecoder, args):
         if args.mosesX or args.mosesY:
             #do not compete with phrasetable (-X/-Y)
             cmd += " -xml-input exclusive"
-        elif (args.moses or args.mosesW) and (args.leftcontext or args.rightcontext):
+        elif args.moses or args.mosesW:
             #compete with phrasetable (-Z/-W)
             cmd += " -xml-input inclusive"
             #inclusive/exclusive makes no difference on non-context informed data
