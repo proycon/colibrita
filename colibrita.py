@@ -882,7 +882,7 @@ def getlimit(testset):
 def setupmosesserver(ttable, sourceclassdecoder, targetclassdecoder, args):
     mosesserverpid = 0
     mosesclient = None
-    if args.fallback or args.moses or args.mosesX or args.mosesY or args.mosesW:
+    if args.fallback or args.moses or args.mosesX or args.mosesY or args.mosesW or args.allornothing:
         print("Writing " + args.output + "/fallback.phrase-table",file=sys.stderr)
         ttable.savemosesphrasetable(args.output + "/fallback.phrase-table", sourceclassdecoder, targetclassdecoder)
 
@@ -937,7 +937,7 @@ def setupmosesserver(ttable, sourceclassdecoder, targetclassdecoder, args):
             cmd = args.mosesdir + '/bin/mosesserver'
         else:
             cmd = 'mosesserver'
-        if args.mosesX or args.mosesY:
+        if args.mosesX or args.mosesY or args.allornothing:
             #do not compete with phrasetable (-X/-Y)
             cmd += " -xml-input exclusive"
         elif (args.moses or args.mosesW) and (args.leftcontext or args.rightcontext):
@@ -1030,7 +1030,7 @@ def makebaseline(ttable, outputfile, testset,sourceencoder, targetdecoder, moses
     testset.close()
     output.close()
 
-def mosesfullsentence(outputfile, testset, mosesclient=None,experts = None,leftcontextsize=0,rightcontextsize=0,timbloptions="", ttable=None, sourceclassencoder=None,targetclassdecoder=None, tmweights=None):
+def mosesfullsentence(outputfile, testset, mosesclient=None,experts = None,leftcontextsize=0,rightcontextsize=0,timbloptions="", allornothing=0, ttable=None, sourceclassencoder=None,targetclassdecoder=None, tmweights=None):
     output = Writer(outputfile)
     if not tmweights:
         tmweights = (0.2,0.2,0.2,0.2)
@@ -1082,9 +1082,20 @@ def mosesfullsentence(outputfile, testset, mosesclient=None,experts = None,leftc
 
                             translation = " ".join(classifiedfragment.value)
                             translations = [ translation ]
-                            if ttable:
+                            if allornothing:
+                                if classifiedfragment.confidence >= allornothing:
+                                    print("*** All-or-nothing threshold passed for '" + translation + "', passing as winner to Moses ***",file=sys.stderr)
+                                    probs = [str(1)] #pass to moses with full confidence
+                                else:
+                                    #don't pass any translation, let Moses handle it completely
+                                    word = word[1:-1]
+                                    havefragment = True
+                                    inputsentence_xml += word + "<wall/>"
+                                    continue
+
+                            elif ttable:
+                                #(-X option)
                                 if inputfragment_p in ttable:
-                                    #(-X option)
                                     #lookup score in phrasetable, replace p(t|s) with classifier score, and compute log linear combination
 
                                     scores = None
@@ -1116,43 +1127,45 @@ def mosesfullsentence(outputfile, testset, mosesclient=None,experts = None,leftc
                                 #(-Z option, args.moses)
                                 probs = [ str(classifiedfragment.confidence) ]
 
-                            for alternative in classifiedfragment.alternatives:
-                                translation = " ".join(alternative.value)
-                                translations.append( translation )
-                                if ttable:
-                                    #(-X option)
-                                    if inputfragment_p in ttable:
-                                        #lookup score in phrasetable, replace p(t|s) with classifier score, and compute log linear combination
 
-                                        scores = None
-                                        for targetpattern, tmpscores in sorted(ttable[inputfragment_p].items(),key=lambda x: -1* x[1][2]):
-                                            targetpattern_s = targetpattern.tostring(targetclassdecoder)
-                                            if targetpattern_s == translation: #bit cumbersome and inefficient but we don't need an encoder this way
-                                                scores = tmpscores
+                            if not allornothing:
+                                for alternative in classifiedfragment.alternatives:
+                                    translation = " ".join(alternative.value)
+                                    translations.append( translation )
+                                    if ttable:
+                                        #(-X option)
+                                        if inputfragment_p in ttable:
+                                            #lookup score in phrasetable, replace p(t|s) with classifier score, and compute log linear combination
 
-                                        if scores:
-                                            try:
-                                                origscore = tmweights[0] * math.log(scores[0]) + tmweights[1] * math.log(scores[1]) + tmweights[2] * math.log(scores[2]) + tmweights[3] * math.log(scores[3])
-                                                score = tmweights[0] * math.log(scores[0]) + tmweights[1] * math.log(scores[1]) + tmweights[2] * math.log(alternative.confidence) + tmweights[3] * math.log(scores[3])
-                                            except ValueError:
-                                                print("WARNING: One of the scores in score vector (or weights) is zero!!",file=sys.stderr)
-                                                print("weights: ", tmweights,file=sys.stderr)
-                                                print("original scores: ", scores,file=sys.stderr)
-                                                score = origscore = -999
-                                            score = math.e ** score
-                                            origscore = math.e ** origscore
+                                            scores = None
+                                            for targetpattern, tmpscores in sorted(ttable[inputfragment_p].items(),key=lambda x: -1* x[1][2]):
+                                                targetpattern_s = targetpattern.tostring(targetclassdecoder)
+                                                if targetpattern_s == translation: #bit cumbersome and inefficient but we don't need an encoder this way
+                                                    scores = tmpscores
+
+                                            if scores:
+                                                try:
+                                                    origscore = tmweights[0] * math.log(scores[0]) + tmweights[1] * math.log(scores[1]) + tmweights[2] * math.log(scores[2]) + tmweights[3] * math.log(scores[3])
+                                                    score = tmweights[0] * math.log(scores[0]) + tmweights[1] * math.log(scores[1]) + tmweights[2] * math.log(alternative.confidence) + tmweights[3] * math.log(scores[3])
+                                                except ValueError:
+                                                    print("WARNING: One of the scores in score vector (or weights) is zero!!",file=sys.stderr)
+                                                    print("weights: ", tmweights,file=sys.stderr)
+                                                    print("original scores: ", scores,file=sys.stderr)
+                                                    score = origscore = -999
+                                                score = math.e ** score
+                                                origscore = math.e ** origscore
+                                            else:
+                                                score = origscore = math.e ** -999
+                                                print("**** ERROR ***** Target fragment not found in phrasetable, skipping and ignoring!!! source=" + inputfragment_s + ", target=" + targetpattern_s, file=sys.stderr)
+
+                                            print("Score for alternative target '" + translation + "', classifier=" + str(alternative.confidence) + ", phrasetable(t|s)=" + str(scores[2]) + ", total(class)=" + str(score), ", total(orig)=" + str(origscore),file=sys.stderr)
+                                            probs.append(str(score))
                                         else:
-                                            score = origscore = math.e ** -999
-                                            print("**** ERROR ***** Target fragment not found in phrasetable, skipping and ignoring!!! source=" + inputfragment_s + ", target=" + targetpattern_s, file=sys.stderr)
+                                            raise Exception("Source fragment not found in phrasetable, shouldn't happen at this point: " + inputfragment_s)
 
-                                        print("Score for alternative target '" + translation + "', classifier=" + str(alternative.confidence) + ", phrasetable(t|s)=" + str(scores[2]) + ", total(class)=" + str(score), ", total(orig)=" + str(origscore),file=sys.stderr)
-                                        probs.append(str(score))
                                     else:
-                                        raise Exception("Source fragment not found in phrasetable, shouldn't happen at this point: " + inputfragment_s)
-
-                                else:
-                                    #(-Z option, args.moses)
-                                    probs.append( str(alternative.confidence) )
+                                        #(-Z option, args.moses)
+                                        probs.append( str(alternative.confidence) )
 
 
                             #Moses XML syntax for multiple options (ugly XML-abuse but okay)
@@ -1162,6 +1175,7 @@ def mosesfullsentence(outputfile, testset, mosesclient=None,experts = None,leftc
                             inputsentence_xml += "<f translation=\"" + translations + "\" prob=\"" + probs + "\">" + inputfragment_s + "</f><wall/>"
                             havefragment = True
                     else:
+                        #don't pass any translation, let Moses handle it completely
                         word = word[1:-1]
                         havefragment = True
                         inputsentence_xml += word + "<wall/>"
@@ -1266,9 +1280,10 @@ def main():
 
     parser.add_argument('--maxlength',type=int,help="Maximum length of phrases", action='store',default=10)
     parser.add_argument('-k','--keywords',help="Add global keywords in context", action='store_true',default=False)
-    parser.add_argument('-Z','--moses',help="Pass full sentences through through Moses server using XML input (will start a moses server, requires --moseslm). Relies fully on Moses for LM, optional classifier output (if -l,-r) is passed to Moses and competes with phrase-table. Classifier score is the sole score used.", action='store_true',default=False)
-    parser.add_argument('-Y','--mosesY',help="Pass full sentences through through Moses server using XML input (will start a moses server, requires --moseslm). Relies fully on Moses for LM, optional classifier output (if -l,-r) is passed to Moses and competes with phrase-table. Classifier score is the sole score used.", action='store_true',default=False)
-    parser.add_argument('-X','--mosesX',help="Pass full sentences through through Moses server using XML input (will start a moses server, requires --moseslm). Relies fully on Moses for LM, optional classifier output (if -l,-r) is passed to Moses but does not compete with phrase-table. Classifier score is integrated in phrasetable using replace method is used for scoring, --mosestweights for weights", action='store_true',default=False)
+    parser.add_argument('-A','--allornothing',type=float,help="All or nothing mode. If the winning classifier score exceeds the specified threshold, the translation will be passed to Moses with perfect confidence, otherwise no translation is passed and the SMT decoder resolves it by itself. Passes full sentences through Moses server using XML input (will start a moses server, requires --moseslm)", action='store_true',default=False)
+    parser.add_argument('-Z','--moses',help="Pass full sentences  hrough Moses server using XML input (will start a moses server, requires --moseslm). Relies fully on Moses for LM, optional classifier output (if -l,-r) is passed to Moses and competes with phrase-table. Classifier score is the sole score used.", action='store_true',default=False)
+    parser.add_argument('-Y','--mosesY',help="Pass full sentences through Moses server using XML input (will start a moses server, requires --moseslm). Relies fully on Moses for LM, optional classifier output (if -l,-r) is passed to Moses and competes with phrase-table. Classifier score is the sole score used.", action='store_true',default=False)
+    parser.add_argument('-X','--mosesX',help="Pass full sentences through Moses server using XML input (will start a moses server, requires --moseslm). Relies fully on Moses for LM, optional classifier output (if -l,-r) is passed to Moses but does not compete with phrase-table. Classifier score is integrated in phrasetable using replace method is used for scoring, --mosestweights for weights", action='store_true',default=False)
     parser.add_argument('-W','--mosesW',help="Pass full sentences through through Moses server using XML input (will start a moses server, requires --moseslm). Relies fully on Moses for LM, optional classifier output (if -l,-r) is passed to Moses and competes with phrase-table. Classifier score is integrated in phrasetable using replace method", action='store_true',default=False)
     parser.add_argument('-F','--fallback',help="Attempt to decode unknown fragments using moses (will start a moses server, requires --moseslm or --lm). This is a more constrained version of falling back to Moses only for unknown fragments", action='store_true',default=False)
     parser.add_argument("--kt",dest="bow_absolute_threshold", help="Keyword needs to occur at least this many times in the context (absolute number)", type=int, action='store',default=3)
@@ -1523,14 +1538,14 @@ def main():
     #else:
     #    mosesserver = None
 
-    if args.lm and not args.moses and not args.mosesX and not args.mosesY and not args.mosesW:
+    if args.lm and not args.moses and not args.mosesX and not args.mosesY and not args.mosesW and not args.allornothing:
         print("Loading Language model " + args.lm, file=sys.stderr)
         lm = ARPALanguageModel(args.lm)
     else:
         lm = None
 
 
-    if (args.fallback or args.moses or args.mosesX or args.mosesY or args.mosesW) and args.test and not args.baseline and not args.leftcontext and not args.rightcontext:
+    if (args.fallback or args.moses or args.mosesX or args.mosesY or args.mosesW or args.allornothing) and args.test and not args.baseline and not args.leftcontext and not args.rightcontext:
         # --test -F without any context  is the same as --baseline -F
         args.baseline = args.test
         args.test = ""
@@ -1567,7 +1582,7 @@ def main():
 
         data = Reader(args.baseline)
         print("Making baseline",file=sys.stderr)
-        if args.moses or args.mosesY or args.mosesX or args.mosesW:
+        if args.moses or args.mosesY or args.mosesX or args.mosesW or args.allornothing:
             print("(Moses only, passing full sentence)",file=sys.stderr)
             mosesfullsentence(args.output + '.output.xml', data, mosesclient)
         else:
@@ -1588,14 +1603,14 @@ def main():
 
 
             data = Reader(args.test)
-            if args.moses or args.mosesY:
+            if args.moses or args.mosesY or args.allornothing:
                 #classifier score
                 print("(Moses (-Z/-Y) after classifiers, passing full sentence)",file=sys.stderr)
-                mosesfullsentence(args.output + '.output.xml', data, mosesclient, experts, args.leftcontext, args.rightcontext, timbloptions)
+                mosesfullsentence(args.output + '.output.xml', data, mosesclient, experts, args.leftcontext, args.rightcontext, timbloptions, args.allornothing)
             elif args.mosesX or args.mosesW:
                 #weighted score
                 print("(Moses (-X/-W) after classifiers, passing full sentence)",file=sys.stderr)
-                mosesfullsentence(args.output + '.output.xml', data, mosesclient, experts, args.leftcontext, args.rightcontext, timbloptions, ttable, sourceclassencoder, targetclassdecoder, args.mosestweight)
+                mosesfullsentence(args.output + '.output.xml', data, mosesclient, experts, args.leftcontext, args.rightcontext, timbloptions, 0, ttable, sourceclassencoder, targetclassdecoder, args.mosestweight)
             else:
                 print("Running...",file=sys.stderr)
                 experts.test(data, args.output + '.output.xml', ttable, sourceclassencoder,targetclassdecoder, args.leftcontext, args.rightcontext, args.keywords, timbloptions , lm,  args.tmweight, args.lmweight, mosesclient)
