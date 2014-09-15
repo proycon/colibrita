@@ -1187,6 +1187,7 @@ def mosesfullsentence(outputfile, testset, mosesclient=None,experts = None,leftc
                         leadwords += 1
 
 
+        print("\tMoses input: " + inputsentence_xml.strip(), file=sys.stderr)
         params = {"text":inputsentence_xml.strip(), "align":"false", "report-all-factors":"false", 'nbest':25}
         mosesresponse = mosesclient.translate(params)
 
