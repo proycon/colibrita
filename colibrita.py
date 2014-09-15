@@ -1090,7 +1090,7 @@ def mosesfullsentence(outputfile, testset, mosesclient=None,experts = None,leftc
                                     #don't pass any translation, let Moses handle it completely
                                     word = word[1:-1]
                                     havefragment = True
-                                    inputsentence_xml += word + "<wall/>"
+                                    inputsentence_xml += inputfragment_s + "<wall/>"
                                     continue
 
                             elif ttable:
