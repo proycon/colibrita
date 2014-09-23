@@ -1337,8 +1337,8 @@ def main():
     args = parser.parse_args()
 
 
-    if not args.train and not args.test and not args.trainfromset and not args.trainfortest and not args.baseline:
-        print("Specify either --train, --test, --trainfromset, --trainfortst, --baseline")
+    if not args.train and not args.test and not args.trainfromset and not args.trainfortest and not args.baseline and not args.server:
+        print("Specify either --train, --test, --trainfromset, --trainfortst, --baseline, --server")
         sys.exit(2)
 
 
