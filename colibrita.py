@@ -946,6 +946,7 @@ def setupmosesserver(ttable, sourceclassdecoder, targetclassdecoder, args):
             cmd = args.mosesdir + '/bin/mosesserver'
         else:
             cmd = 'mosesserver'
+        cmd += ' --server-port ' + str(args.mosesport)
         if args.mosesX or args.mosesY or args.allornothing:
             #do not compete with phrasetable (-X/-Y)
             cmd += " -xml-input exclusive"
