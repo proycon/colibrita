@@ -1290,7 +1290,7 @@ def main():
     parser.add_argument('--train',help="Build classifiers and train from scratch based on a parallel corpus", action='store_true')
     parser.add_argument('--source', type=str,help="Source language corpus for training (plaintext)", action='store',required=False)
     parser.add_argument('--target', type=str,help="Target language corpus for training (plaintext)", action='store',required=False)
-    parser.add_argument('-M','--phrasetable', type=str,help="Moses phrasetable to use for training (--train)", action='store',default="")
+    parser.add_argument('-M','--phrasetable', type=str,help="Moses phrasetable to use for training (--train), or for testing with moses using -Z/-Y, must be an absolute path", action='store',default="")
     parser.add_argument('--trainfortest',type=str, help="Do only limited training that covers a particular test set (speeds up training and reduces memory considerably!), use with --train or --trainfromset", action='store',default="")
     parser.add_argument('--test',type=str,help="Test mode (against a specific test set)", action='store',default="")
     parser.add_argument('--baseline', type=str,help="Baseline (against specified test set)", action='store',default="")
