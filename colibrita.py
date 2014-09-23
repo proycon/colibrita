@@ -1640,6 +1640,8 @@ def main():
             experts = ClassifierExperts(args.output)
             print("Loading classifiers",file=sys.stderr)
             experts.load(timbloptions, args.leftcontext, args.rightcontext, args.keywords, None, args.autoconf)
+        else:
+            experts = None
 
         print("Starting Colibrita server on port " + str(args.port),file=sys.stderr)
         ColibritaServer(args.port, experts, ttable, sourceclassencoder, targetclassdecoder, lm, args, timbloptions, mosesclient)
