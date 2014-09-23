@@ -795,7 +795,7 @@ class ClassifierExperts:
                 if stats: stats['classifier'] += 1
                 if str(outputfragment) != targetpattern_s:
                     if stats: stats['classifierdifferent'].append( (str(outputfragment), targetpattern_s) )
-            elif ttable and inputfragment_p and inputfragment_p in ttable:
+            elif isinstance(ttable, AlignmentModel) and inputfragment_p and inputfragment_p in ttable:
                 outputfragment = self.phrasetablelookup(inputfragment, inputfragment_p, sentencepair, targetclassdecoder, ttable, lm, tweight, lmweight, stats)
                 if stats: stats['fallback'] += 1
                 if outputfragment is None:
@@ -892,8 +892,14 @@ def setupmosesserver(ttable, sourceclassdecoder, targetclassdecoder, args):
     mosesserverpid = 0
     mosesclient = None
     if args.fallback or args.moses or args.mosesX or args.mosesY or args.mosesW or args.allornothing:
-        print("Writing " + args.output + "/fallback.phrase-table",file=sys.stderr)
-        ttable.savemosesphrasetable(args.output + "/fallback.phrase-table", sourceclassdecoder, targetclassdecoder)
+
+        if isinstance(ttable, str):
+            ttablefile = ttable
+        else:
+            ttablefile = args.output + "/fallback.phrase-table"
+            print("Writing " + ttablefile,file=sys.stderr)
+            ttable.savemosesphrasetable(ttablefile, sourceclassdecoder, targetclassdecoder)
+
 
         print("Writing " + args.output + "/fallback.moses.ini",file=sys.stderr)
 
@@ -939,7 +945,7 @@ def setupmosesserver(ttable, sourceclassdecoder, targetclassdecoder, args):
     LM0= {lmweight}
     TranslationModel0= {tweights}
     Distortion0= {dweight}
-    """.format(phrasetable=args.output + "/fallback.phrase-table", lm=lm, lmorder=args.lmorder, lmweight = args.moseslmweight, dweight = args.mosesdweight, tweights=tweights, lentweights=lentweights, wweight=args.moseswweight, pweight = args.mosespweight))
+    """.format(phrasetable=ttablefile, lm=lm, lmorder=args.lmorder, lmweight = args.moseslmweight, dweight = args.mosesdweight, tweights=tweights, lentweights=lentweights, wweight=args.moseswweight, pweight = args.mosespweight))
 
         print("Starting Moses Server",file=sys.stderr)
         if args.mosesdir:
@@ -1076,7 +1082,7 @@ def mosesfullsentence_processsentence(sentencepair, mosesclient=None,experts = N
                         #first word of fragment, insertion point is here
 
 
-                        if ttable: #(-X option)
+                        if isinstance(ttable,AlignmentModel): #(-X option)
                             try:
                                 inputfragment_p = sourceclassencoder.buildpattern(inputfragment_s)
                             except IOError:
@@ -1098,7 +1104,7 @@ def mosesfullsentence_processsentence(sentencepair, mosesclient=None,experts = N
                                 inputsentence_xml += inputfragment_s + "<wall/>"
                                 continue
 
-                        elif ttable:
+                        elif isinstance(ttable,AlignmentModel):
                             #(-X option)
                             if inputfragment_p in ttable:
                                 #lookup score in phrasetable, replace p(t|s) with classifier score, and compute log linear combination
@@ -1137,7 +1143,7 @@ def mosesfullsentence_processsentence(sentencepair, mosesclient=None,experts = N
                             for alternative in classifiedfragment.alternatives:
                                 translation = " ".join(alternative.value)
                                 translations.append( translation )
-                                if ttable:
+                                if isinstance(ttable,AlignmentModel):
                                     #(-X option)
                                     if inputfragment_p in ttable:
                                         #lookup score in phrasetable, replace p(t|s) with classifier score, and compute log linear combination
@@ -1589,8 +1595,12 @@ def main():
         print("Loading target class decoder " + targetclassfile, file=sys.stderr)
         targetclassdecoder = ClassDecoder(targetclassfile)
 
-        print("Loading translation table " + args.output + "/colibri.alignmodel",file=sys.stderr)
-        ttable = AlignmentModel(args.output + "/colibri.alignmodel"); #we still use this for --moses mode too, as we save it to moses-style phrasetable ourselves (bit unnecessary, but ok)
+        if args.phrasetable and not args.mosesX and not args.mosesW: #(works for mosesZ and mosesY)
+            print("Using moses phrasetable rather than colibri alignment model!" ,file=sys.stderr)
+            ttable = args.phrasetable #we use a str instead of AlignmentModel instance indicate we have a moses phrasetable
+        else:
+            print("Loading translation table " + args.output + "/colibri.alignmodel",file=sys.stderr)
+            ttable = AlignmentModel(args.output + "/colibri.alignmodel") #we still use this for --moses mode too, as we save it to moses-style phrasetable ourselves. This phrasetable may be a constrained version of the original!!!
 
         mosesserverpid, mosesclient = setupmosesserver(ttable, ClassDecoder(sourceclassfile), targetclassdecoder, args)
     else:
