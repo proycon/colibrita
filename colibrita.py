@@ -1310,7 +1310,7 @@ def main():
     #parser.add_argument('-O', dest='timbloptions', help="Timbl Classifier options", type=str,action='store',default="-k 1")
     parser.add_argument('--Tk', dest='timbl_k', help="Timbl k", type=int,action='store',default=1)
     parser.add_argument('--Tclones', dest='timbl_clones', help="Timbl clones (number of CPUs to use for parallel processing)", type=int,action='store',default=1)
-    parser.add_argument('-o','--output',type=str,help="Output prefix", required = False, default="output")
+    parser.add_argument('-o','--output',type=str,help="Output prefix", required = True )
     #parser.add_argument('--moses', help="Use Moses as Translation Model, no classifiers will be used, use with -T", action='store_true',default=False)
     parser.add_argument('--lm',type=str, help="Use language model in testing (file in ARPA format, as produced by for instance SRILM)", action='store',default="")
     parser.add_argument('--lmorder', type=int, help="Language Model order", action="store", default=3, required=False)
