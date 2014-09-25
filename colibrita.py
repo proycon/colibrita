@@ -78,7 +78,7 @@ try:
   </head>
   <body>
       Enter text in target language, enclose fall-back language content in asteriskes (*):<br />
-      <form action="/" method="get">
+      <form action="/" method="post">
           <input name="input" /><br />
           <input type="submit">
       </form>
