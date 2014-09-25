@@ -51,6 +51,7 @@ try:
             self.numberRequests += 1
             if b'input' in request.args:
                 request.setHeader(b"content-type", b"application/xml")
+                print("Server Input: ", request.args, file=sys.stderr)
                 print("Server input: ", request.args[b'input'][0], file=sys.stderr)
                 line = str(request.args[b'input'][0],'utf-8')
                 sentencepair = plaintext2sentencepair(line)
