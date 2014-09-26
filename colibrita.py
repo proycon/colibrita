@@ -51,6 +51,7 @@ try:
             self.numberRequests += 1
             if b'input' in request.args:
                 request.setHeader(b"content-type", b"application/xml")
+                print("Server Input: ", request.args, file=sys.stderr)
                 print("Server input: ", request.args[b'input'][0], file=sys.stderr)
                 line = str(request.args[b'input'][0],'utf-8')
                 sentencepair = plaintext2sentencepair(line)
@@ -71,14 +72,13 @@ try:
                 return b"""<?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
-<html>
   <head>
         <meta http-equiv="content-type" content="application/xhtml+xml; charset=utf-8"/>
         <title>Colibrita &cdot; Translation Assistant</title>
   </head>
   <body>
       Enter text in target language, enclose fall-back language content in asteriskes (*):<br />
-      <form action="/" method="get">
+      <form action="/" method="post">
           <input name="input" /><br />
           <input type="submit">
       </form>
