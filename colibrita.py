@@ -47,7 +47,13 @@ try:
             self.sourceclassencoder = sourceclassencoder
             self.targetclassdecoder = targetclassdecoder
 
+        def render_POST(self, request):
+            return self.process(request)
+
         def render_GET(self, request):
+            return self.process(request)
+
+        def process(self, request):
             self.numberRequests += 1
             if b'input' in request.args:
                 request.setHeader(b"content-type", b"application/xml")
