@@ -33,7 +33,10 @@ for LANGPAIR in $LANGPAIRS; do
 
     if [ ! -f model/moses.ini ]; then
         $MOSESDIR/scripts/training/train-model.perl -external-bin-dir $BINDIR  -root-dir . --corpus train --f $L1 --e $L2 --first-step 1 --last-step 9 -reordering msd-bidirectional-fe --lm 0:3:$EXPDIR/$LANGPAIR/$CORPUS-train.en.lm -mgiza -mgiza-cpus $THREADS -core $THREADS -sort-buffer-size 10G -sort-batch-size 253 -sort-compress gzip -sort-parallel $THREADS
+
+        #TODO: MERT
     fi
+
 
     cd ..
     
