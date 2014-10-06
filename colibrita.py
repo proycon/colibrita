@@ -1401,9 +1401,9 @@ def main():
                 elif line[:4] ==  "LM0=":
                     args.moseslmweight = float(line[4:].strip())
                 elif line[:18] ==  "TranslationModel0=":
-                    args.mosestweight = [ float(x) for x in line[18:].strip().split() ])
+                    args.mosestweight = [ float(x) for x in line[18:].strip().split() ]
                 elif line[:19] ==  "LexicalReordering0=":
-                    args.mosesreorderingweight = [ float(x) for x in line[19:].strip().split() ])
+                    args.mosesreorderingweight = [ float(x) for x in line[19:].strip().split() ]
 
 
     if args.trainfromset:
