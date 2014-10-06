@@ -923,6 +923,22 @@ def setupmosesserver(ttable, sourceclassdecoder, targetclassdecoder, args):
             tweights = " ".join([ str(x) for x in (0.2,0.2,0.2,0.2)])
             lentweights = 4
 
+        if args.mosesreorderingweight:
+            reorderingweights = " ".join([ str(x) for x in args.mosesreorderingweight])
+            lenreorderingweights = len(args.mosesreorderingweight)
+        else:
+            reorderingweights = " ".join([ str(x) for x in (0.3,0.3,0.3,0.3,0.3,0.3)])
+            lenreorderingweights = 6
+
+
+
+        if args.mosesreorderingmodel:
+            reordering = "LexicalReordering name=LexicalReordering0 num-features=" + str(lenreorderingweights) + " type=" + args.mosesreorderingtype + " input-factor=0 output-factor=0 path=" + os.path.abspath(args.reorderingmodel)
+            reordering += "\nDistortion"
+        else:
+            reordering = "Distortion"
+
+
         if not args.moseslm and not args.lm:
             raise Exception("You must specify --moseslm or --lm if you use Moses fallback (-F) or --moses!")
         elif args.lm:
@@ -948,7 +964,7 @@ def setupmosesserver(ttable, sourceclassdecoder, targetclassdecoder, args):
     WordPenalty
     PhrasePenalty
     PhraseDictionaryMemory name=TranslationModel0 num-features={lentweights} path={phrasetable} input-factor=0 output-factor=0 table-limit=20
-    Distortion
+    {reordering}
     SRILM name=LM0 factor=0 path={lm} order={lmorder}
 
     [weight]
@@ -958,7 +974,9 @@ def setupmosesserver(ttable, sourceclassdecoder, targetclassdecoder, args):
     LM0= {lmweight}
     TranslationModel0= {tweights}
     Distortion0= {dweight}
-    """.format(phrasetable=ttablefile, lm=lm, lmorder=args.lmorder, lmweight = args.moseslmweight, dweight = args.mosesdweight, tweights=tweights, lentweights=lentweights, wweight=args.moseswweight, pweight = args.mosespweight))
+    """.format(phrasetable=ttablefile,reordering=reordering, lm=lm, lmorder=args.lmorder, lmweight = args.moseslmweight, dweight = args.mosesdweight, tweights=tweights, lentweights=lentweights, wweight=args.moseswweight, pweight = args.mosespweight))
+            if args.mosesreorderingmodel:
+                f.write("LexicalReordering0= " + " ".join([str(x) for x in reorderingweights ]) )
 
         print("Starting Moses Server",file=sys.stderr)
         if args.mosesdir:
@@ -1336,11 +1354,15 @@ def main():
     parser.add_argument('--lmorder', type=int, help="Language Model order", action="store", default=3, required=False)
     parser.add_argument('--lmweight',type=float, help="Language model weight (when --lm is used, not for moses)", action='store',default=1)
     parser.add_argument('--tmweight',type=float, help="Translation model weight (when --lm is used, not for moses)", action='store',default=1)
+    parser.add_argument('--mosesweights', type=str, help="Read Moses weights from the specified moses.ini file (only reads weights, won't read phrasetable nor reordering model!)", action="store", default="", required=False)
     parser.add_argument('--moseslmweight', type=float, help="Language Model weight for Moses fallback (-F)", action="store", default=0.5, required=False)
     parser.add_argument('--mosesdweight', type=float, help="Distortion Model weight for Moses fallback (-F)", action="store", default=0.3, required=False)
     parser.add_argument('--moseswweight', type=float, help="Word penalty weight for Moses fallback (-F)", action="store", default=-1, required=False)
     parser.add_argument('--mosestweight', type=float, help="Translation Model weight for Moses fallback (-F) (may be specified multiple times for each score making up the translation model)", action="append", required=False)
     parser.add_argument('--mosespweight', type=float, help="Phrase penalty for Moses fallback (-F)", default=0.2, action="store", required=False)
+    parser.add_argument('--mosesreorderingmodel', type="str",default="", action="store", required=False)
+    parser.add_argument('--mosesreorderingtype', type="str",default="wbe-msd-bidirectional-fe-allff", action="store", required=False)
+    parser.add_argument('--mosesreorderingweight', type=float, help="May be specified multiple times for each score making up the reordering model", action="append", required=False)
     parser.add_argument('--port',type=int, help="Server port (use with --server)", action='store',default=7893)
     parser.add_argument('--folds',type=int, help="Number of folds to use for cross-validation (used with -a)", action='store',default=10)
     parser.add_argument('-T','--ttable', type=str,help="Phrase translation table (file) to use, must be a Colibri alignment model (use colibri-mosesphrasetable2alignmodel). Will be tried as a fallback when no classifiers are made, also required when testing with --lm and without classifier training, and when using --trainfromscratch", action='store',default="")
@@ -1367,6 +1389,21 @@ def main():
         timbloptions += " --clones=" + str(args.timbl_clones)
 
 
+    if args.mosesweights:
+        with open(args.mosesweights,'r',encoding='utf-8') as f:
+            for line in f:
+                if line[:15] ==  "PhrasePenalty0=":
+                    args.mosespweight = float(line[15:].strip())
+                elif line[:14] ==  "WordPenalty0=":
+                    args.mosespweight = float(line[14:].strip())
+                elif line[:12] ==  "Distortion0=":
+                    args.mosesdweight = float(line[12:].strip())
+                elif line[:4] ==  "LM0=":
+                    args.moseslmweight = float(line[4:].strip())
+                elif line[:18] ==  "TranslationModel0=":
+                    args.mosestweight = [ float(x) for x in line[18:].strip().split() ])
+                elif line[:19] ==  "LexicalReordering0=":
+                    args.mosesreorderingweight = [ float(x) for x in line[19:].strip().split() ])
 
 
     if args.trainfromset:
