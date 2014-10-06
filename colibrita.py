@@ -1685,7 +1685,11 @@ def main():
     else:
         print("Don't know what to do!", file=sys.stderr)
 
-    if mosesserverpid: os.kill(mosesserverpid, signal.SIGTERM)
+    if mosesserverpid:
+        print("Stopping moses server (" + str(mosesserverpid) + ")", file=sys.stderr)
+        os.kill(mosesserverpid, signal.SIGKILL)
+        time.sleep(3)
+
     print("All done.", file=sys.stderr)
 
 
