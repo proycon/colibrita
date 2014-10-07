@@ -66,7 +66,7 @@ for CONF in $TRAINCONFIGURATIONS; do
     if [ ! -d "$CORPUS-baseline" ]; then 
         ln -s $CORPUS-$CONF $CORPUS-baseline
         colibrita --baseline $TESTDIR/corpus/${LANGPAIR}.gold.tokenised.xml -o $CORPUS-baseline
-        if [ "$?" -ne 0 ];
+        if [ "$?" -ne 0 ]; then
             echo "Failure in colibrita! ($CORPUS-baseline)" >&2
         else
             $EVALCMD --ref $TESTDIR/corpus/${LANGPAIR}.gold.tokenised.xml --out $CORPUS-baseline
