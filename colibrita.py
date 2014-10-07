@@ -976,7 +976,7 @@ TranslationModel0= {tweights}
 Distortion0= {dweight}
     """.format(phrasetable=ttablefile,reordering=reordering, lm=lm, lmorder=args.lmorder, lmweight = args.moseslmweight, dweight = args.mosesdweight, tweights=tweights, lentweights=lentweights, wweight=args.moseswweight, pweight = args.mosespweight))
             if args.mosesreorderingmodel:
-                f.write("LexicalReordering0= " + " ".join([str(x) for x in reorderingweights ]) )
+                f.write("LexicalReordering0= " + reorderingweights + "\n")
 
         print("Starting Moses Server",file=sys.stderr)
         if args.mosesdir:
