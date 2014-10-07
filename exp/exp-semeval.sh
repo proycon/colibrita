@@ -2,7 +2,7 @@
 
 THREADS=10
 LANGPAIRS="en-es en-de fr-en nl-en" #run this script with any of these values as parameter
-CORPUSNAME="ep7os12"
+CORPUS="ep7os12"
 BINDIR="/vol/customopt/machine-translation/bin"
 MOSESDIR="/vol/customopt/machine-translation/src/mosesdecoder/"
 EXPDIR="/scratch/proycon/colibrita/semeval3/"
