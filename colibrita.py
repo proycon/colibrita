@@ -993,7 +993,7 @@ Distortion0= {dweight}
             #inclusive/exclusive makes no difference on non-context informed data
         cmd += ' -f ' + args.output + '/fallback.moses.ini -n-best-list ' + args.output+"/nbest.txt 25"
         print("Calling moses: " + cmd,file=sys.stderr)
-        p = subprocess.Popen(cmd,shell=True)
+        p = subprocess.Popen(cmd,shell=False)
         mosesserverpid = p.pid
 
         while True:
