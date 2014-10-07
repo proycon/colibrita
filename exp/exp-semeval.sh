@@ -83,7 +83,7 @@ for CONF in $TRAINCONFIGURATIONS; do
     fi
     if [ ! -d "${CORPUS}-mosesbaseline" ]; then 
         ln -s $CORPUS-$CONF $CORPUS-mosesbaseline
-        colibrita --test $TESTDIR/corpus/${LANGPAIR}.gold.tokenised.xml -Z -o $CORPUS-mosesbaseline --moseslm $CORPUS-train.${L2}.lm --mosesweights $CORPUS-train/mert-work/moses.ini
+        colibrita --test $TESTDIR/corpus/${LANGPAIR}.gold.tokenised.xml -Z -o $CORPUS-mosesbaseline --moseslm $CORPUS-train.${L2}.lm --mosesweights train-$CORPUS/mert-work/moses.ini
         if [ "$?" -ne 0 ];
             echo "Failure in colibrita! ($CORPUS-mosesbaseline)" >&2
         else
@@ -110,7 +110,7 @@ for CONF in $TRAINCONFIGURATIONS; do
 
     if [ ! -d $CORPUS-${CONF}-moses ]; then
         ln -s $CORPUS-$CONF $CORPUS-${CONF}moses
-        colibrita --test $TESTDIR/corpus/${LANGPAIR}.gold.tokenised.xml -l $L -r $R -Z -o $CORPUS-${CONF}-moses --lm $CORPUS-train.${L2}.lm  --mosesweights $CORPUS-train/mert-work/moses.ini
+        colibrita --test $TESTDIR/corpus/${LANGPAIR}.gold.tokenised.xml -l $L -r $R -Z -o $CORPUS-${CONF}-moses --lm $CORPUS-train.${L2}.lm  --mosesweights train-$CORPUS/mert-work/moses.ini
         if [ "$?" -ne 0 ];
             echo "Failure in colibrita! ($CORPUS-$CONF-moses)" >&2
         else
@@ -121,7 +121,7 @@ for CONF in $TRAINCONFIGURATIONS; do
 
     if [ ! -d $CORPUS-${CONF}-mosesweighted ]; then
         ln -s $CORPUS-$CONF $CORPUS-${CONF}-mosesweighted
-        colibrita --test $TESTDIR/corpus/${LANGPAIR}.gold.tokenised.xml -l $L -r $R -X -o $CORPUS-${CONF}-mosesweighted --lm $CORPUS-train.${L2}.lm --mosesweights $CORPUS-train/mert-work/moses.ini 
+        colibrita --test $TESTDIR/corpus/${LANGPAIR}.gold.tokenised.xml -l $L -r $R -X -o $CORPUS-${CONF}-mosesweighted --lm $CORPUS-train.${L2}.lm --mosesweights train-$CORPUS/mert-work/moses.ini 
         if [ "$?" -ne 0 ];
             echo "Failure in colibrita! ($CORPUS-$CONF-mosesweighted)" >&2
         else
@@ -131,7 +131,7 @@ for CONF in $TRAINCONFIGURATIONS; do
 
     if [ ! -d $CORPUS-${CONF}-mosescut0.7 ]; then
         ln -s $CORPUS-$CONF $CORPUS-${CONF}-mosescut0.7
-        colibrita --test $TESTDIR/corpus/${LANGPAIR}.gold.tokenised.xml -l $L -r $R -A 0.7 -o $CORPUS-${CONF}-mosescut0.7 --lm $CORPUS-train.${L2}.lm --mosesweights $CORPUS-train/mert-work/moses.ini 
+        colibrita --test $TESTDIR/corpus/${LANGPAIR}.gold.tokenised.xml -l $L -r $R -A 0.7 -o $CORPUS-${CONF}-mosescut0.7 --lm $CORPUS-train.${L2}.lm --mosesweights train-$CORPUS/mert-work/moses.ini 
         if [ "$?" -ne 0 ];
             echo "Failure in colibrita! ($CORPUS-$CONF-mosescut0.7)" >&2
         else
@@ -141,7 +141,7 @@ for CONF in $TRAINCONFIGURATIONS; do
 
     if [ ! -d $CORPUS-${CONF}-mosescut0.8 ]; then
         ln -s $CORPUS-$CONF $CORPUS-${CONF}-mosescut0.8
-        colibrita --test $TESTDIR/corpus/${LANGPAIR}.gold.tokenised.xml -l $L -r $R -A 0.8 -o $CORPUS-${CONF}-mosescut0.8 --lm $CORPUS-train.${L2}.lm --mosesweights $CORPUS-train/mert-work/moses.ini 
+        colibrita --test $TESTDIR/corpus/${LANGPAIR}.gold.tokenised.xml -l $L -r $R -A 0.8 -o $CORPUS-${CONF}-mosescut0.8 --lm $CORPUS-train.${L2}.lm --mosesweights train-$CORPUS/mert-work/moses.ini 
         if [ "$?" -ne 0 ];
             echo "Failure in colibrita! ($CORPUS-$CONF-mosescut0.8)" >&2
         else
@@ -151,7 +151,7 @@ for CONF in $TRAINCONFIGURATIONS; do
 
     if [ ! -d $CORPUS-${CONF}-mosescut0.9 ]; then
         ln -s $CORPUS-$CONF $CORPUS-${CONF}-mosescut0.9
-        colibrita --test $TESTDIR/corpus/${LANGPAIR}.gold.tokenised.xml -l $L -r $R -A 0.9 -o $CORPUS-${CONF}-mosescut0.9 --lm $CORPUS-train.${L2}.lm --mosesweights $CORPUS-train/mert-work/moses.ini 
+        colibrita --test $TESTDIR/corpus/${LANGPAIR}.gold.tokenised.xml -l $L -r $R -A 0.9 -o $CORPUS-${CONF}-mosescut0.9 --lm $CORPUS-train.${L2}.lm --mosesweights train-$CORPUS/mert-work/moses.ini 
         if [ "$?" -ne 0 ];
             echo "Failure in colibrita! ($CORPUS-$CONF-mosescut0.9)" >&2
         else
