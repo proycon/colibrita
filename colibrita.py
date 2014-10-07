@@ -1394,16 +1394,22 @@ def main():
             for line in f:
                 if line[:15] ==  "PhrasePenalty0=":
                     args.mosespweight = float(line[15:].strip())
+                    print("Read weight phrase penalty =", str(args.mosespweight),file=sys.stderr)
                 elif line[:14] ==  "WordPenalty0=":
-                    args.mosespweight = float(line[14:].strip())
+                    args.moseswweight = float(line[14:].strip())
+                    print("Read weight word penalty = ", str(args.moseswweight),file=sys.stderr)
                 elif line[:12] ==  "Distortion0=":
                     args.mosesdweight = float(line[12:].strip())
+                    print("Read weight distortion = ", str(args.mosesdweight),file=sys.stderr)
                 elif line[:4] ==  "LM0=":
                     args.moseslmweight = float(line[4:].strip())
+                    print("Read weight lm = ", str(args.moseslmweight),file=sys.stderr)
                 elif line[:18] ==  "TranslationModel0=":
                     args.mosestweight = [ float(x) for x in line[18:].strip().split() ]
+                    print("Read weight tm = ", repr(args.mosestweight),file=sys.stderr)
                 elif line[:19] ==  "LexicalReordering0=":
                     args.mosesreorderingweight = [ float(x) for x in line[19:].strip().split() ]
+                    print("Read weight reordering = ", repr(args.mosesreorderingweight),file=sys.stderr)
 
 
     if args.trainfromset:
