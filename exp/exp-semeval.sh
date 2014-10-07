@@ -69,7 +69,7 @@ for CONF in $TRAINCONFIGURATIONS; do
         if [ "$?" -ne 0 ]; then
             echo "Failure in colibrita! ($CORPUS-baseline)" >&2
         else
-            $EVALCMD --ref $TESTDIR/corpus/${LANGPAIR}.gold.tokenised.xml --out $CORPUS-baseline
+            $EVALCMD --ref $TESTDIR/corpus/${LANGPAIR}.gold.tokenised.xml --out $CORPUS-baseline.output.xml
         fi
     fi
     if [ ! -d $CORPUS-lmbaseline ]; then 
@@ -78,7 +78,7 @@ for CONF in $TRAINCONFIGURATIONS; do
         if [ "$?" -ne 0 ]; then
             echo "Failure in colibrita! ($CORPUS-lmbaseline)" >&2
         else
-            $EVALCMD --ref $TESTDIR/corpus/${LANGPAIR}.gold.tokenised.xml --out $CORPUS-lmbaseline
+            $EVALCMD --ref $TESTDIR/corpus/${LANGPAIR}.gold.tokenised.xml --out $CORPUS-lmbaseline.output.xml
         fi
     fi
     if [ ! -d "${CORPUS}-mosesbaseline" ]; then 
@@ -87,7 +87,7 @@ for CONF in $TRAINCONFIGURATIONS; do
         if [ "$?" -ne 0 ]; then
             echo "Failure in colibrita! ($CORPUS-mosesbaseline)" >&2
         else
-            $EVALCMD --ref $TESTDIR/corpus/${LANGPAIR}.gold.tokenised.xml --out $CORPUS-mosesbaseline
+            $EVALCMD --ref $TESTDIR/corpus/${LANGPAIR}.gold.tokenised.xml --out $CORPUS-mosesbaseline.output.xml
         fi
     fi
 
@@ -95,7 +95,7 @@ for CONF in $TRAINCONFIGURATIONS; do
     if [ "$?" -ne 0 ]; then
         echo "Failure in colibrita! ($CORPUS-$CONF)" >&2
     else
-        $EVALCMD --ref $TESTDIR/corpus/${LANGPAIR}.gold.tokenised.xml --out $CORPUS-$CONF
+        $EVALCMD --ref $TESTDIR/corpus/${LANGPAIR}.gold.tokenised.xml --out $CORPUS-${CONF}.output.xml
     fi
     
     if [ ! -d $CORPUS-${CONF}-lm ]; then
@@ -104,7 +104,7 @@ for CONF in $TRAINCONFIGURATIONS; do
         if [ "$?" -ne 0 ]; then
             echo "Failure in colibrita! ($CORPUS-$CONF-lm)" >&2
         else
-            $EVALCMD --ref $TESTDIR/corpus/${LANGPAIR}.gold.tokenised.xml --out $CORPUS-$CONF-lm
+            $EVALCMD --ref $TESTDIR/corpus/${LANGPAIR}.gold.tokenised.xml --out $CORPUS-$CONF-lm.output.xml
         fi
     fi
 
@@ -114,7 +114,7 @@ for CONF in $TRAINCONFIGURATIONS; do
         if [ "$?" -ne 0 ]; then
             echo "Failure in colibrita! ($CORPUS-$CONF-moses)" >&2
         else
-            $EVALCMD --ref $TESTDIR/corpus/${LANGPAIR}.gold.tokenised.xml --out $CORPUS-$CONF-moses
+            $EVALCMD --ref $TESTDIR/corpus/${LANGPAIR}.gold.tokenised.xml --out $CORPUS-$CONF-moses.output.xml
         fi
     fi
 
@@ -125,7 +125,7 @@ for CONF in $TRAINCONFIGURATIONS; do
         if [ "$?" -ne 0 ]; then
             echo "Failure in colibrita! ($CORPUS-$CONF-mosesweighted)" >&2
         else
-            $EVALCMD --ref $TESTDIR/corpus/${LANGPAIR}.gold.tokenised.xml --out $CORPUS-$CONF-mosesweighted
+            $EVALCMD --ref $TESTDIR/corpus/${LANGPAIR}.gold.tokenised.xml --out $CORPUS-$CONF-mosesweighted.output.xml
         fi
     fi
 
@@ -135,7 +135,7 @@ for CONF in $TRAINCONFIGURATIONS; do
         if [ "$?" -ne 0 ]; then
             echo "Failure in colibrita! ($CORPUS-$CONF-mosescut0.7)" >&2
         else
-            $EVALCMD --ref $TESTDIR/corpus/${LANGPAIR}.gold.tokenised.xml --out $CORPUS-$CONF-mosescut0.7
+            $EVALCMD --ref $TESTDIR/corpus/${LANGPAIR}.gold.tokenised.xml --out $CORPUS-$CONF-mosescut0.7.output.xml
         fi
     fi
 
@@ -145,7 +145,7 @@ for CONF in $TRAINCONFIGURATIONS; do
         if [ "$?" -ne 0 ]; then
             echo "Failure in colibrita! ($CORPUS-$CONF-mosescut0.8)" >&2
         else
-            $EVALCMD --ref $TESTDIR/corpus/${LANGPAIR}.gold.tokenised.xml --out $CORPUS-$CONF-mosescut0.8
+            $EVALCMD --ref $TESTDIR/corpus/${LANGPAIR}.gold.tokenised.xml --out $CORPUS-$CONF-mosescut0.8.output.xml
         fi
     fi
 
@@ -155,7 +155,7 @@ for CONF in $TRAINCONFIGURATIONS; do
         if [ "$?" -ne 0 ]; then
             echo "Failure in colibrita! ($CORPUS-$CONF-mosescut0.9)" >&2
         else
-            $EVALCMD --ref $TESTDIR/corpus/${LANGPAIR}.gold.tokenised.xml --out $CORPUS-$CONF-mosescut0.9
+            $EVALCMD --ref $TESTDIR/corpus/${LANGPAIR}.gold.tokenised.xml --out $CORPUS-$CONF-mosescut0.9.output.xml
         fi
     fi
 done
