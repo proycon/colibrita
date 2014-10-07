@@ -949,31 +949,31 @@ def setupmosesserver(ttable, sourceclassdecoder, targetclassdecoder, args):
         #write moses.ini
         with open(args.output + '/fallback.moses.ini','w',encoding='utf-8') as f:
             f.write("""
-    #Moses INI, produced by colibrita.py
-    [input-factors]
-    0
+#Moses INI, produced by colibrita.py
+[input-factors]
+0
 
-    [mapping]
-    0 T 0
+[mapping]
+0 T 0
 
-    [distortion-limit]
-    6
+[distortion-limit]
+6
 
-    [feature]
-    UnknownWordPenalty
-    WordPenalty
-    PhrasePenalty
-    PhraseDictionaryMemory name=TranslationModel0 num-features={lentweights} path={phrasetable} input-factor=0 output-factor=0 table-limit=20
-    {reordering}
-    SRILM name=LM0 factor=0 path={lm} order={lmorder}
+[feature]
+UnknownWordPenalty
+WordPenalty
+PhrasePenalty
+PhraseDictionaryMemory name=TranslationModel0 num-features={lentweights} path={phrasetable} input-factor=0 output-factor=0 table-limit=20
+{reordering}
+SRILM name=LM0 factor=0 path={lm} order={lmorder}
 
-    [weight]
-    UnknownWordPenalty0= 1
-    WordPenalty0= {wweight}
-    PhrasePenalty0= {pweight}
-    LM0= {lmweight}
-    TranslationModel0= {tweights}
-    Distortion0= {dweight}
+[weight]
+UnknownWordPenalty0= 1
+WordPenalty0= {wweight}
+PhrasePenalty0= {pweight}
+LM0= {lmweight}
+TranslationModel0= {tweights}
+Distortion0= {dweight}
     """.format(phrasetable=ttablefile,reordering=reordering, lm=lm, lmorder=args.lmorder, lmweight = args.moseslmweight, dweight = args.mosesdweight, tweights=tweights, lentweights=lentweights, wweight=args.moseswweight, pweight = args.mosespweight))
             if args.mosesreorderingmodel:
                 f.write("LexicalReordering0= " + " ".join([str(x) for x in reorderingweights ]) )
@@ -1395,8 +1395,8 @@ def main():
                 if line[:15] ==  "PhrasePenalty0=":
                     args.mosespweight = float(line[15:].strip())
                     print("Read weight phrase penalty =", str(args.mosespweight),file=sys.stderr)
-                elif line[:14] ==  "WordPenalty0=":
-                    args.moseswweight = float(line[14:].strip())
+                elif line[:13] ==  "WordPenalty0=":
+                    args.moseswweight = float(line[13:].strip())
                     print("Read weight word penalty = ", str(args.moseswweight),file=sys.stderr)
                 elif line[:12] ==  "Distortion0=":
                     args.mosesdweight = float(line[12:].strip())
