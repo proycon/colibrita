@@ -933,7 +933,7 @@ def setupmosesserver(ttable, sourceclassdecoder, targetclassdecoder, args):
 
 
         if args.mosesreorderingmodel:
-            reordering = "LexicalReordering name=LexicalReordering0 num-features=" + str(lenreorderingweights) + " type=" + args.mosesreorderingtype + " input-factor=0 output-factor=0 path=" + os.path.abspath(args.reorderingmodel)
+            reordering = "LexicalReordering name=LexicalReordering0 num-features=" + str(lenreorderingweights) + " type=" + args.mosesreorderingtype + " input-factor=0 output-factor=0 path=" + os.path.abspath(args.mosesreorderingmodel)
             reordering += "\nDistortion"
         else:
             reordering = "Distortion"
