@@ -10,7 +10,7 @@ for filename in glob.glob("ep7os12-*.summary.score"):
     with open(filename) as f:
         line = f.read() #header
         line = f.read()
-        fields = [round(x,4) for x in line.split(' ') ]
+        fields = [ str(round(float(x),4) for x in line.split(' ')) ]
         print(name + ',' + ','.join(fields))
 
 
