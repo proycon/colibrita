@@ -126,6 +126,7 @@ for CONF in $TRAINCONFIGURATIONS; do
         else
             $EVALCMD --ref $TESTDIR/corpus/${LANGPAIR}.gold.tokenised.xml --out $CORPUS-$CONF-moses.output.xml
         fi
+        killall -w mosesserver
     fi
 
 
@@ -138,6 +139,7 @@ for CONF in $TRAINCONFIGURATIONS; do
         else
             $EVALCMD --ref $TESTDIR/corpus/${LANGPAIR}.gold.tokenised.xml --out $CORPUS-$CONF-mosesweighted.output.xml
         fi
+        killall -w mosesserver
     fi
 
     if [ ! -d $CORPUS-${CONF}-mosescut0.7 ]; then
@@ -149,6 +151,7 @@ for CONF in $TRAINCONFIGURATIONS; do
         else
             $EVALCMD --ref $TESTDIR/corpus/${LANGPAIR}.gold.tokenised.xml --out $CORPUS-$CONF-mosescut0.7.output.xml
         fi
+        killall -w mosesserver
     fi
 
     if [ ! -d $CORPUS-${CONF}-mosescut0.8 ]; then
@@ -160,6 +163,7 @@ for CONF in $TRAINCONFIGURATIONS; do
         else
             $EVALCMD --ref $TESTDIR/corpus/${LANGPAIR}.gold.tokenised.xml --out $CORPUS-$CONF-mosescut0.8.output.xml
         fi
+        killall -w mosesserver
     fi
 
     if [ ! -d $CORPUS-${CONF}-mosescut0.9 ]; then
@@ -171,6 +175,7 @@ for CONF in $TRAINCONFIGURATIONS; do
         else
             $EVALCMD --ref $TESTDIR/corpus/${LANGPAIR}.gold.tokenised.xml --out $CORPUS-$CONF-mosescut0.9.output.xml
         fi
+        killall -w mosesserver
     fi
 done
 
