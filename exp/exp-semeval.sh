@@ -60,7 +60,8 @@ for CONF in $TRAINCONFIGURATIONS; do
     L=${CONF:1:1}
     R=${CONF:3:1}
     if [ ! -d $CORPUS-$CONF ]; then
-        colibrita --trainfortest $TESTDIR/corpus/$LANGPAIR.gold.tokenised.xml  --source $CORPUS-train.${L1}.txt --target $CORPUS-train.${L2}.txt -M train-$CORPUS/model/phrase-table.gz -l $L -r $R -o $CORPUS-$CONF -p 0.0001 
+        "RUNNING: colibrita --trainfortest $TESTDIR/corpus/$LANGPAIR.gold.tokenised.xml  --source $CORPUS-train.${L1}.txt --target $CORPUS-train.${L2}.txt -M train-$CORPUS/model/phrase-table.gz -l $L -r $R -o $CORPUS-$CONF -p 0.0001"
+        colibrita --trainfortest $TESTDIR/corpus/$LANGPAIR.gold.tokenised.xml  --source $CORPUS-train.${L1}.txt --target $CORPUS-train.${L2}.txt -M train-$CORPUS/model/phrase-table.gz -l $L -r $R -o $CORPUS-$CONF -p 0.0001
     fi
 
     if [ ! -d "$CORPUS-baseline" ]; then 
@@ -105,7 +106,7 @@ for CONF in $TRAINCONFIGURATIONS; do
 
     if [ ! -d "${CORPUS}-mosesbaseline" ]; then 
         ln -s $CORPUS-$CONF $CORPUS-mosesbaseline
-        colibrita --test $TESTDIR/corpus/${LANGPAIR}.gold.tokenised.xml -Z -o $CORPUS-mosesbaseline --moseslm $CORPUS-train.${L2}.lm --mosesweights train-$CORPUS/mert-work/moses.ini --mosesreorderingmodel train-$CORPUS/model/reordering-table.wbe-msd-bidirectional-fe.gz
+        colibrita --test $TESTDIR/corpus/${LANGPAIR}.gold.tokenised.xml -Z -o $CORPUS-mosesbaseline --moseslm $CORPUS-train.${L2}.lm --mosesweights train-$CORPUS/mert-work/moses.ini #--mosesreorrderingmodel train-$CORPUS/model/reordering-table.wbe-msd-bidirectional-fe.gz
         if [ "$?" -ne 0 ]; then
             echo "Failure in colibrita! ($CORPUS-mosesbaseline)" >&2
             exit 2
@@ -118,7 +119,7 @@ for CONF in $TRAINCONFIGURATIONS; do
 
     if [ ! -d $CORPUS-${CONF}-moses ]; then
         ln -s $CORPUS-$CONF $CORPUS-${CONF}-moses
-        colibrita --test $TESTDIR/corpus/${LANGPAIR}.gold.tokenised.xml -l $L -r $R -Z -o $CORPUS-${CONF}-moses --lm $CORPUS-train.${L2}.lm  --mosesweights train-$CORPUS/mert-work/moses.ini --mosesreorderingmodel train-$CORPUS/model/reordering-table.wbe-msd-bidirectional-fe.gz
+        colibrita --test $TESTDIR/corpus/${LANGPAIR}.gold.tokenised.xml -l $L -r $R -Z -o $CORPUS-${CONF}-moses --lm $CORPUS-train.${L2}.lm  --mosesweights train-$CORPUS/mert-work/moses.ini #--mosesreorrderingmodel train-$CORPUS/model/reordering-table.wbe-msd-bidirectional-fe.gz
         if [ "$?" -ne 0 ]; then
             echo "Failure in colibrita! ($CORPUS-$CONF-moses)" >&2
             exit 2
@@ -130,7 +131,7 @@ for CONF in $TRAINCONFIGURATIONS; do
 
     if [ ! -d $CORPUS-${CONF}-mosesweighted ]; then
         ln -s $CORPUS-$CONF $CORPUS-${CONF}-mosesweighted
-        colibrita --test $TESTDIR/corpus/${LANGPAIR}.gold.tokenised.xml -l $L -r $R -X -o $CORPUS-${CONF}-mosesweighted --lm $CORPUS-train.${L2}.lm --mosesweights train-$CORPUS/mert-work/moses.ini  --mosesreorderingmodel train-$CORPUS/model/reordering-table.wbe-msd-bidirectional-fe.gz
+        colibrita --test $TESTDIR/corpus/${LANGPAIR}.gold.tokenised.xml -l $L -r $R -X -o $CORPUS-${CONF}-mosesweighted --lm $CORPUS-train.${L2}.lm --mosesweights train-$CORPUS/mert-work/moses.ini  #--mosesreorrderingmodel train-$CORPUS/model/reordering-table.wbe-msd-bidirectional-fe.gz
         if [ "$?" -ne 0 ]; then
             echo "Failure in colibrita! ($CORPUS-$CONF-mosesweighted)" >&2
             exit 2
@@ -141,7 +142,7 @@ for CONF in $TRAINCONFIGURATIONS; do
 
     if [ ! -d $CORPUS-${CONF}-mosescut0.7 ]; then
         ln -s $CORPUS-$CONF $CORPUS-${CONF}-mosescut0.7
-        colibrita --test $TESTDIR/corpus/${LANGPAIR}.gold.tokenised.xml -l $L -r $R -A 0.7 -o $CORPUS-${CONF}-mosescut0.7 --lm $CORPUS-train.${L2}.lm --mosesweights train-$CORPUS/mert-work/moses.ini  --mosesreorderingmodel train-$CORPUS/model/reordering-table.wbe-msd-bidirectional-fe.gz
+        colibrita --test $TESTDIR/corpus/${LANGPAIR}.gold.tokenised.xml -l $L -r $R -A 0.7 -o $CORPUS-${CONF}-mosescut0.7 --lm $CORPUS-train.${L2}.lm --mosesweights train-$CORPUS/mert-work/moses.ini  #--mosesreorrderingmodel train-$CORPUS/model/reordering-table.wbe-msd-bidirectional-fe.gz
         if [ "$?" -ne 0 ]; then
             echo "Failure in colibrita! ($CORPUS-$CONF-mosescut0.7)" >&2
             exit 2
@@ -152,7 +153,7 @@ for CONF in $TRAINCONFIGURATIONS; do
 
     if [ ! -d $CORPUS-${CONF}-mosescut0.8 ]; then
         ln -s $CORPUS-$CONF $CORPUS-${CONF}-mosescut0.8
-        colibrita --test $TESTDIR/corpus/${LANGPAIR}.gold.tokenised.xml -l $L -r $R -A 0.8 -o $CORPUS-${CONF}-mosescut0.8 --lm $CORPUS-train.${L2}.lm --mosesweights train-$CORPUS/mert-work/moses.ini  --mosesreorderingmodel train-$CORPUS/model/reordering-table.wbe-msd-bidirectional-fe.gz
+        colibrita --test $TESTDIR/corpus/${LANGPAIR}.gold.tokenised.xml -l $L -r $R -A 0.8 -o $CORPUS-${CONF}-mosescut0.8 --lm $CORPUS-train.${L2}.lm --mosesweights train-$CORPUS/mert-work/moses.ini  #--mosesreorrderingmodel train-$CORPUS/model/reordering-table.wbe-msd-bidirectional-fe.gz
         if [ "$?" -ne 0 ]; then
             echo "Failure in colibrita! ($CORPUS-$CONF-mosescut0.8)" >&2
             exit 2
@@ -163,7 +164,7 @@ for CONF in $TRAINCONFIGURATIONS; do
 
     if [ ! -d $CORPUS-${CONF}-mosescut0.9 ]; then
         ln -s $CORPUS-$CONF $CORPUS-${CONF}-mosescut0.9
-        colibrita --test $TESTDIR/corpus/${LANGPAIR}.gold.tokenised.xml -l $L -r $R -A 0.9 -o $CORPUS-${CONF}-mosescut0.9 --lm $CORPUS-train.${L2}.lm --mosesweights train-$CORPUS/mert-work/moses.ini  --mosesreorderingmodel train-$CORPUS/model/reordering-table.wbe-msd-bidirectional-fe.gz
+        colibrita --test $TESTDIR/corpus/${LANGPAIR}.gold.tokenised.xml -l $L -r $R -A 0.9 -o $CORPUS-${CONF}-mosescut0.9 --lm $CORPUS-train.${L2}.lm --mosesweights train-$CORPUS/mert-work/moses.ini  #--mosesreorrderingmodel train-$CORPUS/model/reordering-table.wbe-msd-bidirectional-fe.gz
         if [ "$?" -ne 0 ]; then
             echo "Failure in colibrita! ($CORPUS-$CONF-mosescut0.9)" >&2
             exit 2
