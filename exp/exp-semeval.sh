@@ -117,7 +117,7 @@ for CONF in $TRAINCONFIGURATIONS; do
     
 
     if [ ! -d $CORPUS-${CONF}-moses ]; then
-        ln -s $CORPUS-$CONF $CORPUS-${CONF}moses
+        ln -s $CORPUS-$CONF $CORPUS-${CONF}-moses
         colibrita --test $TESTDIR/corpus/${LANGPAIR}.gold.tokenised.xml -l $L -r $R -Z -o $CORPUS-${CONF}-moses --lm $CORPUS-train.${L2}.lm  --mosesweights train-$CORPUS/mert-work/moses.ini --mosesreorderingmodel train-$CORPUS/model/reordering-table.wbe-msd-bidirectional-fe.gz
         if [ "$?" -ne 0 ]; then
             echo "Failure in colibrita! ($CORPUS-$CONF-moses)" >&2
