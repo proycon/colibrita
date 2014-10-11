@@ -74,7 +74,7 @@ for CONF in $TRAINCONFIGURATIONS; do
         fi
     fi
     if [ ! -d $CORPUS-lmbaseline ]; then 
-        ln -s $CORPUS-$CONF $CORPUS-baseline
+        ln -s $CORPUS-$CONF $CORPUS-lmbaseline
         colibrita --baseline $TESTDIR/corpus/${LANGPAIR}.gold.tokenised.xml -o $CORPUS-lmbaseline --lm $CORPUS-train.${L2}.lm
         if [ "$?" -ne 0 ]; then
             echo "Failure in colibrita! ($CORPUS-lmbaseline)" >&2
@@ -83,6 +83,26 @@ for CONF in $TRAINCONFIGURATIONS; do
             $EVALCMD --ref $TESTDIR/corpus/${LANGPAIR}.gold.tokenised.xml --out $CORPUS-lmbaseline.output.xml
         fi
     fi
+
+    colibrita --test $TESTDIR/corpus/${LANGPAIR}.gold.tokenised.xml -l $L -r $R -o $CORPUS-$CONF 
+    if [ "$?" -ne 0 ]; then
+        echo "Failure in colibrita! ($CORPUS-$CONF)" >&2
+        exit 2
+    else
+        $EVALCMD --ref $TESTDIR/corpus/${LANGPAIR}.gold.tokenised.xml --out $CORPUS-${CONF}.output.xml
+    fi
+
+    if [ ! -d $CORPUS-${CONF}-lm ]; then
+        ln -s $CORPUS-$CONF $CORPUS-${CONF}-lm
+        colibrita --test $TESTDIR/corpus/${LANGPAIR}.gold.tokenised.xml -l $L -r $R -o $CORPUS-${CONF}-lm --lm $CORPUS-train.${L2}.lm 
+        if [ "$?" -ne 0 ]; then
+            echo "Failure in colibrita! ($CORPUS-$CONF-lm)" >&2
+            exit 2
+        else
+            $EVALCMD --ref $TESTDIR/corpus/${LANGPAIR}.gold.tokenised.xml --out $CORPUS-$CONF-lm.output.xml
+        fi
+    fi
+
     if [ ! -d "${CORPUS}-mosesbaseline" ]; then 
         ln -s $CORPUS-$CONF $CORPUS-mosesbaseline
         colibrita --test $TESTDIR/corpus/${LANGPAIR}.gold.tokenised.xml -Z -o $CORPUS-mosesbaseline --moseslm $CORPUS-train.${L2}.lm --mosesweights train-$CORPUS/mert-work/moses.ini --mosesreorderingmodel train-$CORPUS/model/reordering-table.wbe-msd-bidirectional-fe.gz
@@ -94,24 +114,7 @@ for CONF in $TRAINCONFIGURATIONS; do
         fi
     fi
 
-    colibrita --test $TESTDIR/corpus/${LANGPAIR}.gold.tokenised.xml -l $L -r $R -o $CORPUS-$CONF 
-    if [ "$?" -ne 0 ]; then
-        echo "Failure in colibrita! ($CORPUS-$CONF)" >&2
-        exit 2
-    else
-        $EVALCMD --ref $TESTDIR/corpus/${LANGPAIR}.gold.tokenised.xml --out $CORPUS-${CONF}.output.xml
-    fi
     
-    if [ ! -d $CORPUS-${CONF}-lm ]; then
-        ln -s $CORPUS-$CONF $CORPUS-${CONF}-lm
-        colibrita --test $TESTDIR/corpus/${LANGPAIR}.gold.tokenised.xml -l $L -r $R -o $CORPUS-${CONF}-lm --lm $CORPUS-train.${L2}.lm 
-        if [ "$?" -ne 0 ]; then
-            echo "Failure in colibrita! ($CORPUS-$CONF-lm)" >&2
-            exit 2
-        else
-            $EVALCMD --ref $TESTDIR/corpus/${LANGPAIR}.gold.tokenised.xml --out $CORPUS-$CONF-lm.output.xml
-        fi
-    fi
 
     if [ ! -d $CORPUS-${CONF}-moses ]; then
         ln -s $CORPUS-$CONF $CORPUS-${CONF}moses
