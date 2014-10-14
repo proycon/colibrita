@@ -28,7 +28,7 @@ def printdata(data):
 
 def printrow(data, key):
     for i, field in enumerate(data[key]):
-        if i >= 1 and i <= 6:
+        if i >= 1 and i <= 6 and i != 3:
             highlight = True
             for k in data:
                 if k != key:
