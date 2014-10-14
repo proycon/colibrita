@@ -10,7 +10,23 @@ import datetime
 header = ["System","Accuracy","Word Accuracy","Recall","BLEU","METEOR","NIST","TER","WER","PER"]
 
 
-def printdata(key):
+def printdata(data):
+    print(r"\begin{tabular}{l|rrrrrrrrr}")
+    print("%generated at " + datetime.datetime.now().strftime("%Y-%m-%d %H:%M") + " in " + os.getcwd() )
+    print(r"\hline")
+    print(" & ".join(header) + r"\\")
+    print(r"\hline")
+    for key in sorted(data):
+        if key.find('baseline') != -1:
+            printrow(data,key)
+    print(r"\hline")
+    for key in sorted(data):
+        if key.find('baseline') == -1:
+            printrow(data, key)
+    print(r"\hline")
+    print(r"\end{tabular}")
+
+def printrow(data, key):
     for i, field in enumerate(data[key]):
         if i >= 1 and i <= 6:
             highlight = True
@@ -53,32 +69,21 @@ for filename in glob.glob("ep7os12-*.summary.score"):
             fields = [ round(x,4) for x in fields ]
             data[name] = (name,) + tuple(fields)
 
-print(r"\begin{tabular}{l|rrrrrrrrr}")
-print("%generated at " + datetime.datetime.now().strftime("%Y-%m-%d %H:%M") + " in " + os.getcwd() )
-print(r"\hline")
-print(" & ".join(header) + r"\\")
-print(r"\hline")
-if 'baseline' in data: print(data['baseline'])
-if 'lmbaseline' in data: print(data['lmbaseline'])
-print(r"\hline")
-for key in sorted(data):
-    if key.find('baseline') == -1 and key.find('moses') == -1:
-        printdata(key)
-print(r"\hline")
-print(r"\end{tabular}")
+
+data1 = {}
+for key in data:
+    if key.find('moses') == -1:
+        data1[key] = data[key]
+printdata(data1)
+
 
 print()
 
-print(r"\begin{tabular}{l|rrrrrrrrr}")
-print("%generated at " + datetime.datetime.now().strftime("%Y-%m-%d %H:%M") + " in " + os.getcwd() )
-print(r"\hline")
-print(" & ".join(header) + r"\\")
-print(r"\hline")
-if 'mosesbaseline' in data: print(data['mosesbaseline'])
-print(r"\hline")
-for key in sorted(data):
-    if key.find('baseline') == -1 and key.find('moses') != -1:
-        printdata(key)
-print(r"\hline")
 
-print(r"\end{tabular}")
+data2 = {}
+for key in data:
+    if key.find('moses') != -1:
+        data2[key] = data[key]
+printdata(data2)
+
+
