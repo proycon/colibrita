@@ -7,11 +7,13 @@ import glob
 import datetime
 
 
+
 header = ["System","Accuracy","Word Accuracy","Recall","BLEU","METEOR","NIST","TER","WER","PER"]
+includefields = (0,1,2,3,4)
 
 
 def printdata(data):
-    print(r"\begin{tabular}{l|rrrrrrrrr}")
+    print(r"\begin{tabular}{|l|" + "r" * (len(header) - 1) + "|}")
     print("%generated at " + datetime.datetime.now().strftime("%Y-%m-%d %H:%M") + " in " + os.getcwd() )
     print(r"\hline")
     print(" & ".join(header) + r"\\")
@@ -28,31 +30,31 @@ def printdata(data):
 
 def printrow(data, key):
     for i, field in enumerate(data[key]):
-        if i >= 1 and i <= 6 and i != 3:
-            highlight = True
-            for k in data:
-                if k != key:
-                    if data[key][i] < data[k][i]:
-                        highlight = False
-                        break
-        elif i > 6:
-            highlight = True
-            for k in data:
-                if k != key:
-                    if data[key][i] > data[k][i]:
-                        highlight = False
-                        break
-        else:
-            highlight = False
+        if i in includefields:
+            if i >= 1 and i <= 6 and i != 3:
+                highlight = True
+                for k in data:
+                    if k != key:
+                        if data[key][i] < data[k][i]:
+                            highlight = False
+                            break
+            elif i > 6:
+                highlight = True
+                for k in data:
+                    if k != key:
+                        if data[key][i] > data[k][i]:
+                            highlight = False
+                            break
+            else:
+                highlight = False
 
-        if highlight:
-            print('\\textbf{' + str(field) + '}', end='')
-        else:
-            print(str(field), end='')
-        if i < len(data[key]) - 1:
-            print(' & ',end='')
-        else:
-            print(r' \\')
+            if highlight:
+                print('\\textbf{' + str(field) + '}', end='')
+            else:
+                print(str(field), end='')
+            if i < len(data[key]) - 1:
+                print(' & ',end='')
+    print(r' \\')
 
 
 data = {}
