@@ -30,8 +30,13 @@ def printdata(data):
     print(r"\end{tabular}")
 
 def printrow(data, key):
+    first = True
     for i, field in enumerate(data[key]):
         if i in includefields:
+            if not first:
+                print(' & ',end='')
+            else:
+                first = False
             if i >= 1 and i <= 6 and i != 3:
                 highlight = True
                 for k in data:
@@ -53,8 +58,6 @@ def printrow(data, key):
                 print('\\textbf{' + str(field) + '}', end='')
             else:
                 print(str(field), end='')
-            if i < len(data[key]) - 1:
-                print(' & ',end='')
     print(r' \\')
 
 
