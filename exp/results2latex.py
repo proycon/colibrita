@@ -8,7 +8,8 @@ import datetime
 
 
 
-header = ["System","Accuracy","Word Accuracy","Recall","BLEU","METEOR","NIST","TER","WER","PER"]
+#header = ["System","Accuracy","Word Accuracy","Recall","BLEU","METEOR","NIST","TER","WER","PER"]
+header = ["System","Accuracy","Word Accuracy","Recall","BLEU"]
 includefields = (0,1,2,3,4)
 
 
