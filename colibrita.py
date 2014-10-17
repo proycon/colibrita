@@ -55,6 +55,7 @@ try:
 
         def process(self, request):
             self.numberRequests += 1
+            request.setHeader(b"Access-Control-Allow-Origin", b"*")
             if b'input' in request.args:
                 request.setHeader(b"content-type", b"application/xml")
                 print("Server Input: ", request.args, file=sys.stderr)
