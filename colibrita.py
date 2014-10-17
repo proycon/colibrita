@@ -1471,6 +1471,7 @@ def main():
         targetclassfile = args.target.replace('.txt','') + '.colibri.cls'
         targetcorpusfile  = args.target.replace('.txt','') + '.colibri.dat'
         targetmodelfile  = args.target.replace('.txt','') + '.colibri.indexedpatternmodel'
+        keywordmodelfile  = args.output + '/keywords.colibri.indexedpatternmodel'
 
         conf = {'sourceclassfile':sourceclassfile, 'targetclassfile': targetclassfile,'sourcecorpusfile':sourcecorpusfile,'targetcorpusfile': targetcorpusfile}
         pickle.dump(conf, open(args.output+'/colibrita.conf','wb'))
@@ -1584,10 +1585,18 @@ def main():
                 print("Failed",file=sys.stderr)
                 sys.exit(2)
 
+        if args.keywords and not os.path.exists(keywordmodelfile):
+            cmd = "colibri-patternmodeller -t " + str(max(args.bow_filter_threshold,args.bow_absolute_threshold)) + " -l 1 -f " + targetcorpusfile + " -o " + keywordmodelfile
+            print("3.3) Building keyword model: indexed pattern model on target corpus: ", cmd, file=sys.stderr)
+            r = os.system(cmd)
+            if r != 0:
+                print("Failed",file=sys.stderr)
+                sys.exit(2)
+
 
         if not os.path.exists(args.output+'/classifier.conf'):
             if args.keywords:
-                keywordopts = "-k --kt " + str(args.bow_absolute_threshold) + " --kp " + str(args.bow_prob_threshold) + " --kg " + str(args.bow_filter_threshold)
+                keywordopts = "-k --kt " + str(args.bow_absolute_threshold) + " --kp " + str(args.bow_prob_threshold) + " --kg " + str(args.bow_filter_threshold) + " --km " + keywordmodelfile
             else:
                 keywordopts = ""
             cmd = "colibri-extractfeatures --crosslingual " + keywordopts + " -C -X -i " + args.output + "/colibri.alignmodel -f " + targetcorpusfile + " -l " + str(args.leftcontext) + " -r " + str(args.rightcontext) + " -o " + args.output + " -s " + sourcemodelfile + " -t " + targetmodelfile + " -S " + sourceclassfile + " -T " + targetclassfile + " -c " + targetclassfile #TODO: do sourcemodel and targetmodel work with --crosslingual??
