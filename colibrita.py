@@ -1586,7 +1586,11 @@ def main():
 
 
         if not os.path.exists(args.output+'/classifier.conf'):
-            cmd = "colibri-extractfeatures --crosslingual -C -X -i " + args.output + "/colibri.alignmodel -f " + targetcorpusfile + " -l " + str(args.leftcontext) + " -r " + str(args.rightcontext) + " -o " + args.output + " -s " + sourcemodelfile + " -t " + targetmodelfile + " -S " + sourceclassfile + " -T " + targetclassfile + " -c " + targetclassfile #TODO: do sourcemodel and targetmodel work with --crosslingual??
+            if args.keywords:
+                keywordopts = "-k --kt " + str(args.bow_absolute_threshold) + " --kp " + str(args.bow_prob_threshold) + " --kg " + str(args.bow_filter_threshold)
+            else:
+                keywordopts = ""
+            cmd = "colibri-extractfeatures --crosslingual " + keywordopts + " -C -X -i " + args.output + "/colibri.alignmodel -f " + targetcorpusfile + " -l " + str(args.leftcontext) + " -r " + str(args.rightcontext) + " -o " + args.output + " -s " + sourcemodelfile + " -t " + targetmodelfile + " -S " + sourceclassfile + " -T " + targetclassfile + " -c " + targetclassfile #TODO: do sourcemodel and targetmodel work with --crosslingual??
             print("4) Extracting features and building classifiers: " + cmd,file=sys.stderr)
             r = os.system(cmd)
             if r != 0:
