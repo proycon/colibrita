@@ -1343,7 +1343,7 @@ def main():
     parser.add_argument('-W','--mosesW',help="Pass full sentences through through Moses server using XML input (will start a moses server, requires --moseslm). Relies fully on Moses for LM, optional classifier output (if -l,-r) is passed to Moses and competes with phrase-table. Classifier score is integrated in phrasetable using replace method", action='store_true',default=False)
     parser.add_argument('-F','--fallback',help="Attempt to decode unknown fragments using moses (will start a moses server, requires --moseslm or --lm). This is a more constrained version of falling back to Moses only for unknown fragments", action='store_true',default=False)
     parser.add_argument("--kt",dest="bow_absolute_threshold", help="Keyword needs to occur at least this many times in the context (absolute number)", type=int, action='store',default=3)
-    parser.add_argument("--kp",dest="bow_prob_threshold", help="minimal P(translation|keyword)", type=int, action='store',default=0.001)
+    parser.add_argument("--kp",dest="bow_prob_threshold", help="minimal P(translation|keyword)", type=float, action='store',default=0.001)
     parser.add_argument("--kg",dest="bow_filter_threshold", help="Keyword needs to occur at least this many times globally in the entire corpus (absolute number)", type=int, action='store',default=20)
     parser.add_argument("--ka",dest="compute_bow_params", help="Attempt to automatically compute --kt,--kp and --kg parameters", action='store_false',default=True)
     #parser.add_argument('-O', dest='timbloptions', help="Timbl Classifier options", type=str,action='store',default="-k 1")
