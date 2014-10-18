@@ -16,8 +16,8 @@ import time
 import socket
 import lxml.etree
 import signal
-#from collections import defaultdict
-#from urllib.parse import quote_plus, unquote_plus
+from collections import defaultdict
+from urllib.parse import quote_plus, unquote_plus
 from copy import copy
 
 from colibrita.format import Writer, Reader, Fragment, Alternative
