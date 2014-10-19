@@ -436,7 +436,7 @@ class ClassifierExperts:
                         bag[word] = 1
 
                 #add to features
-                for keyword in sorted(bag.keys()):
+                for keyword, target, freq,p in self.keywords[str(inputfragment)]:
                     features.append(keyword+"="+str(bag[keyword]))
             elif classifier.keywords: #classifier was trained with keywords, need dummies
                 for i, keyword in enumerate( set( ( x[0] for x in self.keywords[str(inputfragment)]) ) ):
