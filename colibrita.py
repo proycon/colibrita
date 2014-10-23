@@ -1027,10 +1027,11 @@ def mosesfullsentence_processsentence(sentencepair, mosesclient=None,experts = N
     print("\tMoses response: " + outputsentence + " [leadwords="+str(leadwords) + ":tailwords=" + str(tailwords) +"]", file=sys.stderr)
     outputfragment = Fragment( tuple(outputsentence.split(' ')[leadwords:-tailwords]) , 1 )
 
+    altsentences = [ outputsentence ]
     for nbestitem in mosesresponse['nbest']:
         score = math.e**float(nbestitem['totalScore'])
         altsentence = ' '.join([ x.strip() for x in nbestitem['hyp'].split(' ') if x.strip() ])
-        if altsentence != outputsentence:
+        if altsentence not in altsentences:
             print("\tMoses alternative response: " + outputsentence + " [leadwords="+str(leadwords) + ":tailwords=" + str(tailwords) +"]", file=sys.stderr)
             outputfragment.alternatives.append( Alternative( tuple(altsentence.split(' ')[leadwords:-tailwords]) , score ) )
 
