@@ -1023,10 +1023,16 @@ def mosesfullsentence_processsentence(sentencepair, mosesclient=None,experts = N
     print("\tMoses input: " + inputsentence_xml.strip(), file=sys.stderr)
     params = {"text":inputsentence_xml.strip(), "align":"false", "report-all-factors":"false", 'nbest':25}
     mosesresponse = mosesclient.translate(params)
-
     outputsentence = ' '.join([ x.strip() for x in mosesresponse['text'].split(' ') if x.strip() ])
     print("\tMoses response: " + outputsentence + " [leadwords="+str(leadwords) + ":tailwords=" + str(tailwords) +"]", file=sys.stderr)
     outputfragment = Fragment( tuple(outputsentence.split(' ')[leadwords:-tailwords]) , 1 )
+
+    for nbestitem in mosesresponse['nbest']:
+        score = math.e**float(nbestitem['totalScore'])
+        altsentence = ' '.join([ x.strip() for x in nbestitem['hyp'].split(' ') if x.strip() ])
+        if altsentence != outputsentence:
+            print("\tMoses alternative response: " + outputsentence + " [leadwords="+str(leadwords) + ":tailwords=" + str(tailwords) +"]", file=sys.stderr)
+            outputfragment.alternatives.append( Alternative( tuple(altsentence.split(' ')[leadwords:-tailwords]) , score ) )
 
     print("\tMoses translation (via full sentence)" + str(inputfragment) + " -> " + str(outputfragment) , file=sys.stderr)
 
