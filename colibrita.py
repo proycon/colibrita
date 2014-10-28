@@ -1026,11 +1026,7 @@ def mosesfullsentence_processsentence(sentencepair, mosesclient=None,experts = N
     outputsentence = ' '.join([ x.strip() for x in mosesresponse['text'].split(' ') if x.strip() ])
     print("\tMoses response: " + outputsentence + " [leadwords="+str(leadwords) + ":tailwords=" + str(tailwords) +"]", file=sys.stderr)
     outputfragment = Fragment( tuple(outputsentence.split(' ')[leadwords:-tailwords]) , 1 )
-    try:
-        outputfragment.confidence = math.e**float(mosesresponse['score'])
-    except:
-        print("ERROR: Confidence not found for mosesserver output: " + repr(mosesresponse),file=sys.stderr)
-
+    bestscore = 0
     altsentences = [ outputsentence ]
     for nbestitem in mosesresponse['nbest']:
         score = math.e**float(nbestitem['totalScore'])
@@ -1038,10 +1034,13 @@ def mosesfullsentence_processsentence(sentencepair, mosesclient=None,experts = N
         if altsentence not in altsentences:
             print("\tMoses alternative response: " + outputsentence + " [leadwords="+str(leadwords) + ":tailwords=" + str(tailwords) +"]", file=sys.stderr)
             outputfragment.alternatives.append( Alternative( tuple(altsentence.split(' ')[leadwords:-tailwords]) , score ) )
+        if altsentence == outputsentence:
+            if score > bestscore:
+                bestscore = score
 
     print("\tMoses translation (via full sentence)" + str(inputfragment) + " -> " + str(outputfragment) , file=sys.stderr)
-
     sentencepair.output = sentencepair.replacefragment(inputfragment, outputfragment, sentencepair.output)
+    outputfragment.confidence = bestscore
     return sentencepair
 
 
