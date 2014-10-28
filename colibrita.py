@@ -1026,6 +1026,10 @@ def mosesfullsentence_processsentence(sentencepair, mosesclient=None,experts = N
     outputsentence = ' '.join([ x.strip() for x in mosesresponse['text'].split(' ') if x.strip() ])
     print("\tMoses response: " + outputsentence + " [leadwords="+str(leadwords) + ":tailwords=" + str(tailwords) +"]", file=sys.stderr)
     outputfragment = Fragment( tuple(outputsentence.split(' ')[leadwords:-tailwords]) , 1 )
+    try:
+        outputfragment.confidence = mosesresponse['score']
+    except:
+        print("ERROR: Confidence not found for mosesserver output: " + repr(mosesresponse),file=sys.stderr)
 
     altsentences = [ outputsentence ]
     for nbestitem in mosesresponse['nbest']:
