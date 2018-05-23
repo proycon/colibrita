@@ -86,6 +86,7 @@
 			"url": "http://www.aclweb.org/anthology/P14-1082"
 		}
 	],
+    "interfaceType": "CLI",
 	"readme": "https://github.com/proycon/colibrita/blob/master/README.md",
 	"issueTracker": "https://github.com/proycon/colibrita/issues",
 	"releaseNotes": "https://github.com/proycon/colibrita/releases",
