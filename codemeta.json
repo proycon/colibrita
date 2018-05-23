@@ -1,0 +1,95 @@
+{
+    "@context": [
+        "https://doi.org/10.5063/schema/codemeta-2.0",
+        "http://schema.org",
+        {
+            "entryPoints": { "@reverse": "schema:actionApplication" },
+            "interfaceType": { "@id": "codemeta:interfaceType" }
+        }
+    ],
+    "@type": "SoftwareSourceCode",
+    "identifier": "colibrita",
+    "name": "colibrita",
+    "version": "0.3.1",
+    "description": "Colibrita is a proof-of-concept translation assistance system that can translate L1 fragments in an L2 context. The system is designed prior to a new task (presented at SemEval 2014) concerning the translation of L1 fragments, i.e words or phrases, in an L2 context. This type of translation can be applied in writing assistance systems for language learners in which users write in their target language, but are allowed to occasionally back off to their native L1 when they are uncertain of the proper word or expression in L2. These L1 fragments are subsequently translated, along with the L2 context, into L2 fragments. Colibrita was developed to test whether L2 context information aids in translation of L1 fragments.",
+    "license": "GPLv3",
+	"url": "https://github.com/proycon/colibrita",
+    "producer": {
+        "@id": "https://www.ru.nl/cls",
+        "@type": "Organization",
+        "name": "Centre for Language Studies",
+        "url": "https://www.ru.nl/cls",
+        "parentOrganization": {
+            "@id": "https://www.ru.nl",
+            "name": "Radboud University",
+            "@type": "Organization",
+            "url": "https://www.ru.nl",
+            "location": {
+                "@type": "Place",
+                "name": "Nijmegen"
+            }
+        }
+    },
+    "author": [
+		{
+			"@id": "https://orcid.org/0000-0002-1046-0006",
+			"@type": "Person",
+			"givenName": "Maarten",
+			"familyName": "van Gompel",
+			"email": "proycon@anaproy.nl",
+			"affiliation": { "@id": "https://www.ru.nl/cls" }
+		}
+	],
+	"sourceOrganization": { "@id": "https://www.ru.nl/cls" },
+	"programmingLanguage": {
+		"@type": "ComputerLanguage",
+		"identifier": "python",
+		"name": "python"
+	},
+	"operatingSystem": "POSIX",
+	"codeRepository": "https://github.com/proycon/colibrita",
+    "softwareRequirements": [
+        {
+			"@type": "SoftwareApplication",
+			"identifier": "colibricore",
+			"name": "Colibri Core"
+		},
+        {
+			"@type": "SoftwareApplication",
+			"identifier": "moses",
+			"name": "Moses"
+		},
+        {
+			"@type": "SoftwareApplication",
+			"identifier": "GIZA++",
+			"name": "GIZA++"
+		},
+        {
+			"@type": "SoftwareApplication",
+			"identifier": "python3-timbl",
+			"name": "python-timbl"
+		}
+	],
+    "referencePublication": [
+		{
+            "@id": "http://hdl.handle.net/2066/129758",
+			"@type": "ScholarlyArticle",
+			"name": "Translation Assistance by Translation of L1 Fragments in an L2 Context",
+			"author": [ "Maarten van Gompel", "Antal van den Bosch" ],
+			"pageStart": 871,
+			"pageEnd": 880,
+			"isPartOf": {
+				"@type": "PublicationIssue",
+				"datePublished": "2014-06-23",
+				"name": "Proceedings of the 52nd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers)"
+			},
+			"url": "http://www.aclweb.org/anthology/P14-1082"
+		}
+	],
+	"readme": "https://github.com/proycon/colibrita/blob/master/README.md",
+	"issueTracker": "https://github.com/proycon/colibrita/issues",
+	"releaseNotes": "https://github.com/proycon/colibrita/releases",
+	"developmentStatus": "inactive",
+	"keywords":  [ "nlp", "natural language processing", "machine translation", "collocations", "translation", "code switching", "computer-aided language learning" ],
+	"dateCreated": "2013-07-09"
+}
